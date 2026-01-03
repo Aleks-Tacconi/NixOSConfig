@@ -1,0 +1,40 @@
+{
+    "layer": "top",
+    "margin-top": 0,
+    "margin-bottom": -5,
+
+    "layer": "top",
+    "margin-left": 0,
+    "margin-right": 0,    
+    "spacing": 0,
+
+    "include": [
+        "~/.config/waybar/modules.json"
+    ],
+
+    "modules-left": [
+        "custom/bluelight",
+        "custom/nix-icon",
+
+        "custom/agenda-icon",
+        "custom/agenda",
+        "mpris"
+    ],
+    "modules-center": [
+        "hyprland/workspaces"
+    ],
+
+    "modules-right": [
+        "custom/audio-interface",
+        "pulseaudio",
+        "battery", 
+        "clock",
+        "tray",
+        "network",
+        "custom/todo-icon",
+        "custom/todo",
+        "custom/notification",
+        "custom/exit",
+    ]
+}
+

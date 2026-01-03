@@ -1,0 +1,44 @@
+(defpoll random-img :interval "60s" "/home/aleks/.config/eww/scripts/random_image.sh")
+
+(defpoll time :interval "1s" "date +%H:%M")
+(defpoll date :interval "60s" "date '+%A, %d %B'")
+
+(defwidget clock []
+  (box
+    :class "clock"
+    :orientation "v"
+    (label :text "${time}" :halign "center")
+    (label :text "${date}" :class "date" :halign "center")))
+
+(defwidget image-frame []
+  (box
+    :class "frame"
+    :orientation "v"
+    :width 425
+    (button
+      :class "image-button-wrapper"
+      :onclick "eww update random-img=\"$(bash -c '/home/aleks/.config/eww/scripts/random_image.sh')\""
+      (image :path {random-img} :image-width 410 :image-height 300 :class "image"))
+    (box
+      :valign "start"
+      :vexpand false
+      (button
+        :class "image-button"
+        :vexpand false
+        :valign "start"
+        :onclick "eww update random-img=\"$(bash -c '/home/aleks/.config/eww/scripts/random_image.sh')\""
+        ))))
+
+(defwindow random-window
+  :monitor 0
+  :geometry (geometry :x "2100" :y "50" :width "340")
+  :stacking "bg"
+  :exclusive false
+  (image-frame))
+
+(defwindow clock
+  :monitor 0
+  :geometry (geometry :x "970" :y "560" :width "600")
+  :stacking "bg"
+  :exclusive false
+  (clock))

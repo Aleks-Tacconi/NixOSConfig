@@ -1,0 +1,171 @@
+{
+  "hyprland/workspaces": {
+    "on-click": "activate",
+    "active-only": false,
+    "all-outputs": true,
+    "format": "{}",
+    "format-icons": {
+      "urgent": "",
+      "active": "",
+      "default": ""
+    }
+  },
+
+  "mpris": {
+    "format": "{player_icon}   {dynamic}  ",
+    "ignored-players": [],
+    "max-length": 25,
+    "scroll": true,
+    "scroll-speed": 30,
+    "player-icons": {
+      "spotify": "",
+      "brave": "󰖟"
+    }
+  },
+
+  "custom/todo-icon": {
+    "format": "󰏪 ",
+    "on-click": "~/.config/waybar/todo_rofi.sh",
+    "tooltip": true,
+    "return-type": "json",
+    "exec": "~/.config/waybar/todo_count.sh"
+  },
+
+  "custom/todo": {
+    "format": "{}",
+    "on-click": "~/.config/waybar/todo_rofi.sh",
+    "return-type": "json",
+    "exec": "~/.config/waybar/todo_count.sh",
+    "interval": 59,
+    "tooltip": true
+  },
+
+  "custom/audio-interface": {
+    "exec": "~/.config/waybar/audio_interface.sh",
+    "interval": 2,
+    "on-click": "~/.config/waybar/audio_interface.sh click",
+    "tooltip": false
+  },
+
+  "custom/bluelight": {
+    "format": "󱣖 ",
+    "on-click": "pgrep hyprsunset >/dev/null && pkill hyprsunset || hyprsunset -t 4500",
+    "tooltip": false
+  },
+
+  "custom/agenda-icon": {
+    "format": " ",
+    "on-click": "brave \"https://calendar.google.com/calendar\"",
+    "tooltip": false
+  },
+
+  "custom/agenda": {
+    "format": "{}",
+    "exec": "uv run --directory ~/.nextmeeting nextmeeting --max-title-length 60 --waybar | ~/.config/waybar/strip_emoji.py",
+    "on-click": "brave \"https://calendar.google.com/calendar\"",
+    "interval": 59,
+    "return-type": "json",
+    "tooltip": true
+  },
+
+  "custom/nix-icon": {
+    "format": " ",
+    "on-click": "python ~/.config/waybar/nixos_search/main.py",
+    "tooltip": false
+  },
+
+  "custom/nix-search": {
+    "format": "NixPkgs",
+    "on-click": "python ~/.config/waybar/nixos_search/main.py",
+    "tooltip": false
+  },
+
+  "custom/app-icon": {
+    "format": " ",
+    "on-click": "rofi -show drun",
+    "tooltip": false
+  },
+
+  "tray": {
+    "icon-size": 21,
+    "spacing": 10
+  },
+
+  "custom/app-search": {
+    "format": "Apps",
+    "on-click": "rofi -show drun",
+    "tooltip": false
+  },
+
+  "custom/notification": {
+    "tooltip": false,
+    "format": "{icon}",
+    "format-icons": {
+      "notification": "<span foreground='red'><sup></sup></span>",
+      "none": " ",
+      "dnd-notification": "󰂛<span foreground='red'><sup></sup></span>",
+      "dnd-none": "󰂛 ",
+      "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+      "inhibited-none": " ",
+      "dnd-inhibited-notification": "󰂛<span foreground='red'><sup></sup></span>",
+      "dnd-inhibited-none": "󰂛 "
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
+  },
+
+  "custom/exit": {
+    "format": "󰐥",
+    "on-click": "wlogout -b 5 -T $(( $(hyprctl -j monitors | jq '.[] | select(.focused==true) | .height') / 4 )) -B $(( $(hyprctl -j monitors | jq '.[] | select(.focused==true) | .height') / 4 ))",
+    "tooltip": false
+  },
+
+  "clock": {
+    "timezone": "BST",
+    "format-alt": "{:%Y-%m-%d}"
+  },
+
+  "network": {
+    "format": "   ",
+    "tooltip-format": " {ifname} via {gwaddri}",
+    "tooltip-format-wifi": "    {essid} ({signalStrength}%)",
+    "tooltip-format-ethernet": "  {ifname} ({ipaddr}/{cidr})",
+    "tooltip-format-disconnected": "Disconnected",
+    "max-length": 50
+  },
+
+  "battery": {
+    "states": {
+      // "good": 95,
+      "warning": 30,
+      "critical": 15
+    },
+    "format": "{icon}   {capacity}%",
+    "format-charging": "  {capacity}%",
+    "format-plugged": "  {capacity}%",
+    // "format-good": "", // An empty format will hide the module
+    // "format-full": "",
+    "format-icons": [" ", " ", " ", " ", " "],
+    "tooltip": false
+  },
+
+  "pulseaudio": {
+    "format": "{icon}   {volume}%",
+    "format-muted": "   {volume}%",
+    "format-icons": {
+      "headphone": "",
+      "hands-free": "",
+      "headset": "",
+      "phone": "",
+      "portable": "",
+      "car": "",
+      "default": ["", "  ", "  "]
+    },
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "tooltip": false
+  }
+}

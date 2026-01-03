@@ -1,0 +1,36 @@
+* {
+  all: unset;
+}
+
+.frame {
+  background: #333;
+  padding: 10px;
+  margin-bottom: -300px
+}
+
+.image-button-wrapper {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.image-button-wrapper:hover {
+  opacity: 0.8;
+}
+
+.image {
+  background: black;
+  min-width: 410px;
+  min-height: 300px;
+}
+
+.clock {
+  font-size: 80px;
+  background-color: transparent;
+  color: white;
+  font-weight: 600;
+}
+
+.date {
+  font-size: 40px;
+}

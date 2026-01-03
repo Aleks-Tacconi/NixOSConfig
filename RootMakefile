@@ -1,0 +1,14 @@
+reset-jellyfin:
+	# web-ui for setup after command: http://0.0.0.0:8096/web/#/wizardstart.html
+
+	rm -rf ~/.local/share/jellyfin
+
+	rm -rf ~/Media/config
+	mkdir ~/Media/config
+
+	sudo systemctl enable --now tailscale
+	sudo systemctl restart jellyfin
+
+reset-tailscale:
+	sudo rm -r /var/lib/tailscale
+	sudo tailscale up
