@@ -9,7 +9,7 @@
 {
   programs.java = {
     enable = true;
-    package = pkgs.javaPackages.compiler.openjdk25;
+    package = pkgs.javaPackages.compiler.openjdk21;
   };
 
   home.packages = with pkgs; [
@@ -163,6 +163,7 @@
     libxcvt
     libdrm
     pulseaudioFull
+    curl
 
     # Controller tooling
     bluez
