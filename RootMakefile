@@ -12,3 +12,8 @@ reset-jellyfin:
 reset-tailscale:
 	sudo rm -r /var/lib/tailscale
 	sudo tailscale up
+
+jdtls-config:
+	mkdir -p $(HOME)/.local/share/jdtls && \
+	cp -r $$(nix eval --raw nixpkgs#jdt-language-server)/share/java/jdtls/config_linux $(HOME)/.local/share/jdtls/config_linux && \
+	chmod -R u+rwX $(HOME)/.local/share/jdtls/config_linux
