@@ -41,6 +41,7 @@
         ", XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
 
         ", Print, exec, hyprshot -m region"
+        "SHIFT, Print, exec, hyprshot -m window"
         "$mod, t, exec, pkill waybar && waybar &"
         "$mod, h, movefocus, l"
         "$mod, l, movefocus, r"
