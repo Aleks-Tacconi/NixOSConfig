@@ -19,6 +19,9 @@
   ];
 
   programs = {
+    opencode = {
+      enable = true;
+    };
     git = {
       enable = true;
       settings = {

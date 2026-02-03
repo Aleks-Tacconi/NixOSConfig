@@ -37,7 +37,6 @@
     libxml2
     lemminx
 
-    opencode
     lsof
 
     lua51Packages.lua
@@ -144,6 +143,7 @@
     stylelint-lsp
     mprocs
     postgresql
+    swi-prolog
 
     # Misc utilities
     unzip

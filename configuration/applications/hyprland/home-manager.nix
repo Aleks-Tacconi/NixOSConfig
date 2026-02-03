@@ -118,9 +118,9 @@
       # ... , mirror, eDP-1
 
       monitor = [
-        "HDMI-A-2, 2560x1440@60, auto, 1"
+        # "HDMI-A-2, 2560x1440@60, auto, 1"
         "eDP-1,1920x1200@60,auto,1"
-        ", preferred, auto, 1, mirror, eDP-1"
+        # ", preferred, auto, 1, mirror, eDP-1"
       ];
 
       cursor = {

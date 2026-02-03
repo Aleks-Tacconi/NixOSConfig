@@ -18,6 +18,7 @@ laptop:
 
 	@echo ""
 	@echo -e "$(YELLOW)==> Mounting /boot if needed...$(NC)"
+	
 	@if ! mountpoint -q /boot; then \
 		sudo mount /dev/nvme0n1p1 /boot; \
 		echo -e "$(GREEN)/boot mounted$(NC)"; \
