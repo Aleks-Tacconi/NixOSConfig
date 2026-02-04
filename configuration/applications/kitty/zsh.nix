@@ -8,6 +8,7 @@
 
 let
   gccLib = pkgs.stdenv.cc.cc.lib;
+  glibc = pkgs.glibc;
 in
 {
   programs.zsh = {
@@ -49,7 +50,7 @@ in
       eval "$(zoxide init zsh)"
       setopt appendhistory
       export PATH=$PATH:$HOME/.cargo/bin
-      export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64:${gccLib}/lib:$LD_LIBRARY_PATH"
+      export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64:${gccLib}/lib:$LD_LIBRARY_PATH:${glibc}/lib"
       export JDTLS_HOME="$HOME/.local/share/jdtls"
       mkdir -p "$JDTLS_HOME"
     '';

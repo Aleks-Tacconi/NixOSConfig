@@ -110,6 +110,7 @@
     libGL
     glibc
     glib
+    rubyPackages.glib2
     stdenv.cc.cc.lib
     zlib
 
