@@ -171,5 +171,10 @@
     usbutils
     pciutils
     linuxConsoleTools
+
+    # electron build
+    dpkg
+    fakeroot
+    rpm
   ];
 }

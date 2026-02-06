@@ -87,38 +87,36 @@
       };
 
       layerrule = [
-        "noanim, selection "
-        "animation slide bottom, rofi"
-        "blur, rofi"
-        "ignorealpha 0.3, rofi"
-        "noanim, selection"
+        "no_anim on, match:namespace selection"
+
+        "animation slide bottom, match:namespace rofi"
+        "blur on, match:namespace rofi"
+        "ignore_alpha 0.3, match:namespace rofi"
       ];
 
-      windowrulev2 = [
-        "float, class:showmethekey-gtk"
-        "pin, class:showmethekey-gtk"
-        "noborder, class:showmethekey-gtk"
-        "noinitialfocus, class:showmethekey-gtk"
+      windowrule = [
+        "match:class showmethekey-gtk, float on"
+        "match:class showmethekey-gtk, pin on"
+        "match:class showmethekey-gtk, border_size 0"
+        "match:class showmethekey-gtk, no_initial_focus on"
 
-        "float, class:brave-nngceckbapebfimnlniiiahkandclblb-Default"
-        "center, class:brave-nngceckbapebfimnlniiiahkandclblb-Default"
+        "match:class brave-nngceckbapebfimnlniiiahkandclblb-Default, float on"
+        "match:class brave-nngceckbapebfimnlniiiahkandclblb-Default, center on"
 
-        "float, title:^Save File$"
-        "center, title:^Save File$"
+        "match:title ^Save File$, float on"
+        "match:title ^Save File$, center on"
+        "match:title .*wants to save$, float on"
+        "match:title .*wants to save$, center on"
 
-        "float, title:.*wants to save$"
-        "center, title:.*wants to save$"
+        "match:class rocketleague.exe, opacity 1.0 override 1.0 override 1.0 override"
 
-        "opacity 1, class:rocketleague.exe"
-
-        "float, title:Calculator$"
-        "center, title:Calculator$"
+        "match:title ^Calculator$, float on"
+        "match:title ^Calculator$, center on"
       ];
-
       # ... , mirror, eDP-1
 
       monitor = [
-        # "HDMI-A-2, 2560x1440@60, auto, 1"
+        "HDMI-A-2, 2560x1440@60, auto, 1"
         "eDP-1,1920x1200@60,auto,1"
         # ", preferred, auto, 1, mirror, eDP-1"
       ];
@@ -190,9 +188,18 @@
 
   };
 
-  services.hyprpaper.enable = true;
-  services.hyprpaper.settings = {
-    preload = [ "~/.wallpaper.jpg" ];
-    wallpaper = [ ",~/.wallpaper.jpg" ];
+  services.hyprpaper = {
+    enable = true;
+    settings = {
+      splash = false;
+      wallpaper = [
+        {
+          monitor = "";
+          path = "~/.wallpaper.jpg";
+          fit_mode = "cover";
+        }
+      ];
+    };
   };
+
 }

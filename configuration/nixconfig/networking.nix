@@ -10,11 +10,6 @@
   networking = {
     hostName = "aleks";
 
-    wireless = {
-      enable = false;
-      iwd.enable = false;
-    };
-
     networkmanager = {
       enable = true;
       wifi = {
@@ -28,6 +23,10 @@
         {
           from = 1714;
           to = 1764;
+        }
+        {
+          from = 6543;
+          to = 6543;
         }
       ];
       allowedUDPPortRanges = [

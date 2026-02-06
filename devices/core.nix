@@ -10,6 +10,8 @@
   hardware.enableAllFirmware = true;
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
+    useGlobalPkgs = true;
+    useUserPackages = true;
     users."aleks" = {
       imports = [ ../home.nix ];
     };
@@ -47,6 +49,7 @@
     # ../configuration/applications/syncthing/configuration.nix
     # ../configuration/applications/emulator/configuration.nix
 
+    ../configuration/applications/android/configuration.nix
     ../configuration/applications/teams/configuration.nix
     ../configuration/applications/tailscale/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix

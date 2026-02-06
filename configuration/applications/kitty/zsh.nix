@@ -6,10 +6,6 @@
   ...
 }:
 
-let
-  gccLib = pkgs.stdenv.cc.cc.lib;
-  glibc = pkgs.glibc;
-in
 {
   programs.zsh = {
     enable = true;
@@ -40,8 +36,12 @@ in
     histSize = 1000;
 
     interactiveShellInit = ''
+      if [ -e /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh ]; then
+        . /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh
+      fi
+
       if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-        exec Hyprland
+        exec start-hyprland
       fi
 
       autoload -Uz compinit
@@ -50,7 +50,7 @@ in
       eval "$(zoxide init zsh)"
       setopt appendhistory
       export PATH=$PATH:$HOME/.cargo/bin
-      export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64:${gccLib}/lib:$LD_LIBRARY_PATH:${glibc}/lib"
+      export LD_LIBRARY_PATH="$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
       export JDTLS_HOME="$HOME/.local/share/jdtls"
       mkdir -p "$JDTLS_HOME"
     '';

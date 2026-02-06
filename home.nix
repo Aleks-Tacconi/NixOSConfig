@@ -16,6 +16,7 @@
     ./configuration/homemanagerconfig/themes.nix
     ./configuration/homemanagerconfig/desktopentries.nix
     ./configuration/homemanagerconfig/services.nix
+    ./configuration/applications/android/home-manager.nix
   ];
 
   programs = {
@@ -28,6 +29,9 @@
         user = {
           name = "Aleks Tacconi";
           email = "aleks.tacconi@gmail.com";
+        };
+        merge = {
+          tool = "nvim";
         };
       };
     };
@@ -50,5 +54,4 @@
     };
   '';
 
-  nixpkgs.config.allowUnfree = true;
 }
