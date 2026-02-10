@@ -21,7 +21,8 @@
 
   programs = {
     opencode = {
-      enable = true;
+      enable = false;
+      package = pkgs.opencode;
     };
     git = {
       enable = true;

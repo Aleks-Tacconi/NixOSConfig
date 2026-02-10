@@ -63,7 +63,7 @@
     marksman
     markdownlint-cli
     nil
-    nixfmt-rfc-style
+    nixfmt
     pyright
     lombok
     checkstyle
@@ -165,6 +165,8 @@
     libdrm
     pulseaudioFull
     curl
+    pandoc
+    texliveTeTeX
 
     # Controller tooling
     bluez

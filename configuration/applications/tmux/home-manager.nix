@@ -31,8 +31,7 @@
     if tmux list-clients | grep opencode; then
         tmux detach-client
     else
-        tmux has-session -t opencode 2>/dev/null || tmux new-session -d -s opencode "opencode"
-        tmux display-popup -T "OpenCode" -w 80% -h 80% -E "tmux attach -t opencode"
+        tmux has-session -t opencode 2>/dev/null || tmux new-session -d -s opencode "opencode" && tmux display-popup -T "OpenCode" -w 80% -h 80% -E "tmux attach -t opencode"
     fi
     '
 
