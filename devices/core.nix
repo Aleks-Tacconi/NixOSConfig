@@ -8,6 +8,8 @@
 
 {
   hardware.enableAllFirmware = true;
+  nixpkgs.config.android_sdk.accept_license = true;
+
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     useGlobalPkgs = true;
@@ -48,8 +50,8 @@
     # ../configuration/applications/globalprotect/configuration.nix
     # ../configuration/applications/syncthing/configuration.nix
     # ../configuration/applications/emulator/configuration.nix
+    # ../configuration/applications/wordpress/configuration.nix
 
-    ../configuration/applications/wordpress/configuration.nix
     ../configuration/applications/android/configuration.nix
     ../configuration/applications/teams/configuration.nix
     ../configuration/applications/tailscale/configuration.nix
