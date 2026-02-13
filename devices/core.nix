@@ -48,8 +48,8 @@
     # ../configuration/applications/globalprotect/configuration.nix
     # ../configuration/applications/syncthing/configuration.nix
     # ../configuration/applications/emulator/configuration.nix
+    # ../configuration/applications/wordpress/configuration.nix
 
-    ../configuration/applications/wordpress/configuration.nix
     ../configuration/applications/android/configuration.nix
     ../configuration/applications/teams/configuration.nix
     ../configuration/applications/tailscale/configuration.nix
