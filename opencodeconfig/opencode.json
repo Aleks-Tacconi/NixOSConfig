@@ -20,7 +20,7 @@
     },
     "wp_mcp": {
       "type": "remote",
-      "url": "http://localhost/wp-json/stifli-flex-mcp/v1/sse",
+      "url": "http://localhost/wp-json/mcp/mcp-adapter-default-server",
       "oauth": false,
       "enabled": true,
       "headers": {
@@ -46,4 +46,3 @@
     }
   }
 }
-
