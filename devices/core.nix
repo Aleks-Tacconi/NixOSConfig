@@ -11,6 +11,8 @@
   users.users.aleks.extraGroups = [ "docker" ];
 
   hardware.enableAllFirmware = true;
+  nixpkgs.config.android_sdk.accept_license = true;
+
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     useGlobalPkgs = true;

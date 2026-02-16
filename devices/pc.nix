@@ -7,8 +7,6 @@
 }:
 
 {
-  nixpkgs.config.android_sdk.accept_license = true;
-
   imports = [
     ./core.nix
     ./hardware-configuration-pc.nix
