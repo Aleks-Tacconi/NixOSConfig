@@ -167,6 +167,7 @@
     curl
     pandoc
     texliveTeTeX
+    docker
 
     # Controller tooling
     bluez

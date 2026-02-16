@@ -7,6 +7,9 @@
 }:
 
 {
+  virtualisation.docker.enable = true;
+  users.users.aleks.extraGroups = [ "docker" ];
+
   hardware.enableAllFirmware = true;
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
