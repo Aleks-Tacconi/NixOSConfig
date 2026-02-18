@@ -7,6 +7,15 @@
 }:
 
 {
+  environment.systemPackages = with pkgs; [
+    android-studio-full
+  ];
+
+  users.users.aleks.extraGroups = [
+    "kvm"
+    "adbusers"
+  ];
+
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users."aleks" = {
