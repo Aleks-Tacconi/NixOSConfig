@@ -8,7 +8,11 @@
 
 {
   virtualisation.docker.enable = true;
-  users.users.aleks.extraGroups = [ "docker" ];
+  programs.wireshark.enable = true;
+  users.users.aleks.extraGroups = [
+    "docker"
+    "wireshark"
+  ];
 
   hardware.enableAllFirmware = true;
   nixpkgs.config.android_sdk.accept_license = true;
