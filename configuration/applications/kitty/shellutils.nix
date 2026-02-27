@@ -129,6 +129,7 @@
       ]
     ))
 
+    pipx
     black
     isort
     poetry
@@ -168,6 +169,7 @@
     pandoc
     texliveTeTeX
     docker
+    bun
 
     # Controller tooling
     bluez

@@ -56,7 +56,6 @@
     # ../configuration/applications/eclipse/configuration.nix
     # ../configuration/applications/globalprotect/configuration.nix
     # ../configuration/applications/syncthing/configuration.nix
-    # ../configuration/applications/emulator/configuration.nix
     # ../configuration/applications/wordpress/configuration.nix
 
     ../configuration/applications/android/configuration.nix
