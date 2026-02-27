@@ -168,6 +168,7 @@
     pandoc
     texliveTeTeX
     docker
+    bun
 
     # Controller tooling
     bluez
