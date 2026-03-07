@@ -8,7 +8,10 @@
 
 {
   virtualisation.docker.enable = true;
-  programs.wireshark.enable = true;
+  programs.wireshark = {
+    enable = true;
+    package = pkgs.wireshark;
+  };
   users.users.aleks.extraGroups = [
     "docker"
     "wireshark"

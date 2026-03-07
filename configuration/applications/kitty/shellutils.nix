@@ -170,6 +170,7 @@
     texliveTeTeX
     docker
     bun
+    arduino
 
     # Controller tooling
     bluez
@@ -181,5 +182,6 @@
     dpkg
     fakeroot
     rpm
+
   ];
 }
