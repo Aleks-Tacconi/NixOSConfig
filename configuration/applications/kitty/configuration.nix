@@ -9,11 +9,11 @@
 {
   imports = [ ./zsh.nix ];
 
-  services.postgresql.enable = true;
-  services.postgresql.package = pkgs.postgresql_16;
-  services.postgresql.authentication = ''
-    local all all trust
-  '';
+  # services.postgresql.enable = true;
+  # services.postgresql.package = pkgs.postgresql_16;
+  # services.postgresql.authentication = ''
+  #   local all all trust
+  # '';
 
   home-manager = {
     extraSpecialArgs = { inherit inputs; };

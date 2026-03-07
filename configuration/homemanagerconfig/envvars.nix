@@ -1,4 +1,6 @@
 {
+  config,
+  pkgs,
   ...
 }:
 
@@ -31,6 +33,9 @@
     GTK_THEME = "WhiteSur-Dark";
     ADW_DISABLE_PORTAL = "1";
 
-    HYPRSHOT_DIR = "~/Photos/";
+    HYPRSHOT_DIR = "/home/aleks/Photos/";
+
+    # Add gcc libraries to LD_LIBRARY_PATH for Python packages with C extensions
+    LD_LIBRARY_PATH = "${pkgs.gcc.cc.lib}/lib:${pkgs.stdenv.cc.cc.lib}/lib";
   };
 }
