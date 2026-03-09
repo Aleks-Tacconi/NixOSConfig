@@ -79,7 +79,7 @@
     ../configuration/applications/hyprland/configuration.nix
     ../configuration/applications/hyprlock/configuration.nix
     ../configuration/applications/kdeconnect/configuration.nix
-    ../configuration/applications/kitty/configuration.nix
+    ../configuration/applications/ghostty/configuration.nix
     ../configuration/applications/libreoffice/configuration.nix
     ../configuration/applications/mediaplayer/configuration.nix
     ../configuration/applications/nvim/configuration.nix

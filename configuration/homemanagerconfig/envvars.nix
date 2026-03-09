@@ -8,7 +8,7 @@
   home.sessionVariables = {
     EDITOR = "nvim";
     BROWSER = "zen";
-    TERMINAL = "kitty";
+    TERMINAL = "ghostty";
     FILEMANAGER = "nautilus";
 
     XCURSOR_SIZE = "24";

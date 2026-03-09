@@ -22,7 +22,7 @@
       "$mod" = "SUPER";
 
       bind = [
-        "$mod, Q, exec, kitty"
+        "$mod, Q, exec, ghostty"
         "$mod, E, exec, env GTK_THEME='WhiteSur-Dark' nautilus"
         "$mod, C, killactive,"
         # "$mod, M, exit,"
