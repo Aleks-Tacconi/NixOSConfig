@@ -25,21 +25,21 @@
     NoDisplay=true
   '';
 
-  home.file.".local/share/applications/jellyfin-laptop.desktop".text = ''
-    [Desktop Entry]
-    Type=Application
-    Name=Jellyfin Laptop
-    Exec=sh -c "brave --app="http://laptop:8096""
-    Icon=mpv
-  '';
+  # home.file.".local/share/applications/jellyfin-laptop.desktop".text = ''
+  #   [Desktop Entry]
+  #   Type=Application
+  #   Name=Jellyfin Laptop
+  #   Exec=sh -c "brave --app="http://laptop:8096""
+  #   Icon=mpv
+  # '';
 
-  home.file.".local/share/applications/jellyfin-pc.desktop".text = ''
-    [Desktop Entry]
-    Type=Application
-    Name=Jellyfin PC
-    Exec=sh -c "brave --app="http://pc:8096""
-    Icon=mpv
-  '';
+  # home.file.".local/share/applications/jellyfin-pc.desktop".text = ''
+  #   [Desktop Entry]
+  #   Type=Application
+  #   Name=Jellyfin PC
+  #   Exec=sh -c "brave --app="http://pc:8096""
+  #   Icon=mpv
+  # '';
 
   home.file.".local/share/applications/julia.desktop".text = ''
     [Desktop Entry]

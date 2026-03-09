@@ -29,14 +29,13 @@
       mesa
       libgbm
       libxkbcommon
-      xorg.libX11
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXfixes
-      xorg.libXrandr
-      xorg.libXtst
-      xorg.libXScrnSaver
-      xorg.libxcb
+      libx11
+      libxcomposite
+      libxdamage
+      libxfixes
+      libxrandr
+      libxtst
+      libxscrnsaver
       at-spi2-atk
       expat
       fontconfig
@@ -44,10 +43,10 @@
       libuuid
       libnotify
       libxcb
-      xorg.libXcursor
-      xorg.libXi
-      xorg.libXrender
-      xorg.libXext
+      libxcursor
+      libxi
+      libxrender
+      libxext
     ];
   };
 }

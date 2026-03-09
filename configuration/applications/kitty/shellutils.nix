@@ -148,6 +148,7 @@
     swi-prolog
 
     # Misc utilities
+    htop
     unzip
     wget
     ffmpeg
@@ -161,7 +162,7 @@
     xwayland-run
     playerctl
     ncdu
-    xorg.xrandr
+    xrandr
     libxcvt
     libdrm
     pulseaudioFull
@@ -170,7 +171,7 @@
     texliveTeTeX
     docker
     bun
-    arduino
+    # arduino
 
     # Controller tooling
     bluez
@@ -182,6 +183,5 @@
     dpkg
     fakeroot
     rpm
-
   ];
 }

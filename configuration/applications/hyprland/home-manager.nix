@@ -23,7 +23,6 @@
 
       bind = [
         "$mod, Q, exec, kitty"
-        "$mod, W, exec, brave"
         "$mod, E, exec, env GTK_THEME='WhiteSur-Dark' nautilus"
         "$mod, C, killactive,"
         # "$mod, M, exit,"
@@ -80,6 +79,10 @@
         "$mod SHIFT, mouse:272, resizewindow"
       ];
 
+      bindr = [
+        "$mod, W, exec, zen"
+      ];
+
       misc = {
         "force_default_wallpaper" = "0";
         "disable_hyprland_logo" = "true";
@@ -89,7 +92,7 @@
       layerrule = [
         "no_anim on, match:namespace selection"
 
-        "animation slide bottom, match:namespace rofi"
+        "no_anim on, match:namespace rofi"
         "blur on, match:namespace rofi"
         "ignore_alpha 0.3, match:namespace rofi"
       ];
@@ -102,6 +105,9 @@
 
         "match:class brave-nngceckbapebfimnlniiiahkandclblb-Default, float on"
         "match:class brave-nngceckbapebfimnlniiiahkandclblb-Default, center on"
+
+        "match:title ^Extension: \(Bitwarden Password Manager\).*, float on"
+        "match:title ^Extension: \(Bitwarden Password Manager\).*, center on"
 
         "match:title ^Save File$, float on"
         "match:title ^Save File$, center on"
@@ -138,15 +144,22 @@
       animations = {
         "enabled" = "true";
 
+        bezier = [
+          "soft, 0.18, 1.0, 0.3, 1.0"
+        ];
+
         animation = [
           "windows, 1, 2, default"
           "fade, 1, 2, default"
-          "workspaces, 0"
+          "workspaces, 1, 3, soft, slide 12%"
+          "workspacesOut, 0"
+          "workspacesIn, 1, 3, soft, slide 12%"
+          "specialWorkspace, 1, 3, soft, slidevert 20%"
         ];
       };
 
       decoration = {
-        "rounding" = "6";
+        "rounding" = "2";
         "active_opacity" = "1";
         "inactive_opacity" = "1";
         "fullscreen_opacity" = "1";
@@ -158,8 +171,8 @@
       };
 
       general = {
-        "gaps_in" = "6";
-        "gaps_out" = "15,9,9,9";
+        "gaps_in" = "1";
+        "gaps_out" = "5,0,0,0";
         "border_size" = "2";
         "col.active_border" = "rgba(ddddddff)";
         "col.inactive_border" = "rgba(2c2c2cff)";
@@ -195,7 +208,7 @@
       wallpaper = [
         {
           monitor = "";
-          path = "~/.wallpaper.jpg";
+          path = "~/.wallpaper.png";
           fit_mode = "cover";
         }
       ];

@@ -1,14 +1,15 @@
 * {
   font: "Roboto 13";
 
-  bg0    : #1a1a1aa0;
-  bg1    : #202020f0;
-  bg2    : #2c2c2c;
-  bg3    : #393939bf;
+  bg0    : #080808f0;
+  bg1    : #101010f2;
+  bg2    : #141414;
+  bg3    : #1b1b1bf2;
+  bg4    : #242424;
   fg0    : #ffffff;
-  fg1    : #cecece;
-  accent : #60cdff;
-  urgent : @accent;
+  fg1    : #b0b0b0;
+  accent : #2a2a2a;
+  urgent : #2a2a2a;
 
   background-color : transparent;
   text-color       : @fg0;
@@ -28,28 +29,30 @@ element-icon, element-text, scrollbar {
 }
 
 window {
-  location : south;
-  width    : 700px;
-  height   : 700px;
-  y-offset : -4px;
+  location : center;
+  anchor   : center;
+  width    : 760px;
+  height   : 620px;
 
   background-color : @bg1;
-  border-radius    : 8px;
+  border           : 1px;
+  border-color     : #1f1f1f;
+  border-radius    : 3px;
 }
 
 mainbox {
-  padding : 24px;
-  spacing : 24px;
+  padding : 16px;
+  spacing : 14px;
 }
 
 inputbar {
-  padding          : 8px;
-  spacing          : 4px;
+  padding          : 12px;
+  spacing          : 8px;
   children         : [ textbox-search, entry ];
-  border           : 0 0 2px 0 solid;
-  border-color     : @accent;
+  border           : 1px solid;
+  border-color     : #1f1f1f;
   border-radius    : 3px;
-  background-color : @bg0;
+  background-color : @bg2;
 }
 
 textbox-search {
@@ -83,28 +86,31 @@ listview {
 
 element {
   spacing       : 1em;
-  padding       : 10px;
+  padding       : 10px 12px;
+  border        : 1px;
+  border-color  : transparent;
   border-radius : 3px;
 }
 
 element normal urgent {
-  text-color: @urgent;
+  text-color: @fg0;
 }
 
 element normal active {
-  text-color: @accent;
+  text-color: @fg0;
 }
 
 element alternate active {
-  text-color: @accent;
+  text-color: @fg0;
 }
 
 element selected active {
-  text-color: @accent;
+  text-color: @fg0;
 }
 
 element selected {
   background-color: @bg3;
+  border-color: @bg4;
 }
 
 element selected urgent {

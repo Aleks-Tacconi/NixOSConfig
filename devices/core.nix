@@ -7,6 +7,7 @@
 }:
 
 {
+
   virtualisation.docker.enable = true;
   programs.wireshark = {
     enable = true;
@@ -24,6 +25,7 @@
     extraSpecialArgs = { inherit inputs; };
     useGlobalPkgs = true;
     useUserPackages = true;
+    backupFileExtension = "hm-backup";
     users."aleks" = {
       imports = [ ../home.nix ];
     };
@@ -34,6 +36,7 @@
   environment.systemPackages = with pkgs; [
     xdg-desktop-portal
     xdg-desktop-portal-gtk
+    inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   programs.xwayland.enable = true;
@@ -60,6 +63,7 @@
     # ../configuration/applications/globalprotect/configuration.nix
     # ../configuration/applications/syncthing/configuration.nix
     # ../configuration/applications/wordpress/configuration.nix
+    # ../configuration/applications/dbeaver/configuration.nix
 
     ../configuration/applications/android/configuration.nix
     ../configuration/applications/teams/configuration.nix
@@ -68,7 +72,6 @@
     ../configuration/applications/discord/configuration.nix
     ../configuration/applications/brave/configuration.nix
     ../configuration/applications/calculator/configuration.nix
-    ../configuration/applications/dbeaver/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix
     ../configuration/applications/filemanager/configuration.nix

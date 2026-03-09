@@ -1,7 +1,16 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
-  home.packages = with pkgs; [ papirus-icon-theme sierra-gtk-theme qt6Packages.qt6ct ];
+  home.packages = with pkgs; [
+    papirus-icon-theme
+    sierra-gtk-theme
+  ];
 
   home.pointerCursor = {
     gtk.enable = true;
@@ -22,24 +31,39 @@
     };
   };
 
-  xdg.configFile."qt5ct/qt5ct.conf".text = ''
-    [Appearance]
-    style=gtk2
-    color_scheme=dark
-    icon_theme=Papirus-Dark
-  '';
+  qt = {
+    enable = true;
+    platformTheme.name = "qtct";
+    style.package = with pkgs; [
+      libsForQt5.qtstyleplugins
+      qt6Packages.qt6gtk2
+    ];
+    qt5ctSettings = {
+      Appearance = {
+        color_scheme = "dark";
+        icon_theme = "Papirus-Dark";
+        standard_dialogs = "xdgdesktopportal";
+        style = "gtk2";
+      };
+    };
+    qt6ctSettings = {
+      Appearance = {
+        color_scheme = "dark";
+        icon_theme = "Papirus-Dark";
+        standard_dialogs = "xdgdesktopportal";
+        style = "gtk2";
+      };
+    };
+    kde.settings = {
+      kdeglobals = {
+        General.ColorScheme = "BreezeDark";
+        Icons.Theme = "Papirus-Dark";
+        KDE.widgetStyle = "Breeze";
+      };
+    };
+  };
 
-  xdg.configFile."qt6ct/qt6ct.conf".text = ''
-    [Appearance]
-    style=gtk2
-    color_scheme=dark
-    icon_theme=Papirus-Dark
-  '';
-
-  home.file.".icon.png".source =
-    config.lib.file.mkOutOfStoreSymlink ./.icon.png;
-  home.file.".logo.jpeg".source =
-    config.lib.file.mkOutOfStoreSymlink ./.logo.jpeg;
-  home.file.".wallpaper.jpg".source =
-    config.lib.file.mkOutOfStoreSymlink ./.wallpaper.jpg;
+  home.file.".icon.png".source = config.lib.file.mkOutOfStoreSymlink ./.icon.png;
+  home.file.".logo.jpeg".source = config.lib.file.mkOutOfStoreSymlink ./.logo.jpeg;
+  home.file.".wallpaper.png".source = config.lib.file.mkOutOfStoreSymlink ./.wallpaper.png;
 }

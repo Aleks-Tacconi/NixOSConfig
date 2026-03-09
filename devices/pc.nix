@@ -7,15 +7,15 @@
 }:
 
 {
+  services.ollama = {
+    enable = true;
+    package = pkgs.ollama-cuda;
+  };
+
   fileSystems."/media/aleks" = {
     device = "/dev/disk/by-label/DATA";
     fsType = "ext4";
     options = [ "defaults" ];
-  };
-
-  services.ollama = {
-    enable = true;
-    package = pkgs.ollama-cuda;
   };
 
   imports = [
