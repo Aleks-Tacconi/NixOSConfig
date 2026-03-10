@@ -25,6 +25,7 @@
         "$mod, Q, exec, ghostty"
         "$mod, E, exec, nautilus"
         "$mod, C, killactive,"
+        "$mod, W, exec, zen"
         # "$mod, M, exit,"
         "$mod, N, exec, swaync-client -t"
         "$mod, V, togglefloating,"
@@ -77,10 +78,6 @@
         "$mod, mouse:272, movewindow"
         "$mod, mouse:273, resizewindow"
         "$mod SHIFT, mouse:272, resizewindow"
-      ];
-
-      bindr = [
-        "$mod, W, exec, zen"
       ];
 
       misc = {
