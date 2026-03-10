@@ -23,7 +23,7 @@
 
       bind = [
         "$mod, Q, exec, ghostty"
-        "$mod, E, exec, env GTK_THEME='WhiteSur-Dark' nautilus"
+        "$mod, E, exec, nautilus"
         "$mod, C, killactive,"
         # "$mod, M, exit,"
         "$mod, N, exec, swaync-client -t"

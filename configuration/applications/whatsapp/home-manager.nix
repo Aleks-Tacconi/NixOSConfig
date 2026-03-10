@@ -7,7 +7,7 @@
       [Desktop Entry]
       Name=Whatsapp
       Comment=
-      Exec=brave --app="https://web.whatsapp.com/"
+      Exec=zen "https://web.whatsapp.com/"
       Icon=com.github.xeco23.WasIstLos
       Terminal=false
       Type=Application

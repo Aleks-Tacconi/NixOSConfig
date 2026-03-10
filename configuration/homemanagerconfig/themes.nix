@@ -9,7 +9,7 @@
 {
   home.packages = with pkgs; [
     papirus-icon-theme
-    sierra-gtk-theme
+    colloid-gtk-theme
   ];
 
   home.pointerCursor = {
@@ -22,12 +22,20 @@
   gtk = {
     enable = true;
     theme = {
-      name = "WhiteSur-Dark";
-      package = pkgs.whitesur-gtk-theme;
+      name = "Colloid-Dark";
+      package = pkgs.colloid-gtk-theme;
     };
     iconTheme = {
-      name = "Papirus";
+      name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
+    };
+  };
+
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
+      gtk-theme = "Colloid-Dark";
+      icon-theme = "Papirus-Dark";
     };
   };
 

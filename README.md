@@ -56,7 +56,7 @@ Features include:
 | leader + n                                 | Open notification panel |
 | leader + h / j / k / l | Move selection to application (vim keybinds represent direction) |
 | leader + q | Open terminal (kitty) |
-| leader + w | Open browser (brave) | 
+| leader + w | Open browser (zen) | 
 | leader + e | Open file manager (nautilus) |
 | leader + t | Reload status bar |
 

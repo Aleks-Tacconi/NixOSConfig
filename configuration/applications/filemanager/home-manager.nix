@@ -12,7 +12,7 @@
     Type=Application
     Name=Nautilus
     GenericName=File Manager
-    Exec=env GTK_THEME="WhiteSur-Dark" nautilus %U
+    Exec=nautilus %U
     Icon=system-file-manager
     Categories=Utility;FileManager;
   '';

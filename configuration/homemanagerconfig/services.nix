@@ -43,6 +43,7 @@ in
     };
   };
 
+
   # Hourly sync service
   systemd.user.services.secondbrain-sync = {
     Unit = {

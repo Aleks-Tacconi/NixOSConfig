@@ -55,14 +55,14 @@
 
   "custom/agenda-icon": {
     "format": " ",
-    "on-click": "brave \"https://calendar.google.com/calendar\"",
+    "on-click": "zen \"https://calendar.google.com/calendar\"",
     "tooltip": false
   },
 
   "custom/agenda": {
     "format": "{}",
     "exec": "uv run --directory ~/.nextmeeting nextmeeting --max-title-length 60 --waybar | ~/.config/waybar/strip_emoji.py",
-    "on-click": "brave \"https://calendar.google.com/calendar\"",
+    "on-click": "zen \"https://calendar.google.com/calendar\"",
     "interval": 59,
     "return-type": "json",
     "tooltip": true

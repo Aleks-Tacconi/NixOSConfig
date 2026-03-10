@@ -63,6 +63,7 @@
     # ../configuration/applications/globalprotect/configuration.nix
     # ../configuration/applications/syncthing/configuration.nix
     # ../configuration/applications/wordpress/configuration.nix
+    # ../configuration/applications/brave/configuration.nix
     # ../configuration/applications/dbeaver/configuration.nix
 
     ../configuration/applications/android/configuration.nix
@@ -70,7 +71,6 @@
     ../configuration/applications/tailscale/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
-    ../configuration/applications/brave/configuration.nix
     ../configuration/applications/calculator/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix

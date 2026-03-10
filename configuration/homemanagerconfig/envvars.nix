@@ -27,7 +27,6 @@
     ELECTRON_OZONE_PLATFORM_HINT = "wayland";
 
     GSK_RENDERER = "opengl";
-    GTK_THEME = "WhiteSur-Dark";
     ADW_DISABLE_PORTAL = "1";
 
     HYPRSHOT_DIR = "/home/aleks/Photos/";
