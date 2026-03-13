@@ -118,6 +118,7 @@
     (python313.withPackages (
       ps: with ps; [
         debugpy
+        tkinter
         numpy
         regex
         tkinter

@@ -73,5 +73,6 @@
 
   home.file.".icon.png".source = config.lib.file.mkOutOfStoreSymlink ./.icon.png;
   home.file.".logo.jpeg".source = config.lib.file.mkOutOfStoreSymlink ./.logo.jpeg;
+  home.file.".wallpaper.gif".source = config.lib.file.mkOutOfStoreSymlink ./.wallpaper.gif;
   home.file.".wallpaper.png".source = config.lib.file.mkOutOfStoreSymlink ./.wallpaper.png;
 }

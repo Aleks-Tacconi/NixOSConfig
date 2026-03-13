@@ -14,7 +14,9 @@
   programs.nix-ld = {
     enable = true;
     libraries = with pkgs; [
+      libxkbfile
       glib
+      libbsd
       gtk3
       nss
       nspr
@@ -25,6 +27,7 @@
       pango
       gdk-pixbuf
       alsa-lib
+      libpulseaudio
       libdrm
       mesa
       libgbm
@@ -38,6 +41,7 @@
       libxscrnsaver
       at-spi2-atk
       expat
+      libpng
       fontconfig
       freetype
       libuuid
@@ -47,6 +51,13 @@
       libxi
       libxrender
       libxext
+      xorg.libSM
+      xorg.libICE
+      xorg.xcbutilcursor
+      xorg.xcbutilimage
+      xorg.xcbutilkeysyms
+      xorg.xcbutilrenderutil
+      xorg.xcbutilwm
     ];
   };
 }

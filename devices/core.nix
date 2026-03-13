@@ -77,6 +77,7 @@
     ../configuration/applications/filemanager/configuration.nix
     ../configuration/applications/gimp/configuration.nix
     ../configuration/applications/hyprland/configuration.nix
+    ../configuration/applications/wallpaper/configuration.nix
     ../configuration/applications/hyprlock/configuration.nix
     ../configuration/applications/kdeconnect/configuration.nix
     ../configuration/applications/ghostty/configuration.nix
