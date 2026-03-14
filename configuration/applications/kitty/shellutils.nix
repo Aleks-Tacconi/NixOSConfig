@@ -22,6 +22,7 @@
 
     vscode-extensions.vscjava.vscode-java-debug
     vscode-extensions.vscjava.vscode-java-test
+    tailwindcss-language-server
 
     postgres-language-server
     # postgres-lsp
