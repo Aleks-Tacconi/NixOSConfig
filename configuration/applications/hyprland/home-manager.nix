@@ -124,6 +124,18 @@
         # ", preferred, auto, 1, mirror, eDP-1"
       ];
 
+      workspace = [
+        "1, monitor:eDP-1, default:true"
+        "2, monitor:eDP-1"
+        "3, monitor:eDP-1"
+        "4, monitor:eDP-1"
+        "5, monitor:eDP-1"
+        "6, monitor:eDP-1"
+        "7, monitor:HDMI-A-2, default:true"
+        "8, monitor:HDMI-A-2"
+        "9, monitor:HDMI-A-2"
+      ];
+
       cursor = {
         "no_hardware_cursors" = "true";
       };
@@ -134,7 +146,7 @@
         "waybar &"
         "swaync &"
         # "eww open random-window"
-        "eww open clock"
+        "bash /home/aleks/.config/eww/scripts/open_clock_all.sh"
         "hyprlock"
       ];
 

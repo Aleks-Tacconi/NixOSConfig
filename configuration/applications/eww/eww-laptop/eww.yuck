@@ -36,9 +36,9 @@
   :exclusive false
   (image-frame))
 
-(defwindow clock
-  :monitor 0
-  :geometry (geometry :x "660" :y "460" :width "600")
+(defwindow clock [?screen]
+  :monitor {screen != "" ? screen : 0}
+  :geometry (geometry :x "50%" :y "50%" :width "600" :anchor "center")
   :stacking "bg"
   :exclusive false
   (clock))
