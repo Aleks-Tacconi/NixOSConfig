@@ -47,6 +47,7 @@ Features include:
 
 > The leader key is Super (The windows button)
 
+
 | Key map                                       | action |
 |---------|--------|
 | leader +i (where i is any integer)        | Go to workspace i       |
