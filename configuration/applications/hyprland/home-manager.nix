@@ -6,6 +6,40 @@
   ...
 }:
 
+let
+  monitorHotplugRefresh = pkgs.writeShellScript "hypr-monitor-hotplug-refresh.sh" ''
+    #!/usr/bin/env bash
+
+    set -u
+
+    snapshot_monitors() {
+      hyprctl monitors 2>/dev/null | awk '/^Monitor / { print $2 }' | sort | tr '\n' ' '
+    }
+
+    refresh_desktop_layers() {
+      ${pkgs.procps}/bin/pkill -x mpvpaper >/dev/null 2>&1 || true
+      ${pkgs.mpvpaper}/bin/mpvpaper -o "no-audio loop-file=inf keepaspect=yes panscan=0.0" '*' "$HOME/.wallpaper.gif" >/dev/null 2>&1 &
+      /home/aleks/.config/eww/scripts/open_clock_all.sh >/dev/null 2>&1 || true
+    }
+
+    previous_snapshot="$(snapshot_monitors)"
+
+    while true; do
+      sleep 2
+      current_snapshot="$(snapshot_monitors)"
+
+      if [ -z "$current_snapshot" ]; then
+        continue
+      fi
+
+      if [ "$current_snapshot" != "$previous_snapshot" ]; then
+        previous_snapshot="$current_snapshot"
+        sleep 1
+        refresh_desktop_layers
+      fi
+    done
+  '';
+in
 {
   home.packages = with pkgs; [
     hyprpicker
@@ -147,6 +181,7 @@
         "swaync &"
         # "eww open random-window"
         "bash /home/aleks/.config/eww/scripts/open_clock_all.sh"
+        "${monitorHotplugRefresh} &"
         "hyprlock"
       ];
 

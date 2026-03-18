@@ -9,6 +9,9 @@ reset-jellyfin:
 	sudo systemctl enable --now tailscale
 	sudo systemctl restart jellyfin
 
+clean-harddisk:
+    ncdu /
+
 reset-tailscale:
 	sudo rm -r /var/lib/tailscale
 	sudo tailscale up
