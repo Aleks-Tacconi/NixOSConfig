@@ -34,6 +34,7 @@ in
 {
   home.packages = [
     androidSdk
+    pkgs.eas-cli
   ];
 
   # Copy the SDK to a writable location so Android Studio can create AVDs,

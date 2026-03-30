@@ -9,7 +9,7 @@
 {
   programs.java = {
     enable = true;
-    package = pkgs.javaPackages.compiler.openjdk25;
+    package = pkgs.javaPackages.compiler.openjdk17;
   };
 
   home.packages = with pkgs; [
@@ -119,6 +119,7 @@
     (python313.withPackages (
       ps: with ps; [
         debugpy
+        demjson3
         tkinter
         numpy
         regex
@@ -174,6 +175,7 @@
     docker
     bun
     # arduino
+    haskellPackages.the-snip
 
     # Controller tooling
     bluez

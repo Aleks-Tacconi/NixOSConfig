@@ -16,6 +16,7 @@
     libraries = with pkgs; [
       libxkbfile
       glib
+      xorg.libX11
       libbsd
       gtk3
       nss
