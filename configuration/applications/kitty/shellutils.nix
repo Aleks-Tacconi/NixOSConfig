@@ -171,7 +171,11 @@
     pulseaudioFull
     curl
     pandoc
-    texliveTeTeX
+    (texliveFull.withPackages (
+      ps: with ps; [
+        framed
+      ]
+    ))
     docker
     bun
     # arduino
