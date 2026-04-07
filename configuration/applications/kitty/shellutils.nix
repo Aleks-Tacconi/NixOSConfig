@@ -9,7 +9,7 @@
 {
   programs.java = {
     enable = true;
-    package = pkgs.javaPackages.compiler.openjdk17;
+    package = pkgs.javaPackages.compiler.openjdk25;
   };
 
   home.packages = with pkgs; [
@@ -18,6 +18,7 @@
     vscode-extensions.ms-vscode.cpptools
 
     gdb
+    vale
     lazygit
 
     vscode-extensions.vscjava.vscode-java-debug
@@ -50,7 +51,7 @@
     stylua
     vscode-langservers-extracted
     jdt-language-server
-    nodePackages.prettier
+    prettier
     docker-compose-language-service
 
     dockerfile-language-server
@@ -176,6 +177,7 @@
     bun
     # arduino
     haskellPackages.the-snip
+    gh
 
     # Controller tooling
     bluez

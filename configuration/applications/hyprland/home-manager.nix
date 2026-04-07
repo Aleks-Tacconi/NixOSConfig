@@ -92,7 +92,6 @@ in
         "$mod,F,fullscreen"
         "$mod, S, togglespecialworkspace, magic"
         "$mod SHIFT, S, movetoworkspace, special:magic"
-
       ]
       ++ (builtins.concatLists (
         builtins.genList (
