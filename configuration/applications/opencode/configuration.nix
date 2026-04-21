@@ -10,7 +10,7 @@
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users."aleks" = {
-      imports = [ ./ghostty.nix ];
+      imports = [ ./home-manager.nix ];
     };
   };
 }

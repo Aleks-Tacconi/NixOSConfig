@@ -36,7 +36,6 @@
   environment.systemPackages = with pkgs; [
     xdg-desktop-portal
     xdg-desktop-portal-gtk
-    inputs.zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   programs.xwayland.enable = true;
@@ -59,16 +58,17 @@
 
     # applications
     # ../configuration/applications/appeditor/configuration.nix
+    ../configuration/applications/chromium/configuration.nix
     # ../configuration/applications/eclipse/configuration.nix
     # ../configuration/applications/globalprotect/configuration.nix
-    # ../configuration/applications/syncthing/configuration.nix
-    # ../configuration/applications/wordpress/configuration.nix
     # ../configuration/applications/brave/configuration.nix
     # ../configuration/applications/dbeaver/configuration.nix
-
     ../configuration/applications/android/configuration.nix
-    ../configuration/applications/teams/configuration.nix
-    ../configuration/applications/tailscale/configuration.nix
+    ../configuration/applications/opencode/configuration.nix
+    # ../configuration/applications/teams/configuration.nix
+    # ../configuration/applications/tailscale/configuration.nix
+    ../configuration/applications/zenbrowser/configuration.nix
+
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
     ../configuration/applications/calculator/configuration.nix
@@ -80,6 +80,7 @@
     ../configuration/applications/wallpaper/configuration.nix
     ../configuration/applications/hyprlock/configuration.nix
     ../configuration/applications/kdeconnect/configuration.nix
+    ../configuration/applications/terminal-utils/configuration.nix
     ../configuration/applications/ghostty/configuration.nix
     ../configuration/applications/libreoffice/configuration.nix
     ../configuration/applications/mediaplayer/configuration.nix

@@ -74,8 +74,9 @@ in
         ", XF86MonBrightnessUp, exec, swayosd-client --brightness raise"
         ", XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
 
-        ", Print, exec, hyprshot -m region"
-        "SHIFT, Print, exec, hyprshot -m window"
+        ", Print, exec, bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m region; fi'"
+        "SHIFT, Print, exec, bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'"
+
         "$mod, t, exec, pkill waybar && waybar &"
         "$mod, h, movefocus, l"
         "$mod, l, movefocus, r"

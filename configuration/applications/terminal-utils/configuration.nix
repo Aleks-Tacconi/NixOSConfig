@@ -7,10 +7,15 @@
 }:
 
 {
+  imports = [ ./zsh.nix ];
+
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users."aleks" = {
-      imports = [ ./ghostty.nix ];
+      imports = [
+        ./shellutils.nix
+        ./git.nix
+      ];
     };
   };
 }

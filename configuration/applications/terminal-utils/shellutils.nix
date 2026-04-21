@@ -17,6 +17,7 @@
     vscode-extensions.ms-vscode.cpptools-extension-pack
     vscode-extensions.ms-vscode.cpptools
 
+    espeak
     gdb
     vale
     lazygit
@@ -180,14 +181,7 @@
     docker
     bun
     # arduino
-    haskellPackages.the-snip
     gh
-
-    # Controller tooling
-    bluez
-    usbutils
-    pciutils
-    linuxConsoleTools
 
     # electron build
     dpkg

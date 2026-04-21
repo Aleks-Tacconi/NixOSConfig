@@ -16,27 +16,7 @@
     ./configuration/homemanagerconfig/themes.nix
     ./configuration/homemanagerconfig/desktopentries.nix
     ./configuration/homemanagerconfig/services.nix
-    ./configuration/applications/android/home-manager.nix
   ];
-
-  programs = {
-    opencode = {
-      enable = false;
-      package = pkgs.opencode;
-    };
-    git = {
-      enable = true;
-      settings = {
-        user = {
-          name = "Aleks Tacconi";
-          email = "aleks.tacconi@gmail.com";
-        };
-        merge = {
-          tool = "nvim";
-        };
-      };
-    };
-  };
 
   home.file.".pylintrc".text = ''
     [MESSAGES CONTROL]

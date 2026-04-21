@@ -18,7 +18,7 @@ Features include:
 - Different profiles for different devices
 - `Tailscale` network setup
 - Git configuration
-> git identity is configured in `home.nix`
+> git identity is configured in `configuration/applications/terminal-utils/git.nix`
 - `Jellyfin` media server
 - `Syncthing` for syncing any two devices (currently disabled)
 - `hyprlock` for lock screen
@@ -56,7 +56,7 @@ Features include:
 | leader + Space                                 | Open application menu   |
 | leader + n                                 | Open notification panel |
 | leader + h / j / k / l | Move selection to application (vim keybinds represent direction) |
-| leader + q | Open terminal (kitty) |
+| leader + q | Open terminal (ghostty) |
 | leader + w | Open browser (zen) | 
 | leader + e | Open file manager (nautilus) |
 | leader + t | Reload status bar |
