@@ -13,6 +13,8 @@
     ],
 
     "modules-left": [
+        "custom/ai-icon",
+        "custom/app-icon",
         "custom/bluelight",
         "custom/nix-icon",
 
@@ -37,4 +39,3 @@
         "custom/exit",
     ]
 }
-

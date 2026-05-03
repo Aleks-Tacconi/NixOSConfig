@@ -1,4 +1,13 @@
+#!/usr/bin/env bash
+
 TODO_FILE="$HOME/.todo.md"
+
+touch "$TODO_FILE"
+
+refresh_waybar_todo() {
+    pkill -SIGRTMIN+8 waybar >/dev/null 2>&1 && return 0
+    pkill -SIGUSR2 waybar >/dev/null 2>&1 || true
+}
 
 mapfile -t tasks < <(grep '^- ' "$TODO_FILE" | sed 's/^- //')
 
@@ -30,11 +39,11 @@ if [[ $exists -eq 1 ]]; then
     sed -i "/^- $escaped$/d" "$TODO_FILE"
 else
     if [ -w "$TODO_FILE" ] || [ ! -e "$TODO_FILE" ]; then
-        echo "- $chosen" >> "$TODO_FILE"
+        printf -- "- %s\n" "$chosen" >> "$TODO_FILE"
     else
         echo "Error: Cannot write to $TODO_FILE" >&2
         exit 1
     fi
 fi
 
-pkill waybar && waybar &
+refresh_waybar_todo

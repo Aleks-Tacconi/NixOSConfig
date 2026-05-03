@@ -1,19 +1,24 @@
-@define-color overlay-bg rgba(8, 8, 8, 0.96);
-@define-color shell-bg #101010;
-@define-color module-bg #181818;
-@define-color module-bg-active #202020;
-@define-color border-subtle #1f1f1f;
-@define-color text-primary #ffffff;
-@define-color text-muted #b0b0b0;
-@define-color accent #ffffff;
-@define-color critical-bg #242424;
+@define-color panel-bg #101010;
+@define-color section-bg #141414;
+@define-color card-bg #1a1a1a;
+@define-color card-hover #202020;
+@define-color card-strong #262626;
+@define-color border-subtle #222222;
+@define-color border-strong #2f2f2f;
+@define-color text-primary #f2f2f2;
+@define-color text-muted #9a9a9a;
+@define-color accent #f5f5f5;
+@define-color critical-bg #26201f;
 
 * {
-    font-size: 16px;
-    font-family: "Fira Sans Semibold", FontAwesome, Roboto, Helvetica, Arial, sans-serif;
-    transition: 120ms ease-out;
+    font-size: 14px;
+    font-family: "Inter", "Roboto", "Fira Sans", FontAwesome, "JetBrainsMono Nerd Font", sans-serif;
+    font-weight: 500;
+    line-height: 1.35;
+    transition: 140ms ease-out;
     box-shadow: none;
     background-color: transparent;
+    color: @text-primary;
 }
 
 *:focus {
@@ -22,20 +27,8 @@
 }
 
 notificationwindow,
-blankwindow {
-    background: transparent;
-    background-color: transparent;
-    background-image: none;
-    box-shadow: none;
-}
-
-.blank-window {
-    background: transparent;
-    background-color: transparent;
-    background-image: none;
-    box-shadow: none;
-}
-
+blankwindow,
+.blank-window,
 window.blank-window,
 window.background.blank-window {
     background: transparent;
@@ -45,11 +38,38 @@ window.background.blank-window {
 }
 
 .control-center {
-    border-radius: 3px;
-    background-color: @overlay-bg;
-    padding: 8px;
-    margin: 5px;
+    background-color: @panel-bg;
     border: 1px solid @border-subtle;
+    border-radius: 6px;
+    padding: 8px;
+    margin: 8px;
+}
+
+.control-center .control-center-list { background-color: transparent; border: none; margin: 0; padding: 0; } 
+
+.widget-notifications {
+    background-color: @section-bg;
+    border: 1px solid @border-subtle;
+    border-radius: 4px;
+    margin: 4px;
+    padding: 6px;
+}
+
+.floating-notifications {
+    background-color: transparent;
+}
+
+.control-center .control-center-list-placeholder {
+    background-color: transparent;
+    border: none;
+    margin: 2px 4px 0 4px;
+    padding: 14px 8px 12px 8px;
+    opacity: 1;
+}
+
+.control-center .control-center-list-placeholder label {
+    color: @text-muted;
+    font-weight: 500;
 }
 
 .notification-row {
@@ -62,9 +82,79 @@ window.background.blank-window {
     margin-bottom: 0;
 }
 
+.floating-notifications .notification-row {
+    margin: 10px 0 0 0;
+}
+
 .notification-group {
-    transition: opacity 200ms ease-in-out;
     background-color: transparent;
+    border: none;
+    border-radius: 4px;
+}
+
+.notification-group-headers {
+    background-color: @card-bg;
+    border-radius: 4px 8px 0 0;
+    padding: 8px 12px;
+}
+
+.notification-group .notification-row .notification-background .notification {
+    background-color: @card-bg;
+    border-radius: 0;
+}
+
+.notification-group .notification-row:last-child .notification-background .notification {
+    border-radius: 0 0 4px 4px;
+}
+
+.notification-row .notification-background .notification {
+    background-color: @card-bg;
+    border: none;
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+.notification-group-icon {
+    opacity: 1;
+    color: @text-muted;
+}
+
+.notification-group-header {
+    opacity: 1;
+    color: @text-primary;
+    font-weight: 600;
+    margin: 0 8px;
+}
+
+.notification-group-close-button .close-button,
+.notification-group-buttons .close-button {
+    opacity: 1;
+    background-color: transparent;
+    border-radius: 999px;
+    border: none;
+    color: @text-muted;
+    min-width: 24px;
+    min-height: 24px;
+    margin: 0;
+    padding: 0;
+}
+
+.notification-group-close-button .close-button:hover,
+.notification-group-buttons .close-button:hover {
+    background-color: @card-strong;
+    color: @text-primary;
+}
+
+.notification-group.collapsed .notification-row .notification,
+.notification-group.collapsed:hover .notification-row .notification {
+    background-color: transparent;
+}
+
+.notification-group.collapsed .notification-row .notification-action,
+.notification-group.collapsed .notification-row .notification-default-action,
+.notification-group.collapsed .notification-row:not(:last-child) .notification-action,
+.notification-group.collapsed .notification-row:not(:last-child) .notification-default-action {
+    opacity: 1;
 }
 
 .notification-row .notification-background {
@@ -73,9 +163,9 @@ window.background.blank-window {
 }
 
 .notification-row .notification-background .notification {
-    background-color: transparent;
+    background-color: @card-bg;
     border: none;
-    border-radius: 3px;
+    border-radius: 4px;
     box-shadow: none;
 }
 
@@ -84,7 +174,7 @@ window.background.blank-window {
     padding: 0;
     background-color: transparent;
     border: none;
-    border-radius: 3px;
+    border-radius: 4px;
 }
 
 .notification-row .notification-background .notification .notification-default-action:hover {
@@ -93,43 +183,74 @@ window.background.blank-window {
 
 .control-center .notification-content,
 .floating-notifications .notification-content {
-    background-color: @module-bg;
-    padding: 10px 12px;
+    padding: 11px 13px;
+    border-radius: 4px;
+}
+
+.control-center .notification-content {
+    background-color: @card-bg;
+    border: none;
+}
+
+.floating-notifications .notification-content {
+    background-color: @section-bg;
     border: 1px solid @border-subtle;
-    border-radius: 3px;
+    border-radius: 6px;
+}
+
+.notification-row .notification-background .notification .notification-default-action:hover .notification-content,
+.notification-row .notification-background .notification .notification-content:hover,
+.notification-action > button:hover,
+.inline-reply-button:hover {
+    background-color: @card-hover;
+}
+
+.floating-notifications .notification-row .notification-background .notification .notification-default-action:hover .notification-content,
+.floating-notifications .notification-row .notification-background .notification .notification-content:hover {
+    border-color: @border-strong;
 }
 
 .notification-row .notification-background .notification .notification-default-action .notification-content .image,
 .notification-row .notification-background .notification .notification-default-action .notification-content .app-icon {
-    margin: 4px 10px 4px 4px;
+    margin: 0 12px 0 0;
+    border-radius: 6px;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box {
+    margin: 0;
+    padding: 1px 0;
 }
 
 .notification-row .notification-background .notification .notification-default-action .notification-content .text-box .summary {
     margin-bottom: 3px;
+    color: @text-primary;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .notification-row .notification-background .notification .notification-default-action .notification-content .text-box .time {
     margin-left: 12px;
+    color: @text-muted;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .notification-row .notification-background .notification .notification-default-action .notification-content .text-box .body {
+    color: @text-muted;
+    font-size: 14px;
+    font-weight: 400;
     line-height: 1.35;
 }
 
 .notification.critical .notification-content {
     background-color: @critical-bg;
-    border-color: @accent;
-    border-left: 3px solid @accent;
+    border-left: 2px solid @accent;
 }
 
 .control-center label,
-.floating-notifications label {
-    color: @text-primary;
-}
-
+.floating-notifications label,
 .summary {
     color: @text-primary;
-    font-weight: 600;
 }
 
 .time,
@@ -139,158 +260,203 @@ window.background.blank-window {
     color: @text-muted;
 }
 
-.notification-action,
-.notification-default-action {
+.notification-action {
     margin: 6px 0 0 0;
-    padding: 6px 10px;
-    border-radius: 3px;
-    background-color: @shell-bg;
-    border: 1px solid @border-subtle;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+}
+
+.notification-action > button,
+.inline-reply-button {
+    padding: 7px 10px;
+    border-radius: 4px;
+    background-color: @card-strong;
+    border: none;
     color: @text-primary;
 }
 
-.notification-action:hover,
+.notification-default-action,
 .notification-default-action:hover {
-    background-color: @module-bg-active;
-    border-color: @accent;
+    background-color: transparent;
+    border: none;
+}
+
+.inline-reply {
+    margin-top: 8px;
+}
+
+.inline-reply-entry {
+    background-color: @section-bg;
+    border: 1px solid @border-subtle;
+    border-radius: 4px;
+    color: @text-primary;
+    caret-color: @text-primary;
+    padding: 8px 10px;
 }
 
 .control-center .close-button,
 .floating-notifications .close-button {
-    background-color: @shell-bg;
-    border-radius: 3px;
-    border: 1px solid @border-subtle;
+    background-color: transparent;
+    border-radius: 999px;
+    border: none;
     color: @text-muted;
-    min-width: 26px;
-    min-height: 26px;
-    margin-left: 8px;
+    min-width: 24px;
+    min-height: 24px;
+    margin: -2px 4px 0 8px;
+    opacity: 1;
+    padding: 0;
 }
 
 .close-button:hover {
-    background-color: @module-bg-active;
-    border-color: @accent;
+    background-color: @card-strong;
     color: @text-primary;
 }
 
 .widget-title,
-.widget-buttons-grid,
-.widget-mpris,
-.widget-volume {
-    background-color: @shell-bg;
-    border-radius: 3px;
+.widget-dnd,
+.widget-label {
+    background-color: @section-bg;
     border: 1px solid @border-subtle;
-    margin: 5px;
+    margin-left: 4px;
+    margin-right: 4px;
 }
 
-.widget-title {
-    padding: 8px 10px;
+.widget-title,
+.widget-label {
+    border-radius: 4px 8px 0 0;
+    border-bottom: none;
+    margin-top: 4px;
+    margin-bottom: 0;
+    padding: 10px 12px 7px 12px;
+}
+
+.widget-dnd {
+    border-radius: 0 0 4px 4px;
+    border-top: none;
+    margin-top: 0;
+    margin-bottom: 4px;
+    padding: 7px 12px 10px 12px;
+}
+
+.widget-title > label,
+.widget-dnd label,
+.widget-label label {
+    color: @text-primary;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .widget-title > button {
-    background-color: @module-bg;
-    border-radius: 3px;
-    border: 1px solid @border-subtle;
+    background-color: @card-bg;
+    border-radius: 4px;
+    border: none;
     color: @text-primary;
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .widget-title > button:hover {
-    background-color: @module-bg-active;
-    border-color: @accent;
+    background-color: @card-strong;
 }
 
-.widget-buttons-grid {
-    padding: 5px;
+.widget-dnd switch {
+    background-color: @card-bg;
+    border: none;
+    border-radius: 999px;
+    min-width: 30px;
+    min-height: 18px;
+    padding: 2px;
 }
 
-.widget-buttons-grid > flowbox > flowboxchild > button {
-    border-radius: 3px;
-    min-width: 40px;
-    min-height: 30px;
-    margin: 3px;
-    background-color: @module-bg;
-    color: @text-primary;
-    border: 1px solid @border-subtle;
+.widget-dnd switch:checked {
+    background-color: @card-strong;
 }
 
-.widget-buttons-grid > flowbox > flowboxchild > button:hover {
-    background-color: @module-bg-active;
-    border-color: @accent;
+.widget-dnd switch slider {
+    background-color: @text-muted;
+    border-radius: 999px;
+    min-width: 12px;
+    min-height: 12px;
+    margin: 0;
+    padding: 0;
 }
 
-.widget-buttons-grid > flowbox > flowboxchild > button:checked {
+.widget-dnd switch:checked slider {
     background-color: @accent;
-    color: #101010;
-    border-color: @accent;
 }
 
-.widget-mpris {
-    padding: 8px;
+progressbar trough {
+    background-color: @card-bg;
+    border-radius: 999px;
+    min-height: 6px;
 }
 
-.widget-mpris-player {
-    padding: 12px;
-    border-radius: 3px;
-    background-color: @module-bg;
-    border: 1px solid @border-subtle;
+progressbar trough progress {
+    background-color: @accent;
+    border-radius: 999px;
 }
 
-.widget-mpris > box > button {
+/* Hide notification list scrollbar entirely */
+.widget-notifications scrolledwindow,
+.control-center .control-center-list scrolledwindow {
+    -GtkScrolledWindow-scrollbar-spacing: 0;
+}
+
+.widget-notifications scrollbar,
+.control-center .control-center-list scrollbar,
+.widget-notifications scrollbar trough,
+.control-center .control-center-list scrollbar trough,
+.widget-notifications scrollbar slider,
+.control-center .control-center-list scrollbar slider,
+.widget-notifications scrollbar button,
+.control-center .control-center-list scrollbar button {
     min-width: 0;
     min-height: 0;
-    padding: 0 6px;
-    background-color: transparent;
+    margin: 0;
+    padding: 0;
     border: none;
-    color: @text-muted;
+    background: transparent;
+    color: transparent;
+    box-shadow: none;
+    opacity: 0;
+    -GtkScrollbar-has-backward-stepper: false;
+    -GtkScrollbar-has-forward-stepper: false;
+}
+.control-center .close-button,
+.floating-notifications .close-button,
+.notification-row .close-button {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
-.widget-mpris > box > button:hover {
-    background-color: transparent;
-    border: none;
-    color: @text-primary;
+.widget-notifications scrollbar,
+.control-center .control-center-list scrollbar,
+.widget-notifications scrollbar trough,
+.control-center .control-center-list scrollbar trough,
+.widget-notifications scrollbar slider,
+.control-center .control-center-list scrollbar slider,
+.widget-notifications scrollbar button,
+.control-center .control-center-list scrollbar button {
+    opacity: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    color: transparent !important;
+    box-shadow: none !important;
 }
-
-.widget-mpris > box > button:disabled {
-    color: #3a3a3a;
-}
-
-.widget-mpris-player .mpris-overlay > box > button {
-    min-width: 32px;
-    min-height: 32px;
-    border-radius: 3px;
-    background-color: @shell-bg;
-    border: 1px solid @border-subtle;
-    color: @text-muted;
-}
-
-.widget-mpris-player .mpris-overlay > box > button:hover {
-    background-color: @module-bg-active;
-    border-color: @accent;
-    color: @text-primary;
-}
-
-.widget-mpris-album-art {
-    border-radius: 3px;
-}
-
-.widget-volume {
-    padding: 9px 17px 14px 17px;
-    margin-left: 5px;
-    margin-right: 5px;
-}
-
-.widget-mpris-title,
-.widget-mpris-subtitle,
-.widget-volume label {
-    color: @text-primary;
-}
-
-.widget-volume trough {
-    background-color: @module-bg;
-    border-radius: 999px;
-    min-height: 8px;
-}
-
-.widget-volume trough highlight {
-    background-color: @accent;
-    border-radius: 999px;
+.control-center .close-button,
+.floating-notifications .close-button,
+.notification-row .close-button {
+    margin: 12px 14px 0 8px !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
 }

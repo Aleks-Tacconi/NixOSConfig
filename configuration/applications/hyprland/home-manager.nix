@@ -7,43 +7,15 @@
 }:
 
 let
-  monitorHotplugRefresh = pkgs.writeShellScript "hypr-monitor-hotplug-refresh.sh" ''
-    #!/usr/bin/env bash
-
-    set -u
-
-    snapshot_monitors() {
-      hyprctl monitors 2>/dev/null | awk '/^Monitor / { print $2 }' | sort | tr '\n' ' '
-    }
-
-    refresh_desktop_layers() {
-      ${pkgs.procps}/bin/pkill -x mpvpaper >/dev/null 2>&1 || true
-      ${pkgs.mpvpaper}/bin/mpvpaper -o "no-audio loop-file=inf keepaspect=yes panscan=0.0" '*' "$HOME/.wallpaper.gif" >/dev/null 2>&1 &
-      /home/aleks/.config/eww/scripts/open_clock_all.sh >/dev/null 2>&1 || true
-    }
-
-    previous_snapshot="$(snapshot_monitors)"
-
-    while true; do
-      sleep 2
-      current_snapshot="$(snapshot_monitors)"
-
-      if [ -z "$current_snapshot" ]; then
-        continue
-      fi
-
-      if [ "$current_snapshot" != "$previous_snapshot" ]; then
-        previous_snapshot="$current_snapshot"
-        sleep 1
-        refresh_desktop_layers
-      fi
-    done
-  '';
+  system = pkgs.stdenv.hostPlatform.system;
+  hyprlandPkg = inputs.hyprland.packages.${system}.hyprland;
 in
 {
   home.packages = with pkgs; [
     hyprpicker
     hyprsunset
+    hyprsysteminfo
+    hyprpolkitagent
   ];
   services.swayosd.enable = true;
   services.swayosd.stylePath = null;
@@ -51,9 +23,37 @@ in
 
   wayland.windowManager.hyprland = {
     enable = true;
+    package = hyprlandPkg;
+    # plugins = [ inputs.hyprland-plugins.packages.${system}.hyprbars ];
 
     settings = {
       "$mod" = "SUPER";
+
+      # plugin = {
+      #   hyprbars = {
+      #     enabled = true;
+      #     bar_height = 34;
+      #     bar_blur = false;
+      #     bar_color = "rgb(101010)";
+      #     "col.text" = "rgb(f5f5f5)";
+      #     bar_text_size = 12;
+      #     bar_text_font = "Fira Sans Semibold";
+      #     bar_text_align = "center";
+      #     bar_buttons_alignment = "right";
+      #     bar_part_of_window = true;
+      #     bar_precedence_over_border = true;
+      #     bar_padding = 10;
+      #     bar_button_padding = 5;
+      #     icon_on_hover = false;
+      #     inactive_button_color = "rgb(101010)";
+      #     on_double_click = "hyprctl dispatch fullscreen 1";
+      #     "hyprbars-button" = [
+      #       "rgb(121212), 28, 󰅖 , hyprctl dispatch killactive, rgb(ffffff)"
+      #       "rgb(121212), 24, 󰹑 , hyprctl dispatch fullscreen 1, rgb(ffffff)"
+      #       "rgb(121212), 27, 󰖯 , hyprctl dispatch togglefloating, rgb(ffffff)"
+      #     ];
+      #   };
+      # };
 
       bind = [
         "$mod, Q, exec, ghostty"
@@ -62,8 +62,9 @@ in
         "$mod, W, exec, zen"
         # "$mod, M, exit,"
         "$mod, N, exec, swaync-client -t"
+        "$mod, A, exec, qs -c ii ipc call sidebarLeft toggle"
         "$mod, V, togglefloating,"
-        "$mod, Space, exec, rofi -show drun"
+        "$mod, Space, exec, qs -c ii ipc call search toggle"
         "ALT, Space, exec, playerctl play-pause"
 
         ", XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
@@ -78,6 +79,7 @@ in
         "SHIFT, Print, exec, bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'"
 
         "$mod, t, exec, pkill waybar && waybar &"
+        "$mod SHIFT, T, global, quickshell:wallpaperSelectorToggle"
         "$mod, h, movefocus, l"
         "$mod, l, movefocus, r"
         "$mod, k, movefocus, u"
@@ -93,6 +95,11 @@ in
         "$mod,F,fullscreen"
         "$mod, S, togglespecialworkspace, magic"
         "$mod SHIFT, S, movetoworkspace, special:magic"
+        ", Alt_L, global, quickshell:overviewAltReleaseClose"
+        ", Alt_R, global, quickshell:overviewAltReleaseClose"
+
+        "ALT, Tab, exec, bash ~/.config/hypr/hyprland/scripts/alt-tab-workspace.sh e+1"
+        "ALT SHIFT, Tab, exec, bash ~/.config/hypr/hyprland/scripts/alt-tab-workspace.sh e-1"
       ]
       ++ (builtins.concatLists (
         builtins.genList (
@@ -114,6 +121,8 @@ in
         "$mod SHIFT, mouse:272, resizewindow"
       ];
 
+      bindr = [ ];
+
       misc = {
         "force_default_wallpaper" = "0";
         "disable_hyprland_logo" = "true";
@@ -123,9 +132,9 @@ in
       layerrule = [
         "no_anim on, match:namespace selection"
 
-        "no_anim on, match:namespace rofi"
-        "blur on, match:namespace rofi"
-        "ignore_alpha 0.3, match:namespace rofi"
+        "no_anim on, match:namespace quickshell:overview"
+        "blur on, match:namespace quickshell:overview"
+        "ignore_alpha 0.3, match:namespace quickshell:overview"
       ];
 
       windowrule = [
@@ -149,6 +158,7 @@ in
 
         "match:title ^Calculator$, float on"
         "match:title ^Calculator$, center on"
+        "match:title ^Calculator$, opacity 1.0 override 1.0 override 1.0 override"
       ];
       # ... , mirror, eDP-1
 
@@ -176,12 +186,15 @@ in
 
       exec = [ ];
       exec-once = [
+        "qs -c ii &"
+        "wl-paste --type text --watch cliphist store"
+        "wl-paste --type image --watch cliphist store"
         "hyprctl setcursor Bibata-Modern-Ice 24"
         "waybar &"
+        "blueman-applet"
         "swaync &"
         # "eww open random-window"
-        "bash /home/aleks/.config/eww/scripts/open_clock_all.sh"
-        "${monitorHotplugRefresh} &"
+        # "bash /home/aleks/.config/eww/scripts/open_clock_all.sh"
         "hyprlock"
       ];
 
@@ -222,6 +235,13 @@ in
         "col.inactive_border" = "rgba(2c2c2cff)";
         "layout" = "dwindle";
         "allow_tearing" = "false";
+        "resize_on_border" = "true";
+        "extend_border_grab_area" = "60";
+        "hover_icon_on_border" = "true";
+        snap = {
+          "enabled" = "true";
+          "window_gap" = "10";
+        };
       };
 
       input = {
@@ -252,7 +272,7 @@ in
   #     wallpaper = [
   #       {
   #         monitor = "";
-  #         path = "~/.wallpaper.png";
+  #         path = "~/wallpapers/wallpaper.png";
   #         fit_mode = "cover";
   #       }
   #     ];

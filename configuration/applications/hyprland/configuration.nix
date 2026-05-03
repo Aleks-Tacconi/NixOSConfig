@@ -8,7 +8,12 @@
 
 {
   security.polkit.enable = true;
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    portalPackage =
+      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+  };
 
   home-manager = {
     extraSpecialArgs = { inherit inputs; };

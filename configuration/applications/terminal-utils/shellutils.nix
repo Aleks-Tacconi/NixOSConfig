@@ -157,6 +157,7 @@
     unzip
     wget
     ffmpeg
+    imagemagick
     ripmime
     gcalcli
     tracy
@@ -172,6 +173,7 @@
     libdrm
     pulseaudioFull
     curl
+    upscayl
     pandoc
     (texliveFull.withPackages (
       ps: with ps; [
@@ -184,8 +186,8 @@
     gh
 
     # electron build
-    dpkg
-    fakeroot
-    rpm
+    # dpkg
+    # fakeroot
+    # rpm
   ];
 }

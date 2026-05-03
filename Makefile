@@ -39,6 +39,7 @@ laptop:
 	@echo ""
 
 pc:
+	rm ~/.wallpaper-current
 	@echo ""
 	@echo -e "$(YELLOW)==> Setting ulimit...$(NC)"
 	$(ULIMIT)

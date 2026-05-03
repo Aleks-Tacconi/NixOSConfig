@@ -31,7 +31,9 @@
     "on-click": "~/.config/waybar/todo_rofi.sh",
     "tooltip": true,
     "return-type": "json",
-    "exec": "~/.config/waybar/todo_count.sh"
+    "exec": "~/.config/waybar/todo_count.sh",
+    "interval": 2,
+    "signal": 8
   },
 
   "custom/todo": {
@@ -39,7 +41,8 @@
     "on-click": "~/.config/waybar/todo_rofi.sh",
     "return-type": "json",
     "exec": "~/.config/waybar/todo_count.sh",
-    "interval": 59,
+    "signal": 8,
+    "interval": 2,
     "tooltip": true
   },
 
@@ -64,7 +67,7 @@
 
   "custom/agenda": {
     "format": "{}",
-    "exec": "uv run --directory ~/.nextmeeting nextmeeting --max-title-length 60 --waybar | ~/.config/waybar/strip_emoji.py",
+    "exec": "uv run --directory ~/.nextmeeting nextmeeting --max-title-length 40 --waybar | ~/.config/waybar/strip_emoji.py",
     "on-click": "zen \"https://calendar.google.com/calendar\"",
     "interval": 59,
     "return-type": "json",
@@ -89,9 +92,22 @@
     "tooltip": false
   },
 
+  "custom/ai-icon": {
+    "format": "󰚩 ",
+    "on-click": "qs -c ii ipc call sidebarLeft toggle",
+    "tooltip": false
+  },
+
   "tray": {
     "icon-size": 21,
-    "spacing": 10
+    "spacing": 8,
+    "show-passive-items": false,
+    "icons": {
+      "": "dialog-question-symbolic",
+      "qBittorrent": "qbittorrent",
+      "qbittorrent": "qbittorrent",
+      "qbittorrent-tray": "qbittorrent"
+    }
   },
 
   "custom/app-search": {
@@ -129,11 +145,12 @@
 
   "clock": {
     "timezone": "BST",
-    "format-alt": "{:%Y-%m-%d}"
+    "format-alt": "{:%Y-%m-%d}",
+    "tooltip": false
   },
 
   "network": {
-    "format": "   ",
+    "format": "  ",
     "tooltip-format": " {ifname} via {gwaddri}",
     "tooltip-format-wifi": "    {essid} ({signalStrength}%)",
     "tooltip-format-ethernet": "  {ifname} ({ipaddr}/{cidr})",
@@ -148,11 +165,11 @@
       "critical": 15
     },
     "format": "{icon}   {capacity}%",
-    "format-charging": "  {capacity}%",
-    "format-plugged": "  {capacity}%",
+    "format-charging": "   {capacity}%",
+    "format-plugged": "   {capacity}%",
     // "format-good": "", // An empty format will hide the module
     // "format-full": "",
-    "format-icons": [" ", " ", " ", " ", " "],
+    "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾"],
     "tooltip": false
   },
 
@@ -161,7 +178,6 @@
     "format-muted": "   {volume}%",
     "format-icons": {
       "headphone": "",
-      "hands-free": "",
       "headset": "",
       "phone": "",
       "portable": "",

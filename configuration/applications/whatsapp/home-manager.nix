@@ -1,14 +1,12 @@
 { config, pkgs, lib, inputs, ... }:
 
 {
-  home.packages = with pkgs; [ wasistlos ];
-  home.file.".local/share/applications/com.github.xeco23.WasIstLos.desktop".text =
+  home.file.".local/share/applications/whatsapp.desktop".text =
     ''
       [Desktop Entry]
       Name=Whatsapp
       Comment=
       Exec=zen "https://web.whatsapp.com/"
-      Icon=com.github.xeco23.WasIstLos
       Terminal=false
       Type=Application
       Categories=Messages;

@@ -25,11 +25,12 @@
 
     ELECTRON_ENABLE_WAYLAND = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+    NIXOS_OZONE_WL = "1";
 
     GSK_RENDERER = "opengl";
     ADW_DISABLE_PORTAL = "1";
 
-    HYPRSHOT_DIR = "/home/aleks/Photos/";
+    HYPRSHOT_DIR = "/home/aleks/Photos";
 
     # Add gcc libraries to LD_LIBRARY_PATH for Python packages with C extensions
     LD_LIBRARY_PATH = "${pkgs.gcc.cc.lib}/lib:${pkgs.stdenv.cc.cc.lib}/lib";

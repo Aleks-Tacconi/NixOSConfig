@@ -16,7 +16,6 @@
     libraries = with pkgs; [
       libxkbfile
       glib
-      xorg.libX11
       libbsd
       gtk3
       nss
@@ -52,13 +51,13 @@
       libxi
       libxrender
       libxext
-      xorg.libSM
-      xorg.libICE
-      xorg.xcbutilcursor
-      xorg.xcbutilimage
-      xorg.xcbutilkeysyms
-      xorg.xcbutilrenderutil
-      xorg.xcbutilwm
+      libsm
+      libice
+      pkgs."libxcb-cursor"
+      pkgs."libxcb-image"
+      pkgs."libxcb-keysyms"
+      pkgs."libxcb-render-util"
+      pkgs."libxcb-wm"
     ];
   };
 }

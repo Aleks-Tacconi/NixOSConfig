@@ -1,15 +1,17 @@
 {
   config,
   pkgs,
-  lib,
-  inputs,
   ...
 }:
 
+let
+  gtkThemeName = "WhiteSur-Dark";
+  iconThemeName = "Papirus-Dark";
+in
 {
   home.packages = with pkgs; [
     papirus-icon-theme
-    colloid-gtk-theme
+    whitesur-gtk-theme
   ];
 
   home.pointerCursor = {
@@ -22,14 +24,14 @@
   gtk = {
     enable = true;
     theme = {
-      name = "Colloid-Dark";
-      package = pkgs.colloid-gtk-theme;
+      name = gtkThemeName;
+      package = pkgs.whitesur-gtk-theme;
     };
     gtk4 = {
       theme = config.gtk.theme;
     };
     iconTheme = {
-      name = "Papirus-Dark";
+      name = iconThemeName;
       package = pkgs.papirus-icon-theme;
     };
   };
@@ -37,8 +39,14 @@
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
-      gtk-theme = "Colloid-Dark";
-      icon-theme = "Papirus-Dark";
+      gtk-theme = gtkThemeName;
+      icon-theme = iconThemeName;
+      font-name = "Noto Sans 11";
+      document-font-name = "Noto Sans 11";
+      monospace-font-name = "JetBrainsMono Nerd Font 11";
+    };
+    "org/gnome/shell/extensions/user-theme" = {
+      name = gtkThemeName;
     };
   };
 
@@ -52,7 +60,7 @@
     qt5ctSettings = {
       Appearance = {
         color_scheme = "dark";
-        icon_theme = "Papirus-Dark";
+        icon_theme = iconThemeName;
         standard_dialogs = "xdgdesktopportal";
         style = "gtk2";
       };
@@ -60,7 +68,7 @@
     qt6ctSettings = {
       Appearance = {
         color_scheme = "dark";
-        icon_theme = "Papirus-Dark";
+        icon_theme = iconThemeName;
         standard_dialogs = "xdgdesktopportal";
         style = "gtk2";
       };
@@ -68,7 +76,7 @@
     kde.settings = {
       kdeglobals = {
         General.ColorScheme = "BreezeDark";
-        Icons.Theme = "Papirus-Dark";
+        Icons.Theme = iconThemeName;
         KDE.widgetStyle = "Breeze";
       };
     };
@@ -76,6 +84,7 @@
 
   home.file.".icon.png".source = config.lib.file.mkOutOfStoreSymlink ./.icon.png;
   home.file.".logo.jpeg".source = config.lib.file.mkOutOfStoreSymlink ./.logo.jpeg;
-  home.file.".wallpaper.gif".source = config.lib.file.mkOutOfStoreSymlink ./.wallpaper.gif;
-  home.file.".wallpaper.png".source = config.lib.file.mkOutOfStoreSymlink ./.wallpaper.png;
+  home.file.".wallpaper-current".source =
+    config.lib.file.mkOutOfStoreSymlink ./wallpapers/wallpaper.png;
+  home.file."wallpapers".source = config.lib.file.mkOutOfStoreSymlink ./wallpapers;
 }

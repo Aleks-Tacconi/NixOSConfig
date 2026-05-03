@@ -13,7 +13,7 @@
     Name=Nautilus
     GenericName=File Manager
     Exec=nautilus %U
-    Icon=system-file-manager
+    Icon=org.gnome.Nautilus
     Categories=Utility;FileManager;
   '';
 }
