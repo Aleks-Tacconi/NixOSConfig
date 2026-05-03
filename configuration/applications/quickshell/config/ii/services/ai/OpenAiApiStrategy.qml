@@ -57,24 +57,8 @@ ApiStrategy {
             let newContent = "";
 
             const responseContent = dataJson.choices[0]?.delta?.content || dataJson.message?.content;
-            const responseReasoning = dataJson.choices[0]?.delta?.reasoning || dataJson.choices[0]?.delta?.reasoning_content;
-
             if (responseContent && responseContent.length > 0) {
-                if (isReasoning) {
-                    isReasoning = false;
-                    const endBlock = "\n\n</think>\n\n";
-                    message.content += endBlock;
-                    message.rawContent += endBlock;
-                }
                 newContent = responseContent;
-            } else if (responseReasoning && responseReasoning.length > 0) {
-                if (!isReasoning) {
-                    isReasoning = true;
-                    const startBlock = "\n\n<think>\n\n";
-                    message.rawContent += startBlock;
-                    message.content += startBlock;
-                }
-                newContent = responseReasoning;
             }
 
             message.content += newContent;

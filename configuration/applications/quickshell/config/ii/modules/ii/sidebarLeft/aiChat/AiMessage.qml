@@ -30,6 +30,7 @@ Rectangle {
     // Do not split markdown while streaming.
     // Re-splitting/rebuilding delegates during generation causes height jitter.
     property list<var> messageBlocks: root.streaming ? [] : StringUtils.splitMarkdownBlocks(root.messageData?.content ?? "")
+        .filter(block => block.type !== "think")
 
     anchors.left: parent?.left
     anchors.right: parent?.right
@@ -95,10 +96,29 @@ Rectangle {
         if (!root.blockMatches(root.streamingTailBlock, nextTailBlock)) {
             root.streamingTailBlock = nextTailBlock;
         }
+
+        root.requestListRelayout();
+    }
+
+    function requestListRelayout() {
+        if (!relayoutTimer.running) {
+            relayoutTimer.start();
+        }
+    }
+
+    Timer {
+        id: relayoutTimer
+        interval: 0
+        repeat: false
+
+        onTriggered: {
+            ListView.view?.forceLayout();
+        }
     }
 
     onMessageDataChanged: updateStreamingRenderState()
     onStreamingChanged: updateStreamingRenderState()
+    onImplicitHeightChanged: requestListRelayout()
 
     Component.onCompleted: {
         updateStreamingRenderState();
@@ -376,8 +396,10 @@ Rectangle {
 
         Loader {
             Layout.fillWidth: true
+            Layout.preferredHeight: active ? implicitHeight : 0
 
             active: (root.messageData?.localFilePath?.length ?? 0) > 0
+            visible: active
 
             sourceComponent: AttachedFileIndicator {
                 filePath: root.messageData?.localFilePath
@@ -438,22 +460,6 @@ Rectangle {
                     }
 
                     DelegateChoice {
-                        roleValue: "think"
-
-                        MessageThinkBlock {
-                            editing: root.editing
-                            renderMarkdown: root.renderMarkdown
-                            enableMouseSelection: root.enableMouseSelection
-
-                            segmentContent: modelData.content
-                            messageData: root.messageData
-
-                            done: root.messageData?.done ?? false
-                            completed: modelData.completed ?? false
-                        }
-                    }
-
-                    DelegateChoice {
                         roleValue: "text"
 
                         MessageTextBlock {
@@ -473,7 +479,9 @@ Rectangle {
 
             Loader {
                 Layout.fillWidth: true
+                Layout.preferredHeight: active ? implicitHeight : 0
                 active: root.streaming && !root.editing && !!root.streamingTailBlock
+                visible: active
 
                 sourceComponent: root.streamingTailBlock?.type === "code" ? streamingCodeBlockComponent
                     : root.streamingTailBlock?.type === "text" ? streamingTextBlockComponent
@@ -486,6 +494,7 @@ Rectangle {
             spacing: 5
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignLeft
+            Layout.preferredHeight: visible ? implicitHeight : 0
 
             Repeater {
                 model: ScriptModel {
@@ -506,6 +515,7 @@ Rectangle {
             spacing: 5
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignLeft
+            Layout.preferredHeight: visible ? implicitHeight : 0
 
             Repeater {
                 model: ScriptModel {
@@ -576,7 +586,7 @@ Rectangle {
                 topRightRadius: Appearance.rounding.unsharpen
                 bottomLeftRadius: Appearance.rounding.small
                 bottomRightRadius: Appearance.rounding.small
-                implicitHeight: streamingCodeText.implicitHeight + 12
+                implicitHeight: Math.ceil(streamingCodeText.contentHeight) + 12
                 clip: true
 
                 Flickable {

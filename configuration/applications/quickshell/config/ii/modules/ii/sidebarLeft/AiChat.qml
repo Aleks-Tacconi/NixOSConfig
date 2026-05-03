@@ -247,8 +247,8 @@ Item {
                 boundsMovement: Flickable.StopAtBounds
 
                 topMargin: statusBg.implicitHeight + statusBg.anchors.topMargin * 2
-                // Large temporary buffer prevents Qt from clamping contentY upward
-                // when streamed text temporarily reflows smaller.
+                // Keep a temporary Qt buffer during streaming, but clamp the visible
+                // scroll position to the real rendered bottom to avoid blank gaps.
                 bottomMargin: streamingReplyActive && stickToBottom ? Math.max(8192, height * 8) : 0
 
                 property bool stickToBottom: true
@@ -277,16 +277,8 @@ Item {
                     return Math.max(minY(), originY + contentHeight - height);
                 }
 
-                function hardMaxY() {
-                    return Math.max(minY(), originY + contentHeight + bottomMargin - height);
-                }
-
                 function clampY(y) {
                     return Math.max(minY(), Math.min(visualBottomY(), y));
-                }
-
-                function clampHardY(y) {
-                    return Math.max(minY(), Math.min(hardMaxY(), y));
                 }
 
                 function nearBottom() {
@@ -296,7 +288,7 @@ Item {
                 function setScrollY(y) {
                     autoScrolling = true;
                     cancelFlick();
-                    contentY = clampHardY(y);
+                    contentY = clampY(y);
                     clearAutoScrollingTimer.restart();
                 }
 
@@ -306,16 +298,15 @@ Item {
                 }
 
                 function startStreamingPin() {
-                    pinnedStreamingY = Math.max(contentY, visualBottomY());
+                    pinnedStreamingY = visualBottomY();
                     setScrollY(pinnedStreamingY);
                 }
 
                 function followStreamingBottom() {
                     const target = visualBottomY();
 
-                    // While streaming, contentY can move down, but never up.
-                    pinnedStreamingY = Math.max(pinnedStreamingY, contentY, target);
-                    setScrollY(pinnedStreamingY);
+                    pinnedStreamingY = target;
+                    setScrollY(target);
                 }
 
                 function requestStreamingFollow() {

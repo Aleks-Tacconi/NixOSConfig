@@ -489,10 +489,13 @@ Singleton {
     }
 
     function createFunctionOutputMessage(name, output, includeOutputInChat = true) {
+        const visibleContent = `[[ Output of ${name} ]]`;
+        const rawOutput = includeOutputInChat ? ("\n\n<think>\n" + output + "\n</think>") : "";
+
         return aiMessageComponent.createObject(root, {
             "role": "user",
-            "content": `[[ Output of ${name} ]]${includeOutputInChat ? ("\n\n<think>\n" + output + "\n</think>") : ""}`,
-            "rawContent": `[[ Output of ${name} ]]${includeOutputInChat ? ("\n\n<think>\n" + output + "\n</think>") : ""}`,
+            "content": visibleContent,
+            "rawContent": visibleContent + rawOutput,
             "functionName": name,
             "functionResponse": output,
             "thinking": false,
@@ -551,11 +554,11 @@ Singleton {
             onRead: output => {
                 commandExecutionProc.message.functionResponse += output + "\n\n";
 
-                const updatedContent = commandExecutionProc.baseMessageContent
+                const updatedRawContent = commandExecutionProc.baseMessageContent
                     + `\n\n<think>\n<tt>${commandExecutionProc.message.functionResponse}</tt>\n</think>`;
 
-                commandExecutionProc.message.rawContent = updatedContent;
-                commandExecutionProc.message.content = updatedContent;
+                commandExecutionProc.message.rawContent = updatedRawContent;
+                commandExecutionProc.message.content = commandExecutionProc.baseMessageContent;
             }
         }
 

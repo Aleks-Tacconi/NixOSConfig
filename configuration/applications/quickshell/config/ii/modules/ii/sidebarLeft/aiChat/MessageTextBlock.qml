@@ -155,7 +155,9 @@ ColumnLayout {
             }
 
             Layout.fillWidth: true
-            implicitHeight: Math.ceil(paintedHeight)
+            // contentHeight tracks wrapped markdown layout more reliably than
+            // paintedHeight for long streamed replies.
+            implicitHeight: Math.ceil(contentHeight)
             readOnly: !editing
             selectByMouse: enableMouseSelection || editing
             renderType: Text.NativeRendering

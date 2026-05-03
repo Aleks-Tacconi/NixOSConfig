@@ -179,7 +179,7 @@ ColumnLayout {
                     id: codeFlickable
                     Layout.fillWidth: true
                     implicitWidth: parent.width
-                    implicitHeight: codeTextArea.implicitHeight + 1
+                    implicitHeight: Math.ceil(codeTextArea.contentHeight) + 1
                     contentWidth: Math.max(width, codeTextArea.contentWidth + 1)
                     contentHeight: height
                     clip: true

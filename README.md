@@ -34,7 +34,7 @@ Features include:
 - Application launcher button
 - Toggle `hyprsunset` button (night light)
 - Open [nix packages](https://search.nixos.org/packages) button
-- Local AI sidebar button backed by Ollama / local OpenAI-compatible models with streamed markdown/code rendering
+- Local AI sidebar button backed by Ollama / local OpenAI-compatible models with streamed markdown/code rendering, direct replies, stable long-response rendering, and bottom-following auto-scroll
 - Google calendar integration (using [nextmeeting](https://github.com/chmouel/nextmeeting))
 > `nextmeeting` needs to be cloned into `~/.nextmeeting` and set up with authentication (see `nextmeeting` github)
 - Media player indicator (click to pause / resume)

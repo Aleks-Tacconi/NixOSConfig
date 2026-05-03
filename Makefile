@@ -12,8 +12,7 @@ REBUILD := sudo nixos-rebuild switch --flake ./
 MSG ?= new version
 
 laptop:
-	touch ~/.wallpaper-current
-	rm ~/.wallpaper-current
+	sudo rm ~/.wallpaper-current
 	@echo ""
 	@echo -e "$(YELLOW)==> Setting ulimit...$(NC)"
 	$(ULIMIT)
@@ -41,8 +40,7 @@ laptop:
 	@echo ""
 
 pc:
-	touch ~/.wallpaper-current
-	rm ~/.wallpaper-current
+	sudo rm ~/.wallpaper-current
 	@echo ""
 	@echo -e "$(YELLOW)==> Setting ulimit...$(NC)"
 	$(ULIMIT)
