@@ -24,36 +24,9 @@ in
   wayland.windowManager.hyprland = {
     enable = true;
     package = hyprlandPkg;
-    # plugins = [ inputs.hyprland-plugins.packages.${system}.hyprbars ];
 
     settings = {
       "$mod" = "SUPER";
-
-      # plugin = {
-      #   hyprbars = {
-      #     enabled = true;
-      #     bar_height = 34;
-      #     bar_blur = false;
-      #     bar_color = "rgb(101010)";
-      #     "col.text" = "rgb(f5f5f5)";
-      #     bar_text_size = 12;
-      #     bar_text_font = "Fira Sans Semibold";
-      #     bar_text_align = "center";
-      #     bar_buttons_alignment = "right";
-      #     bar_part_of_window = true;
-      #     bar_precedence_over_border = true;
-      #     bar_padding = 10;
-      #     bar_button_padding = 5;
-      #     icon_on_hover = false;
-      #     inactive_button_color = "rgb(101010)";
-      #     on_double_click = "hyprctl dispatch fullscreen 1";
-      #     "hyprbars-button" = [
-      #       "rgb(121212), 28, 󰅖 , hyprctl dispatch killactive, rgb(ffffff)"
-      #       "rgb(121212), 24, 󰹑 , hyprctl dispatch fullscreen 1, rgb(ffffff)"
-      #       "rgb(121212), 27, 󰖯 , hyprctl dispatch togglefloating, rgb(ffffff)"
-      #     ];
-      #   };
-      # };
 
       bind = [
         "$mod, Q, exec, ghostty"
@@ -62,9 +35,13 @@ in
         "$mod, W, exec, zen"
         # "$mod, M, exit,"
         "$mod, N, exec, swaync-client -t"
-        "$mod, A, exec, qs -c ii ipc call sidebarLeft toggle"
         "$mod, V, togglefloating,"
+
+        # "$mod, A, exec, qs -c ii ipc call sidebarLeft toggle"
         # "$mod, Space, exec, qs -c ii ipc call search toggle"
+        # "$mod SHIFT, T, global, quickshell:wallpaperSelectorToggle"
+        # "$mod, t, exec, pkill waybar && waybar &"
+
         "$mod, SPACE, global, quickshell:appLauncher"
         "ALT, Space, exec, playerctl play-pause"
 
@@ -79,8 +56,6 @@ in
         ", Print, exec, bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m region; fi'"
         "SHIFT, Print, exec, bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'"
 
-        "$mod, t, exec, pkill waybar && waybar &"
-        "$mod SHIFT, T, global, quickshell:wallpaperSelectorToggle"
         "$mod, h, movefocus, l"
         "$mod, l, movefocus, r"
         "$mod, k, movefocus, u"
@@ -96,11 +71,6 @@ in
         "$mod,F,fullscreen"
         "$mod, S, togglespecialworkspace, magic"
         "$mod SHIFT, S, movetoworkspace, special:magic"
-        ", Alt_L, global, quickshell:overviewAltReleaseClose"
-        ", Alt_R, global, quickshell:overviewAltReleaseClose"
-
-        "ALT, Tab, exec, bash ~/.config/hypr/hyprland/scripts/alt-tab-workspace.sh e+1"
-        "ALT SHIFT, Tab, exec, bash ~/.config/hypr/hyprland/scripts/alt-tab-workspace.sh e-1"
       ]
       ++ (builtins.concatLists (
         builtins.genList (
@@ -186,15 +156,12 @@ in
 
       exec = [ ];
       exec-once = [
-        "qs -c ii &"
+        "qs -c learning &"
         "wl-paste --type text --watch cliphist store"
         "wl-paste --type image --watch cliphist store"
         "hyprctl setcursor Bibata-Modern-Ice 24"
-        "waybar &"
         "blueman-applet"
         "swaync &"
-        # "eww open random-window"
-        # "bash /home/aleks/.config/eww/scripts/open_clock_all.sh"
         "hyprlock"
       ];
 
