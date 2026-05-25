@@ -1,7 +1,8 @@
-config-file = tokyo-night.conf
+config-file = rose-pine-moon.conf
 
-background-opacity = 1.0
-background-blur = 1
+background-opacity = 1
+background-opacity-cells = true
+background-blur = false
 window-padding-x = 5
 window-padding-y = 5
 

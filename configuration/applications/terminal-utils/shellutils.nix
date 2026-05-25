@@ -22,6 +22,8 @@
     vale
     lazygit
 
+    kdePackages.qtdeclarative
+
     vscode-extensions.vscjava.vscode-java-debug
     vscode-extensions.vscjava.vscode-java-test
     tailwindcss-language-server

@@ -64,7 +64,8 @@ in
         "$mod, N, exec, swaync-client -t"
         "$mod, A, exec, qs -c ii ipc call sidebarLeft toggle"
         "$mod, V, togglefloating,"
-        "$mod, Space, exec, qs -c ii ipc call search toggle"
+        # "$mod, Space, exec, qs -c ii ipc call search toggle"
+        "$mod, SPACE, global, quickshell:appLauncher"
         "ALT, Space, exec, playerctl play-pause"
 
         ", XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
@@ -158,7 +159,6 @@ in
 
         "match:title ^Calculator$, float on"
         "match:title ^Calculator$, center on"
-        "match:title ^Calculator$, opacity 1.0 override 1.0 override 1.0 override"
       ];
       # ... , mirror, eDP-1
 
@@ -218,7 +218,7 @@ in
       decoration = {
         "rounding" = "2";
         "active_opacity" = "1";
-        "inactive_opacity" = "0.95";
+        "inactive_opacity" = "1";
         "fullscreen_opacity" = "1";
       };
 
@@ -229,7 +229,7 @@ in
 
       general = {
         "gaps_in" = "1";
-        "gaps_out" = "5,0,0,0";
+        "gaps_out" = "4,-1,-2,-1";
         "border_size" = "2";
         "col.active_border" = "rgba(ddddddff)";
         "col.inactive_border" = "rgba(2c2c2cff)";
@@ -265,18 +265,18 @@ in
 
   };
 
-  # services.hyprpaper = {
-  #   enable = true;
-  #   settings = {
-  #     splash = false;
-  #     wallpaper = [
-  #       {
-  #         monitor = "";
-  #         path = "~/wallpapers/wallpaper.png";
-  #         fit_mode = "cover";
-  #       }
-  #     ];
-  #   };
-  # };
+  services.hyprpaper = {
+    enable = true;
+    settings = {
+      splash = false;
+      wallpaper = [
+        {
+          monitor = "";
+          path = "~/wallpapers/1dbe9fe86f1517ba74b8c15c7990ed8f_upscaled_upscaled.jpg";
+          fit_mode = "cover";
+        }
+      ];
+    };
+  };
 
 }

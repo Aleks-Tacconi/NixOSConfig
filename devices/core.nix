@@ -68,12 +68,12 @@
     # ../configuration/applications/teams/configuration.nix
     # ../configuration/applications/tailscale/configuration.nix
     # ../configuration/applications/snappy-switcher/configuration.nix
+    # ../configuration/applications/calculator/configuration.nix
 
     ../configuration/applications/opencode/configuration.nix
     ../configuration/applications/zenbrowser/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
-    ../configuration/applications/calculator/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix
     ../configuration/applications/filemanager/configuration.nix

@@ -21,6 +21,6 @@ in
     ydotool
   ];
 
-  home.file.".config/quickshell".source = ./config;
+  home.file.".config/quickshell/ii".source = ./config/ii;
   home.file.".config/hypr/hyprland/scripts".source = ./hypr-scripts;
 }

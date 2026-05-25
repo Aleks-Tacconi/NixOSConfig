@@ -12,7 +12,7 @@ Features include:
 - Status bar
 - Quickshell-powered application search and workspace overview sourced from `~/dots-hyprland`
 - Notification daemon / control center with a compact Do Not Disturb switch and simplified panel layout
-- Other application configurations (incl terminal configuration and tooling)
+- Other application configurations (incl live-linked Ghostty terminal configuration with transparent Rose Pine Moon styling plus matching shell / CLI colors)
 - configured tooling and dependencies for programming and my [neovim setup](https://github.com/Aleks-Tacconi/nvim-config).
 - KDE connect for connecting mobile device to pc
 - Different profiles for different devices
@@ -22,7 +22,7 @@ Features include:
 - `Jellyfin` media server
 - `Syncthing` for syncing any two devices (currently disabled)
 - `Hyprland` desktop configuration with WhiteSur GTK theming, WhiteSur icons, Noto Sans UI fonts, themed `hyprbars` title bars, and app-specific window rules
-- Vendored `Quickshell` configuration, currently trimmed to the launcher/workspace overview, bottom dock, wallpaper selector, and a local AI sidebar
+- Vendored `Quickshell` configuration, currently trimmed to the launcher/workspace overview, bottom dock, wallpaper selector, and a local AI sidebar, with the background clock widget disabled by default
 - `ImageMagick` is included in terminal utilities so the Quickshell wallpaper selector can generate wallpaper metadata and thumbnails
 - `snappy-switcher` Alt-Tab window switcher themed to match the `waybar` / `swaync` palette
 - `hyprlock` for lock screen, synced to the currently selected wallpaper
@@ -34,7 +34,7 @@ Features include:
 - Application launcher button
 - Toggle `hyprsunset` button (night light)
 - Open [nix packages](https://search.nixos.org/packages) button
-- Local AI sidebar button backed by Ollama / local OpenAI-compatible models with streamed markdown/code rendering, direct replies, stable long-response rendering, and bottom-following auto-scroll
+- Local AI sidebar button backed by Ollama / local OpenAI-compatible models with optional web-result context, cleaner source links, streamed markdown/code rendering, direct replies, stable long-response rendering, and bottom-following auto-scroll
 - Google calendar integration (using [nextmeeting](https://github.com/chmouel/nextmeeting))
 > `nextmeeting` needs to be cloned into `~/.nextmeeting` and set up with authentication (see `nextmeeting` github)
 - Media player indicator (click to pause / resume)

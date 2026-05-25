@@ -57,6 +57,9 @@ Singleton {
         "{DE}": `${SystemInfo.desktopEnvironment} (${SystemInfo.windowingSystem})`
     }
 
+    property var pendingAnnotationSources: []
+    property list<string> pendingSearchQueries: []
+
     property string currentTool: Config?.options.ai.tool ?? "none"
 
     property var tools: {
@@ -69,7 +72,7 @@ Singleton {
     property list<var> availableTools: Object.keys(root.tools[models[currentModelId]?.api_format || "openai"])
 
     property var toolDescriptions: {
-        "search": Translation.tr("No live search backend is configured in this sidebar"),
+        "search": Translation.tr("Fetch recent web results and pass them to the model as context"),
         "none": Translation.tr("Disable tools")
     }
 
@@ -201,6 +204,153 @@ Singleton {
         root.messageIDs = [...root.messageIDs, id];
     }
 
+    function addHiddenUserContext(message) {
+        if (!message || message.length === 0) return;
+
+        const aiMessage = aiMessageComponent.createObject(root, {
+            "role": "user",
+            "content": message,
+            "rawContent": message,
+            "thinking": false,
+            "done": true,
+            "visibleToUser": false,
+        });
+
+        const id = idForMessage(aiMessage);
+
+        root.messageByID = Object.assign({}, root.messageByID, {
+            [id]: aiMessage,
+        });
+
+        root.messageIDs = [...root.messageIDs, id];
+    }
+
+    function createPendingAssistantMessage() {
+        const aiMessage = root.aiMessageComponent.createObject(root, {
+            "role": "assistant",
+            "model": currentModelId,
+            "content": "",
+            "rawContent": "",
+            "thinking": true,
+            "done": false,
+            "annotationSources": root.pendingAnnotationSources.slice(),
+            "searchQueries": root.pendingSearchQueries.slice(),
+        });
+
+        const id = idForMessage(aiMessage);
+
+        root.messageByID = Object.assign({}, root.messageByID, {
+            [id]: aiMessage,
+        });
+
+        root.messageIDs = [...root.messageIDs, id];
+        return aiMessage;
+    }
+
+    function extractSearchResultsSection(markdown) {
+        const cleanMarkdown = String(markdown ?? "").trim();
+        const start = cleanMarkdown.indexOf("## Search Results");
+
+        if (start === -1) {
+            return cleanMarkdown;
+        }
+
+        let section = cleanMarkdown.slice(start).trim();
+        const endMarkers = [
+            "## Searches related to",
+            "People also search for",
+            "## See results about",
+            "*   [Help]",
+            "Which predictions were inappropriate?",
+        ];
+
+        let end = section.length;
+        for (const marker of endMarkers) {
+            const markerIndex = section.indexOf(marker);
+            if (markerIndex !== -1 && markerIndex < end) {
+                end = markerIndex;
+            }
+        }
+
+        return section.slice(0, end).trim();
+    }
+
+    function extractSearchResults(markdown) {
+        const section = extractSearchResultsSection(markdown);
+        const blocks = section.split(/\n(?=\d+\.\s)/);
+        const results = [];
+
+        for (const rawBlock of blocks) {
+            const block = String(rawBlock ?? "").trim();
+
+            if (!/^\d+\.\s/.test(block)) {
+                continue;
+            }
+
+            const linkMatch = block.match(/\[(?:!\[[^\]]*\]\([^)]*\)\s*)?([\s\S]*?)\]\((https?:\/\/[^)\s]+)\)/);
+            if (!linkMatch) {
+                continue;
+            }
+
+            const url = linkMatch[2];
+            if (/search\.yahoo\.com|yahoo\.com\/news|yahoo\.com\/$|s\.yimg\.com|\.png$|\.jpg$|\.jpeg$|\.webp$|\.gif$/i.test(url)) {
+                continue;
+            }
+
+            let title = String(linkMatch[1] ?? "")
+                .replace(/^.*?###\s*/, "")
+                .replace(/\s+/g, " ")
+                .trim();
+
+            if (title.length === 0) {
+                title = CF.StringUtils.getDomain(url) ?? url;
+            }
+
+            let snippet = block.slice(linkMatch.index + linkMatch[0].length)
+                .split("\n")
+                .map(line => line.trim())
+                .filter(line => line.length > 0 && !line.startsWith("*") && !/^\d+\./.test(line))[0] ?? "";
+
+            snippet = snippet
+                .replace(/\s+/g, " ")
+                .trim();
+
+            results.push({
+                title: title.slice(0, 120),
+                url,
+                snippet: snippet.slice(0, 220),
+            });
+
+            if (results.length >= 5) {
+                break;
+            }
+        }
+
+        return results;
+    }
+
+    function extractSearchAnnotationSources(markdown) {
+        return extractSearchResults(markdown).map(result => ({
+            text: result.title.slice(0, 80),
+            url: result.url,
+        }));
+    }
+
+    function buildSearchContext(query, markdown) {
+        const results = extractSearchResults(markdown);
+
+        if (results.length === 0) {
+            return `[[ Web search results for: ${query} ]]\n\n${extractSearchResultsSection(markdown)}`;
+        }
+
+        const renderedResults = results.map((result, index) => {
+            const snippetLine = result.snippet.length > 0 ? `\nSnippet: ${result.snippet}` : "";
+            return `${index + 1}. ${result.title}\nURL: ${result.url}${snippetLine}`;
+        }).join("\n\n");
+
+        return `[[ Web search results for: ${query} ]]\n\n${renderedResults}`;
+    }
+
     function removeMessage(index) {
         if (index < 0 || index >= messageIDs.length) return;
 
@@ -264,9 +414,15 @@ Singleton {
             requester.running = false;
         }
 
+        if (searchProc.running) {
+            searchProc.running = false;
+        }
+
         root.pendingFilePath = "";
         root.postResponseHook = null;
         root.currentApiStrategy.reset();
+        root.pendingAnnotationSources = [];
+        root.pendingSearchQueries = [];
         root.messageIDs = [];
         root.messageByID = ({});
         root.tokenCount.input = -1;
@@ -339,22 +495,27 @@ Singleton {
                 "Content-Type": "application/json",
             };
 
-            requester.message = root.aiMessageComponent.createObject(root, {
-                "role": "assistant",
-                "model": currentModelId,
-                "content": "",
-                "rawContent": "",
-                "thinking": true,
-                "done": false,
-            });
+            const hasPendingMessage = requester.message
+                && requester.message.role === "assistant"
+                && !requester.message.done;
 
-            const id = idForMessage(requester.message);
+            if (!hasPendingMessage) {
+                requester.message = root.createPendingAssistantMessage();
+            }
 
-            root.messageByID = Object.assign({}, root.messageByID, {
-                [id]: requester.message,
-            });
+            requester.message.model = currentModelId;
+            requester.message.thinking = true;
 
-            root.messageIDs = [...root.messageIDs, id];
+            if (root.pendingAnnotationSources.length > 0) {
+                requester.message.annotationSources = root.pendingAnnotationSources.slice();
+            }
+
+            if (root.pendingSearchQueries.length > 0) {
+                requester.message.searchQueries = root.pendingSearchQueries.slice();
+            }
+
+            root.pendingAnnotationSources = [];
+            root.pendingSearchQueries = [];
 
             let headerString = Object.entries(requestHeaders)
                 .filter(([k, v]) => v && v.length > 0)
@@ -434,11 +595,59 @@ Singleton {
         }
     }
 
-    function cancelInFlightRequest() {
-        if (!requester.running) return;
+    Process {
+        id: searchProc
 
-        requester.running = false;
-        root.postResponseHook = null;
+        property string query: ""
+        property string rawResults: ""
+
+        command: [
+            "curl",
+            "-L",
+            "-s",
+            `https://r.jina.ai/http://search.yahoo.com/search?p=${encodeURIComponent(query)}`,
+        ]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                searchProc.rawResults = this.text;
+            }
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            const query = searchProc.query;
+            const rawResults = String(searchProc.rawResults ?? "").trim();
+
+            searchProc.rawResults = "";
+
+            if (exitCode === 0 && rawResults.includes("## Search Results")) {
+                root.pendingSearchQueries = [query];
+                root.pendingAnnotationSources = root.extractSearchAnnotationSources(rawResults);
+                root.addHiddenUserContext(root.buildSearchContext(query, rawResults));
+            } else {
+                root.pendingSearchQueries = [];
+                root.pendingAnnotationSources = [];
+                root.addMessage(Translation.tr("Web search is unavailable right now. Answering without live results."), root.interfaceRole);
+            }
+
+            Qt.callLater(() => {
+                requester.makeRequest();
+            });
+        }
+    }
+
+    function cancelInFlightRequest() {
+        if (searchProc.running) {
+            searchProc.running = false;
+        }
+
+        root.pendingAnnotationSources = [];
+        root.pendingSearchQueries = [];
+
+        if (requester.running) {
+            requester.running = false;
+            root.postResponseHook = null;
+        }
 
         for (let i = root.messageIDs.length - 1; i >= 0; i--) {
             const id = root.messageIDs[i];
@@ -449,6 +658,9 @@ Singleton {
                 break;
             }
         }
+
+        requester.message = null;
+
     }
 
     function sendUserMessage(message) {
@@ -461,6 +673,13 @@ Singleton {
         cancelInFlightRequest();
 
         root.addMessage(cleanMessage, "user");
+
+        if (root.currentTool === "search") {
+            requester.message = root.createPendingAssistantMessage();
+            searchProc.query = cleanMessage;
+            searchProc.running = true;
+            return;
+        }
 
         Qt.callLater(() => {
             requester.makeRequest();
