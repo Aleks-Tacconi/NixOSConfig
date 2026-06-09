@@ -9,6 +9,9 @@
 {
   fonts.packages = with pkgs; [
     font-awesome
+    caladea
+    carlito
+    corefonts
     orbitron
     nerd-fonts.fira-code
     nerd-fonts.jetbrains-mono
@@ -21,6 +24,7 @@
     google-fonts
     material-symbols
     readexpro
+    vista-fonts
   ];
 
   fonts.fontconfig.defaultFonts = {

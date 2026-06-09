@@ -5,13 +5,27 @@
 }:
 
 let
-  gtkThemeName = "WhiteSur-Dark";
+  gtkTheme = pkgs.catppuccin-gtk.override {
+    accents = [ "red" ];
+    size = "standard";
+    tweaks = [ "rimless" ];
+    variant = "mocha";
+  };
+  kvantumTheme = pkgs.catppuccin-kvantum.override {
+    accent = "red";
+    variant = "mocha";
+  };
+  gtkThemeName = "catppuccin-mocha-red-standard+rimless";
   iconThemeName = "Papirus-Dark";
+  kvantumThemeName = "Catppuccin-Mocha-Red";
 in
 {
   home.packages = with pkgs; [
     papirus-icon-theme
-    whitesur-gtk-theme
+    gtkTheme
+    kvantumTheme
+    libsForQt5.qtstyleplugin-kvantum
+    kdePackages.qtstyleplugin-kvantum
   ];
 
   home.pointerCursor = {
@@ -25,7 +39,7 @@ in
     enable = true;
     theme = {
       name = gtkThemeName;
-      package = pkgs.whitesur-gtk-theme;
+      package = gtkTheme;
     };
     gtk4 = {
       theme = config.gtk.theme;
@@ -54,15 +68,15 @@ in
     enable = true;
     platformTheme.name = "qtct";
     style.package = with pkgs; [
-      libsForQt5.qtstyleplugins
-      qt6Packages.qt6gtk2
+      libsForQt5.qtstyleplugin-kvantum
+      kdePackages.qtstyleplugin-kvantum
     ];
     qt5ctSettings = {
       Appearance = {
         color_scheme = "dark";
         icon_theme = iconThemeName;
         standard_dialogs = "xdgdesktopportal";
-        style = "gtk2";
+        style = "kvantum";
       };
     };
     qt6ctSettings = {
@@ -70,17 +84,22 @@ in
         color_scheme = "dark";
         icon_theme = iconThemeName;
         standard_dialogs = "xdgdesktopportal";
-        style = "gtk2";
+        style = "kvantum";
       };
     };
     kde.settings = {
       kdeglobals = {
         General.ColorScheme = "BreezeDark";
         Icons.Theme = iconThemeName;
-        KDE.widgetStyle = "Breeze";
+        KDE.widgetStyle = "kvantum";
       };
     };
   };
+
+  home.file.".config/Kvantum/kvantum.kvconfig".text = ''
+    [General]
+    theme=${kvantumThemeName}
+  '';
 
   home.file.".icon.png".source = config.lib.file.mkOutOfStoreSymlink ./.icon.png;
   home.file.".logo.jpeg".source = config.lib.file.mkOutOfStoreSymlink ./.logo.jpeg;

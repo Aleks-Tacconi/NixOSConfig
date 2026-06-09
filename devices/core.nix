@@ -9,6 +9,25 @@
 {
 
   virtualisation.docker.enable = true;
+  services.speechd = {
+    enable = true;
+    config = ''
+      LogLevel 3
+      LogDir "default"
+      DefaultVolume 100
+      DefaultModule espeak-ng
+      AddModule "espeak-ng" "sd_espeak-ng" "espeak-ng.conf"
+    '';
+    modules."espeak-ng" = ''
+      Debug 0
+      EspeakMinRate 80
+      EspeakNormalRate 170
+      EspeakMaxRate 449
+      EspeakAudioChunkSize 300
+      EspeakIndexing 1
+      EspeakMbrola 0
+    '';
+  };
   programs.wireshark = {
     enable = true;
     package = pkgs.wireshark;
@@ -34,6 +53,7 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
+    espeak-ng
     gramps
     xdg-desktop-portal
     xdg-desktop-portal-gtk
@@ -71,7 +91,7 @@
     # ../configuration/applications/calculator/configuration.nix
 
     ../configuration/applications/opencode/configuration.nix
-    ../configuration/applications/zenbrowser/configuration.nix
+    ../configuration/applications/helium/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
     ../configuration/applications/eza/configuration.nix

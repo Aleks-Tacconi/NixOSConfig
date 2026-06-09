@@ -54,7 +54,7 @@
       export LD_LIBRARY_PATH="${pkgs.gcc.cc.lib}/lib:$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
       export JDTLS_HOME="$HOME/.local/share/jdtls"
       export BAT_THEME="ansi"
-      export FZF_DEFAULT_OPTS='--color=fg:#e0def4,bg:#232136,hl:#ea9a97,fg+:#e0def4,bg+:#2a273f,hl+:#eb6f92,info:#9ccfd8,prompt:#c4a7e7,pointer:#f6c177,marker:#eb6f92,spinner:#f6c177,header:#908caa,border:#6e6a86,label:#9ccfd8,query:#e0def4,gutter:#232136'
+      export FZF_DEFAULT_OPTS='--color=fg:#e0def4,bg:#030303,hl:#ea9a97,fg+:#e0def4,bg+:#2a273f,hl+:#eb6f92,info:#9ccfd8,prompt:#c4a7e7,pointer:#f6c177,marker:#eb6f92,spinner:#f6c177,header:#908caa,border:#6e6a86,label:#9ccfd8,query:#e0def4,gutter:#232136'
 
       mkdir -p "$JDTLS_HOME"
     '';

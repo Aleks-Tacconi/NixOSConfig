@@ -15,9 +15,10 @@
     [Desktop Entry]
     Type=Application
     Name=Neovim (Wrapper)
-    Exec=nvim %F
+    Exec=ghostty -e nvim %F
     Icon=nvim
     NoDisplay=true
+    MimeType=text/plain;text/markdown;text/x-c;text/x-c++;text/x-chdr;text/x-csrc;text/x-python;text/x-shellscript;application/json;application/xml;application/yaml;text/css;text/html;
   '';
 
 }

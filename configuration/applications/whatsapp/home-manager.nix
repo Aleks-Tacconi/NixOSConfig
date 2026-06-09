@@ -6,7 +6,7 @@
       [Desktop Entry]
       Name=Whatsapp
       Comment=
-      Exec=zen "https://web.whatsapp.com/"
+      Exec=helium "https://web.whatsapp.com/"
       Terminal=false
       Type=Application
       Categories=Messages;

@@ -9,9 +9,22 @@
 let
   system = pkgs.stdenv.hostPlatform.system;
   hyprlandPkg = inputs.hyprland.packages.${system}.hyprland;
+  appLauncher = pkgs.writeShellScriptBin "app-launcher" ''
+    monitor="$(${hyprlandPkg}/bin/hyprctl -j monitors | ${pkgs.jq}/bin/jq -r 'first(.[] | select(.focused)) | "\(.x) \(.y) \(.width) \(.height)"')"
+    read -r x y width height <<EOF
+    $monitor
+    EOF
+
+    center_x=$((x + width / 2))
+    center_y=$((y + height / 2))
+
+    ${hyprlandPkg}/bin/hyprctl dispatch movecursor "$center_x" "$center_y"
+    qs -c minimal ipc --any-display call appLauncher open
+  '';
 in
 {
   home.packages = with pkgs; [
+    appLauncher
     hyprpicker
     hyprsunset
     hyprsysteminfo
@@ -32,7 +45,7 @@ in
         "$mod, Q, exec, ghostty"
         "$mod, E, exec, nautilus"
         "$mod, C, killactive,"
-        "$mod, W, exec, zen"
+        "$mod, W, exec, helium"
         # "$mod, M, exit,"
         "$mod, N, exec, swaync-client -t"
         "$mod, V, togglefloating,"
@@ -42,7 +55,7 @@ in
         # "$mod SHIFT, T, global, quickshell:wallpaperSelectorToggle"
         # "$mod, t, exec, pkill waybar && waybar &"
 
-        "$mod, SPACE, global, quickshell:appLauncher"
+        "$mod, Space, exec, app-launcher"
         "ALT, Space, exec, playerctl play-pause"
 
         ", XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
@@ -103,6 +116,30 @@ in
       layerrule = [
         "no_anim on, match:namespace selection"
 
+        "blur on, match:namespace quickshell:topBar"
+        "ignore_alpha 0.05, match:namespace quickshell:topBar"
+        "blur on, match:namespace quickshell:appLauncher"
+        "ignore_alpha 0.05, match:namespace quickshell:appLauncher"
+        "blur on, match:namespace quickshell:appLauncherPreview"
+        "ignore_alpha 0.05, match:namespace quickshell:appLauncherPreview"
+        "blur on, match:namespace quickshell:topLeftNotificationsPullout"
+        "ignore_alpha 0.05, match:namespace quickshell:topLeftNotificationsPullout"
+        "blur on, match:namespace quickshell:topLeftCalendarPullout"
+        "ignore_alpha 0.05, match:namespace quickshell:topLeftCalendarPullout"
+        "blur on, match:namespace quickshell:topLeftNotification"
+        "ignore_alpha 0.05, match:namespace quickshell:topLeftNotification"
+        "blur on, match:namespace quickshell:topRightAudioPullout"
+        "ignore_alpha 0.05, match:namespace quickshell:topRightAudioPullout"
+        "blur on, match:namespace quickshell:topRightNetworkPullout"
+        "ignore_alpha 0.05, match:namespace quickshell:topRightNetworkPullout"
+        "blur on, match:namespace quickshell:topRightBatteryPullout"
+        "ignore_alpha 0.05, match:namespace quickshell:topRightBatteryPullout"
+        "blur on, match:namespace quickshell:topBarDockPullout"
+        "ignore_alpha 0.05, match:namespace quickshell:topBarDockPullout"
+        "no_anim on, match:namespace quickshell:topBarDockPullout"
+        "blur on, match:namespace quickshell:powerMenu"
+        "ignore_alpha 0.05, match:namespace quickshell:powerMenu"
+
         "no_anim on, match:namespace quickshell:overview"
         "blur on, match:namespace quickshell:overview"
         "ignore_alpha 0.3, match:namespace quickshell:overview"
@@ -156,7 +193,7 @@ in
 
       exec = [ ];
       exec-once = [
-        "qs -c learning &"
+        "qs -c minimal &"
         "wl-paste --type text --watch cliphist store"
         "wl-paste --type image --watch cliphist store"
         "hyprctl setcursor Bibata-Modern-Ice 24"
@@ -183,10 +220,27 @@ in
       };
 
       decoration = {
-        "rounding" = "2";
+        "rounding" = "6";
         "active_opacity" = "1";
-        "inactive_opacity" = "1";
+        "inactive_opacity" = "0.95";
         "fullscreen_opacity" = "1";
+        "dim_inactive" = "true";
+        "dim_strength" = "0.08";
+        blur = {
+          "enabled" = "true";
+          "size" = "8";
+          "passes" = "3";
+          "new_optimizations" = "true";
+          "xray" = "false";
+          "ignore_opacity" = "true";
+        };
+        shadow = {
+          "enabled" = "true";
+          "range" = "10";
+          "render_power" = "2";
+          "color" = "rgba(00000070)";
+          "color_inactive" = "rgba(00000045)";
+        };
       };
 
       dwindle = {
@@ -196,10 +250,12 @@ in
 
       general = {
         "gaps_in" = "1";
-        "gaps_out" = "4,-1,-2,-1";
+        # Top, Right, Bottom, Left
+        # cypberpunk gaps: "gaps_out" = "4,-2,-3,-2";
+        "gaps_out" = "2,2,2,2";
         "border_size" = "2";
-        "col.active_border" = "rgba(ddddddff)";
-        "col.inactive_border" = "rgba(2c2c2cff)";
+        "col.active_border" = "rgba(f2f2f266)";
+        "col.inactive_border" = "rgba(00000080)";
         "layout" = "dwindle";
         "allow_tearing" = "false";
         "resize_on_border" = "true";
@@ -239,7 +295,7 @@ in
       wallpaper = [
         {
           monitor = "";
-          path = "~/wallpapers/1dbe9fe86f1517ba74b8c15c7990ed8f_upscaled_upscaled.jpg";
+          path = "~/wallpapers/moon.jpg";
           fit_mode = "cover";
         }
       ];

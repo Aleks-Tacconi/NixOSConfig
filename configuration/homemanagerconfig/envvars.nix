@@ -1,3 +1,9 @@
+let
+  browser = "helium.desktop";
+  editor = "nvim.desktop";
+  imageEditor = "gimp.desktop";
+  office = "onlyoffice-desktopeditors.desktop";
+in
 {
   config,
   pkgs,
@@ -7,7 +13,7 @@
 {
   home.sessionVariables = {
     EDITOR = "nvim";
-    BROWSER = "zen";
+    BROWSER = "helium";
     TERMINAL = "ghostty";
     FILEMANAGER = "nautilus";
 
@@ -39,12 +45,52 @@
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
-      "application/xhtml+xml" = [ "zen.desktop" ];
-      "text/html" = [ "zen.desktop" ];
-      "x-scheme-handler/about" = [ "zen.desktop" ];
-      "x-scheme-handler/http" = [ "zen.desktop" ];
-      "x-scheme-handler/https" = [ "zen.desktop" ];
-      "x-scheme-handler/unknown" = [ "zen.desktop" ];
+      "application/xhtml+xml" = [ browser ];
+      "text/html" = [ browser ];
+      "x-scheme-handler/about" = [ browser ];
+      "x-scheme-handler/http" = [ browser ];
+      "x-scheme-handler/https" = [ browser ];
+      "x-scheme-handler/unknown" = [ browser ];
+
+      "application/json" = [ editor ];
+      "application/toml" = [ editor ];
+      "application/xml" = [ editor ];
+      "application/yaml" = [ editor ];
+      "text/css" = [ editor ];
+      "text/lua" = [ editor ];
+      "text/csv" = [ editor ];
+      "text/markdown" = [ editor ];
+      "text/plain" = [ editor ];
+      "text/x-c" = [ editor ];
+      "text/x-c++" = [ editor ];
+      "text/x-chdr" = [ editor ];
+      "text/x-csrc" = [ editor ];
+      "text/x-go" = [ editor ];
+      "text/x-java" = [ editor ];
+      "text/x-python" = [ editor ];
+      "text/x-rust" = [ editor ];
+      "text/x-shellscript" = [ editor ];
+
+      "image/avif" = [ imageEditor ];
+      "image/bmp" = [ imageEditor ];
+      "image/gif" = [ imageEditor ];
+      "image/jpeg" = [ imageEditor ];
+      "image/png" = [ imageEditor ];
+      "image/svg+xml" = [ imageEditor ];
+      "image/tiff" = [ imageEditor ];
+      "image/webp" = [ imageEditor ];
+
+      "application/pdf" = [ office ];
+      "application/msword" = [ office ];
+      "application/rtf" = [ office ];
+      "application/vnd.ms-excel" = [ office ];
+      "application/vnd.ms-powerpoint" = [ office ];
+      "application/vnd.oasis.opendocument.presentation" = [ office ];
+      "application/vnd.oasis.opendocument.spreadsheet" = [ office ];
+      "application/vnd.oasis.opendocument.text" = [ office ];
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation" = [ office ];
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = [ office ];
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" = [ office ];
     };
   };
 }

@@ -21,6 +21,7 @@
       "spotify": "",
       "brave": "󰖟",
       "zen": "󰖟",
+      "helium": "󰖟",
       "firefox-browser": "󰖟",
       "firefox": "󰖟"
     }
@@ -61,14 +62,14 @@
 
   "custom/agenda-icon": {
     "format": " ",
-    "on-click": "zen \"https://calendar.google.com/calendar\"",
+    "on-click": "helium \"https://calendar.google.com/calendar\"",
     "tooltip": false
   },
 
   "custom/agenda": {
     "format": "{}",
     "exec": "uv run --directory ~/.nextmeeting nextmeeting --max-title-length 40 --waybar | ~/.config/waybar/strip_emoji.py",
-    "on-click": "zen \"https://calendar.google.com/calendar\"",
+    "on-click": "helium \"https://calendar.google.com/calendar\"",
     "interval": 59,
     "return-type": "json",
     "tooltip": true

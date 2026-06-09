@@ -36,10 +36,10 @@
   imports = [
     ./core.nix
     ./hardware-configuration-laptop.nix
-    ../configuration/applications/eww/configuration-laptop.nix
     ../configuration/nixconfig/bluetooth.nix
 
     ../configuration/applications/steam/configuration.nix
+    ../configuration/applications/vial/configuration.nix
     ../configuration/applications/emulator/configuration.nix
   ];
 

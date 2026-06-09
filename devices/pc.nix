@@ -44,7 +44,6 @@
     ../configuration/applications/emulator/configuration.nix
     ../configuration/applications/steam/configuration.nix
     ../configuration/nvidia/configuration.nix
-    ../configuration/applications/eww/configuration-pc.nix
   ];
   boot.loader.grub.useOSProber = true;
   time.hardwareClockInLocalTime = true;

@@ -67,7 +67,7 @@ Features include:
 | leader + n                                 | Open notification panel |
 | leader + h / j / k / l | Move selection to application (vim keybinds represent direction) |
 | leader + q | Open terminal (ghostty) |
-| leader + w | Open browser (zen) | 
+| leader + w | Open browser (helium) | 
 | leader + e | Open file manager (nautilus) |
 | leader + t | Reload status bar |
 | leader + Shift + t | Open Quickshell wallpaper gallery |

@@ -18,6 +18,7 @@
     vscode-extensions.ms-vscode.cpptools
 
     espeak
+    orca
     gdb
     vale
     lazygit
@@ -175,7 +176,6 @@
     libdrm
     pulseaudioFull
     curl
-    upscayl
     pandoc
     (texliveFull.withPackages (
       ps: with ps; [
