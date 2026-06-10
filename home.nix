@@ -11,6 +11,9 @@
   home.homeDirectory = "/home/aleks";
   home.stateVersion = "25.05";
 
+
+  home.file.".local/share/jupyter/runtime/.keep".text = "";
+
   imports = [
     ./configuration/homemanagerconfig/envvars.nix
     ./configuration/homemanagerconfig/themes.nix
