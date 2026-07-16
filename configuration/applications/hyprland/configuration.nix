@@ -15,6 +15,15 @@
       inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config.hyprland.default = [
+      "hyprland"
+      "gtk"
+    ];
+  };
+
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     users."aleks" = {

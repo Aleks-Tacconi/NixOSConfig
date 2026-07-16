@@ -151,6 +151,9 @@ in
         stdenv
         pip
         pynvim
+        nbformat
+        pillow
+        pyperclip
         pylatexenc
         virtualenv
 

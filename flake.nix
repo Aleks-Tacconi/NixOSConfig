@@ -19,6 +19,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    herdr.url = "github:ogulcancelik/herdr/v0.7.3";
+
     hymission = {
       url = "github:gfhdhytghd/hymission";
       flake = false;

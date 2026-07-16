@@ -11,6 +11,9 @@
   home.homeDirectory = "/home/aleks";
   home.stateVersion = "25.05";
 
+  home.packages = with pkgs; [
+    rtk
+  ];
 
   home.file.".local/share/jupyter/runtime/.keep".text = "";
 

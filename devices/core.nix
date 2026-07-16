@@ -7,7 +7,6 @@
 }:
 
 {
-
   virtualisation.docker.enable = true;
   services.speechd = {
     enable = true;
@@ -70,6 +69,7 @@
     ../configuration/nixconfig/locale.nix
     ../configuration/nixconfig/keyboard.nix
     ../configuration/nixconfig/pipewire.nix
+    ../configuration/nixconfig/dbus.nix
     ../configuration/nixconfig/display_manager.nix
     ../configuration/nixconfig/ssh.nix
     ../configuration/nixconfig/security.nix
@@ -91,6 +91,7 @@
     # ../configuration/applications/calculator/configuration.nix
 
     ../configuration/applications/opencode/configuration.nix
+    ../configuration/applications/herdr/configuration.nix
     ../configuration/applications/helium/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix

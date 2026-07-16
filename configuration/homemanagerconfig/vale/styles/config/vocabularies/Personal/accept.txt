@@ -24,8 +24,8 @@ and
 Anley
 APIs
 APNIC
-args
 Args
+args
 ARIN
 arity
 ARP
@@ -188,8 +188,8 @@ GenAI
 generateReport
 GID
 GIDs
-github
 Github
+github
 gitlab
 GitLab
 GL
@@ -247,8 +247,8 @@ Isort
 ith
 Ivar
 IY2840
-JaCoCo
 Jacoco
+JaCoCo
 JavaDoc
 Javadoc
 Javascript
@@ -269,8 +269,8 @@ KDF
 keccak
 Kerighan
 keystream
-Keystreams
 keystreams
+Keystreams
 KLOC
 Koblitz
 Kohnfelder
@@ -323,8 +323,8 @@ mvn
 MvnRepository
 MySQL
 NCLOC
-Neovim
 NeoVim
+Neovim
 netmask
 NFRs
 NIST
@@ -361,13 +361,13 @@ PINs
 PKE
 PKI
 PKIs
-plaintext
 Plaintext
+plaintext
 plaintexts
 PMD
 POSIX
-PostgreSQL
 postgresql
+PostgreSQL
 PostgreSQL's
 PostrgreSQL
 pq
@@ -375,8 +375,8 @@ Praerit
 preimage
 preorder
 prolog
-pseudorandomness
 Pseudorandomness
+pseudorandomness
 pseudotransitivity
 Pthreads
 PVV
@@ -394,8 +394,8 @@ README's
 reddit
 Reenskaug
 refactorings
-referer
 Referer
+referer
 refl
 RelationalModel
 relationhip
@@ -432,8 +432,8 @@ Sedol
 sequence
 Serialisability
 serialisable
-Serializer
 serializer
+Serializer
 serializers
 ServerSide
 SFTP
@@ -456,8 +456,8 @@ Soton
 sp
 SPDX
 spdx
-spotbugs
 SpotBugs
+spotbugs
 SpringBootTest
 SQLi
 SQLite
@@ -479,8 +479,8 @@ SubscriberEmailAddresses
 SubscriberHomeAddresses
 SubscriberID
 sudo
-superkey
 Superkey
+superkey
 superkeys
 Tacconi
 TCF
@@ -493,8 +493,8 @@ timeboxed
 tivoisation
 tl
 TLD
-TLDRLegal
 tldrlegal
+TLDRLegal
 TMSI
 TOC
 TODO
@@ -526,8 +526,8 @@ Unlicense
 Unlinkability
 URIs
 URNs
-UserID
 userid
+UserID
 Utd
 v2
 v3
@@ -535,8 +535,8 @@ v4
 v6
 varient
 VCS
-vibecoding
 Vibecoding
+vibecoding
 Vite
 VLR
 VSC

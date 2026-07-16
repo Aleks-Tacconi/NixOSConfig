@@ -9,6 +9,9 @@
 let
   system = pkgs.stdenv.hostPlatform.system;
   hyprlandPkg = inputs.hyprland.packages.${system}.hyprland;
+  cleanRun = pkgs.writeShellScriptBin "clean-run" ''
+    exec ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all "$@"
+  '';
   appLauncher = pkgs.writeShellScriptBin "app-launcher" ''
     monitor="$(${hyprlandPkg}/bin/hyprctl -j monitors | ${pkgs.jq}/bin/jq -r 'first(.[] | select(.focused)) | "\(.x) \(.y) \(.width) \(.height)"')"
     read -r x y width height <<EOF
@@ -25,6 +28,7 @@ in
 {
   home.packages = with pkgs; [
     appLauncher
+    cleanRun
     hyprpicker
     hyprsunset
     hyprsysteminfo
@@ -37,15 +41,24 @@ in
   wayland.windowManager.hyprland = {
     enable = true;
     package = hyprlandPkg;
+    systemd = {
+      enable = true;
+      variables = [
+        "WAYLAND_DISPLAY"
+        "XDG_CURRENT_DESKTOP"
+        "XDG_SESSION_TYPE"
+        "XDG_SESSION_DESKTOP"
+      ];
+    };
 
     settings = {
       "$mod" = "SUPER";
 
       bind = [
-        "$mod, Q, exec, ghostty"
-        "$mod, E, exec, nautilus"
+        "$mod, Q, exec, clean-run ghostty"
+        "$mod, E, exec, clean-run nautilus"
         "$mod, C, killactive,"
-        "$mod, W, exec, helium"
+        "$mod, W, exec, clean-run helium"
         # "$mod, M, exit,"
         "$mod, N, exec, swaync-client -t"
         "$mod, V, togglefloating,"
@@ -55,7 +68,7 @@ in
         # "$mod SHIFT, T, global, quickshell:wallpaperSelectorToggle"
         # "$mod, t, exec, pkill waybar && waybar &"
 
-        "$mod, Space, exec, app-launcher"
+        "$mod, Space, exec, clean-run app-launcher"
         "ALT, Space, exec, playerctl play-pause"
 
         ", XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
@@ -66,8 +79,8 @@ in
         ", XF86MonBrightnessUp, exec, swayosd-client --brightness raise"
         ", XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
 
-        ", Print, exec, bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m region; fi'"
-        "SHIFT, Print, exec, bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'"
+        ", Print, exec, clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m region; fi'"
+        "SHIFT, Print, exec, clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'"
 
         "$mod, h, movefocus, l"
         "$mod, l, movefocus, r"
@@ -193,13 +206,13 @@ in
 
       exec = [ ];
       exec-once = [
-        "qs -c minimal &"
-        "wl-paste --type text --watch cliphist store"
-        "wl-paste --type image --watch cliphist store"
+        "clean-run wl-paste --type text --watch cliphist store"
+        "clean-run wl-paste --type image --watch cliphist store"
         "hyprctl setcursor Bibata-Modern-Ice 24"
-        "blueman-applet"
-        "swaync &"
+        "clean-run blueman-applet"
+        "clean-run swaync &"
         "hyprlock"
+        "clean-run qs -c minimal &"
       ];
 
       animations = {
@@ -282,7 +295,7 @@ in
           "scroll_factor" = "0.15";
         };
 
-        "sensitivity" = "0";
+        "sensitivity" = "0.1";
       };
     };
 
