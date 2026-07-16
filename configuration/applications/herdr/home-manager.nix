@@ -18,7 +18,7 @@ in
     [theme.custom]
     accent = "#f38ba8"
     panel_bg = "reset"
-    surface0 = "reset"
+    surface0 = "#313244"
 
     [ui]
     hide_tab_bar_when_single_tab = true
