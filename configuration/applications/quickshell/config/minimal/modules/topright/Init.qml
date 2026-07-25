@@ -1,0 +1,711 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Services.Pipewire
+import Quickshell.Services.UPower
+import Quickshell.Wayland
+import "../frame" as Frame
+import "../../theme"
+
+Item {
+    id: root
+
+    width: statusFrame.width
+    height: Theme.barHeight
+
+    property var popupScreen: null
+    property real downloadBytesPerSecond: 0
+    property real uploadBytesPerSecond: 0
+    property real previousRxBytes: 0
+    property real previousTxBytes: 0
+    property real previousTrafficTime: 0
+    property string activeInterface: ""
+    property string networkType: "none"
+    property string networkState: "unavailable"
+    property string networkLabel: "No network"
+    property string sysfsBatteryPath: ""
+    property bool sysfsBatteryPresent: false
+    property int sysfsBatteryPercentValue: 0
+    property string sysfsBatteryState: "Unknown"
+    property real sysfsBatterySecondsRemainingValue: 0
+    property real sysfsBatteryRateWattsValue: 0
+    property real popupRightMargin: Theme.gap * 2
+    property string openPopup: ""
+    readonly property bool audioOpen: root.openPopup === "audio"
+    readonly property bool networkOpen: root.openPopup === "network"
+    readonly property bool batteryOpen: root.openPopup === "battery"
+    readonly property int audioPercent: Math.round((Pipewire.defaultAudioSink?.audio?.volume ?? 0) * 100)
+    readonly property string networkIcon: iconForNetwork()
+    readonly property var laptopBattery: laptopBatteryDevice()
+    readonly property bool hasBattery: laptopBattery !== null || sysfsBatteryPresent
+    readonly property int batteryPercent: Math.round(laptopBattery?.percentage ?? sysfsBatteryPercentValue)
+    readonly property real audioPanelHeight: Math.min(520, Math.max(220, audioContent.implicitHeight + Theme.panelPadding * 2))
+    readonly property real networkPanelHeight: networkContent.implicitHeight + Theme.panelPadding * 2
+    readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
+
+    onActiveInterfaceChanged: resetTraffic()
+
+    PwObjectTracker {
+        objects: [Pipewire.defaultAudioSink]
+    }
+
+    FileView {
+        id: rxBytesFile
+
+        path: root.activeInterface.length > 0 ? `/sys/class/net/${root.activeInterface}/statistics/rx_bytes` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    FileView {
+        id: txBytesFile
+
+        path: root.activeInterface.length > 0 ? `/sys/class/net/${root.activeInterface}/statistics/tx_bytes` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    FileView {
+        id: batteryPresentFile
+
+        path: root.sysfsBatteryPath.length > 0 ? `${root.sysfsBatteryPath}/present` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    FileView {
+        id: batteryCapacityFile
+
+        path: root.sysfsBatteryPath.length > 0 ? `${root.sysfsBatteryPath}/capacity` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    FileView {
+        id: batteryStatusFile
+
+        path: root.sysfsBatteryPath.length > 0 ? `${root.sysfsBatteryPath}/status` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    FileView {
+        id: batteryPowerNowFile
+
+        path: root.sysfsBatteryPath.length > 0 ? `${root.sysfsBatteryPath}/power_now` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    FileView {
+        id: batteryEnergyNowFile
+
+        path: root.sysfsBatteryPath.length > 0 ? `${root.sysfsBatteryPath}/energy_now` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    FileView {
+        id: batteryEnergyFullFile
+
+        path: root.sysfsBatteryPath.length > 0 ? `${root.sysfsBatteryPath}/energy_full` : ""
+        blockAllReads: true
+        printErrors: false
+    }
+
+    Timer {
+        interval: 1000
+        repeat: true
+        running: root.activeInterface.length > 0
+        triggeredOnStart: true
+        onTriggered: root.updateTraffic()
+    }
+
+    Timer {
+        interval: 5000
+        repeat: true
+        running: true
+        triggeredOnStart: true
+        onTriggered: root.updateNetworkStatus()
+    }
+
+    Timer {
+        interval: 30000
+        repeat: true
+        running: root.sysfsBatteryPath.length > 0 && root.laptopBattery === null
+        triggeredOnStart: true
+        onTriggered: root.updateSysfsBattery()
+    }
+
+    Process {
+        id: networkStatusProcess
+
+        stdout: StdioCollector {
+            id: networkStatusOutput
+
+            onStreamFinished: root.applyNetworkStatus(networkStatusOutput.text)
+        }
+    }
+
+    Process {
+        id: batteryPathProcess
+
+        stdout: StdioCollector {
+            id: batteryPathOutput
+
+            onStreamFinished: root.applySysfsBatteryPath(batteryPathOutput.text)
+        }
+    }
+
+    Component.onCompleted: root.refreshSysfsBatteryPath()
+    onSysfsBatteryPathChanged: root.updateSysfsBattery()
+
+    function modelValues(model) {
+        return model?.values ?? [];
+    }
+
+    function updateNetworkStatus() {
+        networkStatusProcess.exec(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device", "status"]);
+    }
+
+    function applyNetworkStatus(output) {
+        const devices = output.trim().split("\n").filter(line => line.length > 0).map(line => {
+            const parts = line.split(":");
+            return {
+                interfaceName: parts[0] ?? "",
+                type: parts[1] ?? "none",
+                state: parts[2] ?? "unavailable",
+                label: parts.slice(3).join(":") || parts[0] || "No network"
+            };
+        }).filter(device => device.interfaceName !== "lo");
+
+        const connected = devices.filter(device => device.state === "connected");
+        const device = connected.find(device => device.type === "wifi") ?? connected.find(device => device.type === "ethernet") ?? devices.find(device => device.type === "wifi") ?? devices.find(device => device.type === "ethernet") ?? null;
+
+        root.activeInterface = device?.interfaceName ?? "";
+        root.networkType = device?.type ?? "none";
+        root.networkState = device?.state ?? "unavailable";
+        root.networkLabel = device?.label ?? "No network";
+    }
+
+    function iconForNetwork() {
+        if (root.networkState !== "connected")
+            return "󰤭";
+
+        if (root.networkType === "ethernet")
+            return "󰈀";
+
+        return "󰤨";
+    }
+
+    function laptopBatteryDevice() {
+        return root.modelValues(UPower.devices).find(device => device.isLaptopBattery && device.isPresent) ?? null;
+    }
+
+    function refreshSysfsBatteryPath() {
+        batteryPathProcess.exec(["sh", "-lc", 'for battery in /sys/class/power_supply/BAT*; do [ -d "$battery" ] || continue; read -r type < "$battery/type" || continue; read -r present < "$battery/present" || continue; [ "$type" = "Battery" ] && [ "$present" = "1" ] && printf "%s" "$battery" && break; done']);
+    }
+
+    function applySysfsBatteryPath(output) {
+        root.sysfsBatteryPath = output.trim();
+    }
+
+    function readNumber(file) {
+        const value = Number(file.text().trim());
+
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function updateSysfsBattery() {
+        if (root.sysfsBatteryPath.length === 0)
+            return;
+
+        batteryPresentFile.reload();
+        batteryCapacityFile.reload();
+        batteryStatusFile.reload();
+        batteryPowerNowFile.reload();
+        batteryEnergyNowFile.reload();
+        batteryEnergyFullFile.reload();
+
+        const present = batteryPresentFile.text().trim() === "1";
+        const capacity = root.readNumber(batteryCapacityFile);
+        const status = batteryStatusFile.text().trim();
+        const powerWatts = root.readNumber(batteryPowerNowFile) / 1000000;
+        const energyNow = root.readNumber(batteryEnergyNowFile) / 1000000;
+        const energyFull = root.readNumber(batteryEnergyFullFile) / 1000000;
+
+        root.sysfsBatteryPresent = present;
+        root.sysfsBatteryPercentValue = Math.max(0, Math.min(100, Math.round(capacity)));
+        root.sysfsBatteryState = status.length > 0 ? status : "Unknown";
+        root.sysfsBatteryRateWattsValue = Math.max(0, powerWatts);
+
+        if (!present || powerWatts <= 0) {
+            root.sysfsBatterySecondsRemainingValue = 0;
+            return;
+        }
+
+        if (status === "Charging" && energyFull > energyNow) {
+            root.sysfsBatterySecondsRemainingValue = (energyFull - energyNow) / powerWatts * 3600;
+            return;
+        }
+
+        if (status === "Discharging" && energyNow > 0) {
+            root.sysfsBatterySecondsRemainingValue = energyNow / powerWatts * 3600;
+            return;
+        }
+
+        root.sysfsBatterySecondsRemainingValue = 0;
+    }
+
+    function resetTraffic() {
+        root.downloadBytesPerSecond = 0;
+        root.uploadBytesPerSecond = 0;
+        root.previousRxBytes = 0;
+        root.previousTxBytes = 0;
+        root.previousTrafficTime = 0;
+    }
+
+    function updateTraffic() {
+        if (root.activeInterface.length === 0)
+            return;
+        rxBytesFile.reload();
+        txBytesFile.reload();
+
+        const rxBytes = Number(rxBytesFile.text().trim());
+        const txBytes = Number(txBytesFile.text().trim());
+        const now = Date.now();
+
+        if (!Number.isFinite(rxBytes) || !Number.isFinite(txBytes))
+            return;
+        if (root.previousTrafficTime > 0) {
+            const elapsedSeconds = Math.max(1, (now - root.previousTrafficTime) / 1000);
+
+            root.downloadBytesPerSecond = Math.max(0, (rxBytes - root.previousRxBytes) / elapsedSeconds);
+            root.uploadBytesPerSecond = Math.max(0, (txBytes - root.previousTxBytes) / elapsedSeconds);
+        }
+
+        root.previousRxBytes = rxBytes;
+        root.previousTxBytes = txBytes;
+        root.previousTrafficTime = now;
+    }
+
+    function formatRate(bytesPerSecond) {
+        if (bytesPerSecond >= 1048576)
+            return `${(bytesPerSecond / 1048576).toFixed(1)} MB/s`;
+
+        return `${Math.round(bytesPerSecond / 1024)} KB/s`;
+    }
+
+    function formatPercent(percent) {
+        return `${Math.max(0, Math.min(999, percent))}%`;
+    }
+
+    function setAudioPercent(percent) {
+        const audio = Pipewire.defaultAudioSink?.audio;
+
+        if (!audio)
+            return;
+
+        audio.volume = Math.max(0, Math.min(1.5, percent / 100));
+    }
+
+    function adjustAudioPercent(delta) {
+        root.setAudioPercent(root.audioPercent + delta);
+    }
+
+    function segmentRightMargin(item) {
+        const position = item.mapToItem(statusFrame, 0, 0);
+
+        return root.popupRightMargin + Math.max(0, statusFrame.width - position.x - item.width);
+    }
+
+    function togglePopup(name) {
+        root.openPopup = root.openPopup === name ? "" : name;
+    }
+
+    function closePopup(name) {
+        if (root.openPopup === name)
+            root.openPopup = "";
+    }
+
+    Item {
+        id: statusFrame
+
+        anchors.centerIn: parent
+        width: statusContent.implicitWidth
+        height: statusContent.implicitHeight
+
+        Row {
+            id: statusContent
+
+            anchors.centerIn: parent
+            spacing: Theme.gap * 5
+
+            Item {
+                id: audioSegment
+
+                y: (statusContent.implicitHeight - height) / 2
+                width: audioRow.implicitWidth
+                height: 28
+
+                Row {
+                    id: audioRow
+
+                    anchors.centerIn: parent
+                    spacing: Theme.gap * 2
+
+                    Text {
+                        text: ""
+                        color: Theme.red
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize + 1
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: root.formatPercent(root.audioPercent)
+                        color: Theme.fg
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize + 1
+                        font.bold: true
+                    }
+                }
+
+                MouseArea {
+                    id: audioTrigger
+
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.togglePopup("audio")
+
+                    onWheel: wheel => {
+                        root.adjustAudioPercent(wheel.angleDelta.y > 0 ? 5 : -5);
+                        wheel.accepted = true;
+                    }
+                }
+            }
+
+            Item {
+                id: networkSegment
+
+                y: (statusContent.implicitHeight - height) / 2
+                width: networkRow.implicitWidth
+                height: 28
+
+                Row {
+                    id: networkRow
+
+                    anchors.centerIn: parent
+                    spacing: Theme.gap * 2
+
+                    Text {
+                        text: root.networkIcon
+                        color: Theme.red
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize + 1
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: root.networkLabel
+                        width: Math.min(92, implicitWidth)
+                        color: Theme.fg
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize + 1
+                        maximumLineCount: 1
+                        elide: Text.ElideRight
+                        font.bold: true
+                    }
+                }
+
+                MouseArea {
+                    id: networkTrigger
+
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.togglePopup("network")
+                }
+            }
+
+            Item {
+                id: batterySegment
+
+                y: (statusContent.implicitHeight - height) / 2
+                visible: root.hasBattery
+                width: visible ? batteryRow.implicitWidth : 0
+                height: 28
+
+                Row {
+                    id: batteryRow
+
+                    anchors.centerIn: parent
+                    spacing: Theme.gap * 2
+
+                    Text {
+                        text: "󰁹"
+                        color: Theme.red
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize + 1
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: root.formatPercent(root.batteryPercent)
+                        color: Theme.fg
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize + 1
+                        font.bold: true
+                    }
+                }
+
+                MouseArea {
+                    id: batteryTrigger
+
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.togglePopup("battery")
+                }
+            }
+        }
+    }
+
+    PanelWindow {
+        id: audioPopupWindow
+
+        screen: root.popupScreen
+        color: "transparent"
+        exclusionMode: ExclusionMode.Ignore
+        visible: root.audioOpen || audioPanel.progress > 0
+        implicitWidth: audioPanel.length + audioPanel.curveRadius
+        implicitHeight: audioPanel.depth + audioPanel.curveRadius
+        mask: Region {
+            item: audioPopupHost
+        }
+
+        WlrLayershell.namespace: "quickshell:topRightAudioPullout"
+        WlrLayershell.layer: WlrLayer.Top
+
+        anchors {
+            top: true
+            right: true
+        }
+
+        margins {
+            top: Theme.barHeight + Theme.popupGap
+            right: root.segmentRightMargin(audioSegment)
+        }
+
+        Item {
+            id: audioPopupHost
+
+            anchors.fill: parent
+            clip: false
+            visible: audioPopupWindow.visible
+
+            Frame.PulloutPanel {
+                id: audioPanel
+
+                corner: "topRight"
+                requestedOpen: root.audioOpen
+                activatorMouseArea: audioTrigger
+                dismissOnExit: true
+                onDismissRequested: root.closePopup("audio")
+
+                length: 340
+                depth: root.audioPanelHeight
+                duration: 180
+
+                backgroundColor: Theme.panelBg
+                curveRadius: Theme.panelRadius
+
+                anchors {
+                    top: parent.top
+                    right: parent.right
+                }
+
+                Column {
+                    id: audioContent
+
+                    anchors {
+                        fill: parent
+                        topMargin: Theme.panelPadding
+                        leftMargin: Theme.panelPadding
+                        rightMargin: Theme.panelPadding
+                        bottomMargin: Theme.panelPadding
+                    }
+
+                    spacing: Theme.panelSectionGap
+
+                    Media {
+                        width: parent.width
+                    }
+                }
+            }
+        }
+    }
+
+    PanelWindow {
+        id: networkPopupWindow
+
+        screen: root.popupScreen
+        color: "transparent"
+        exclusionMode: ExclusionMode.Ignore
+        visible: root.networkOpen || networkPanel.progress > 0
+        implicitWidth: networkPanel.length + networkPanel.curveRadius
+        implicitHeight: networkPanel.depth + networkPanel.curveRadius
+        mask: Region {
+            item: networkPopupHost
+        }
+
+        WlrLayershell.namespace: "quickshell:topRightNetworkPullout"
+        WlrLayershell.layer: WlrLayer.Top
+
+        anchors {
+            top: true
+            right: true
+        }
+
+        margins {
+            top: Theme.barHeight + Theme.popupGap
+            right: root.segmentRightMargin(networkSegment)
+        }
+
+        Item {
+            id: networkPopupHost
+
+            anchors.fill: parent
+            clip: false
+            visible: networkPopupWindow.visible
+
+            Frame.PulloutPanel {
+                id: networkPanel
+
+                corner: "topRight"
+                requestedOpen: root.networkOpen
+                activatorMouseArea: networkTrigger
+                dismissOnExit: true
+                onDismissRequested: root.closePopup("network")
+
+                length: 320
+                depth: root.networkPanelHeight
+                duration: 180
+
+                backgroundColor: Theme.panelBg
+                curveRadius: Theme.panelRadius
+
+                anchors {
+                    top: parent.top
+                    right: parent.right
+                }
+
+                Column {
+                    id: networkContent
+
+                    anchors {
+                        fill: parent
+                        topMargin: Theme.panelPadding
+                        leftMargin: Theme.panelPadding
+                        rightMargin: Theme.panelPadding
+                        bottomMargin: Theme.panelPadding
+                    }
+
+                    Network {
+                        width: parent.width
+                        interfaceName: root.activeInterface
+                        label: root.networkLabel
+                        state: root.networkState
+                        type: root.networkType
+                        down: root.formatRate(root.downloadBytesPerSecond)
+                        up: root.formatRate(root.uploadBytesPerSecond)
+                    }
+                }
+            }
+        }
+    }
+
+    PanelWindow {
+        id: batteryPopupWindow
+
+        screen: root.popupScreen
+        color: "transparent"
+        exclusionMode: ExclusionMode.Ignore
+        visible: root.hasBattery && (root.batteryOpen || batteryPanel.progress > 0)
+        implicitWidth: batteryPanel.length + batteryPanel.curveRadius
+        implicitHeight: batteryPanel.depth + batteryPanel.curveRadius
+        mask: Region {
+            item: batteryPopupHost
+        }
+
+        WlrLayershell.namespace: "quickshell:topRightBatteryPullout"
+        WlrLayershell.layer: WlrLayer.Top
+
+        anchors {
+            top: true
+            right: true
+        }
+
+        margins {
+            top: Theme.barHeight + Theme.popupGap
+            right: root.segmentRightMargin(batterySegment)
+        }
+
+        Item {
+            id: batteryPopupHost
+
+            anchors.fill: parent
+            clip: false
+            visible: batteryPopupWindow.visible
+
+            Frame.PulloutPanel {
+                id: batteryPanel
+
+                corner: "topRight"
+                requestedOpen: root.batteryOpen
+                activatorMouseArea: batteryTrigger
+                dismissOnExit: true
+                onDismissRequested: root.closePopup("battery")
+
+                length: 340
+                depth: root.batteryPanelHeight
+                duration: 180
+
+                backgroundColor: Theme.panelBg
+                curveRadius: Theme.panelRadius
+
+                anchors {
+                    top: parent.top
+                    right: parent.right
+                }
+
+                Column {
+                    id: batteryContent
+
+                    anchors {
+                        fill: parent
+                        topMargin: Theme.panelPadding
+                        leftMargin: Theme.panelPadding
+                        rightMargin: Theme.panelPadding
+                        bottomMargin: Theme.panelPadding
+                    }
+
+                    Battery {
+                        width: parent.width
+                        device: root.laptopBattery
+                        fallbackPercent: root.sysfsBatteryPercentValue
+                        fallbackState: root.sysfsBatteryState
+                        fallbackSecondsRemaining: root.sysfsBatterySecondsRemainingValue
+                        fallbackRateWatts: root.sysfsBatteryRateWattsValue
+                    }
+                }
+            }
+        }
+    }
+}

@@ -34,13 +34,16 @@ in
     hyprsysteminfo
     hyprpolkitagent
   ];
-  services.swayosd.enable = true;
-  services.swayosd.stylePath = null;
-  services.swayosd.topMargin = 0.92;
+  services.swayosd = {
+    enable = true;
+    stylePath = null;
+    topMargin = 0.92;
+  };
 
   wayland.windowManager.hyprland = {
     enable = true;
     package = hyprlandPkg;
+    configType = "hyprlang";
     systemd = {
       enable = true;
       variables = [
@@ -58,15 +61,10 @@ in
         "$mod, Q, exec, clean-run ghostty"
         "$mod, E, exec, clean-run nautilus"
         "$mod, C, killactive,"
-        "$mod, W, exec, clean-run helium"
+        "$mod, W, exec, clean-run google-chrome-stable"
         # "$mod, M, exit,"
-        "$mod, N, exec, swaync-client -t"
+        "$mod, N, exec, clean-run qs -c minimal ipc --any-display call notifications toggle"
         "$mod, V, togglefloating,"
-
-        # "$mod, A, exec, qs -c ii ipc call sidebarLeft toggle"
-        # "$mod, Space, exec, qs -c ii ipc call search toggle"
-        # "$mod SHIFT, T, global, quickshell:wallpaperSelectorToggle"
-        # "$mod, t, exec, pkill waybar && waybar &"
 
         "$mod, Space, exec, clean-run app-launcher"
         "ALT, Space, exec, playerctl play-pause"
@@ -164,9 +162,6 @@ in
         "match:class showmethekey-gtk, border_size 0"
         "match:class showmethekey-gtk, no_initial_focus on"
 
-        "match:class brave-nngceckbapebfimnlniiiahkandclblb-Default, float on"
-        "match:class brave-nngceckbapebfimnlniiiahkandclblb-Default, center on"
-
         "match:title ^Extension: \(Bitwarden Password Manager\).*, float on"
         "match:title ^Extension: \(Bitwarden Password Manager\).*, center on"
 
@@ -175,10 +170,6 @@ in
         "match:title .*wants to save$, float on"
         "match:title .*wants to save$, center on"
 
-        "match:class rocketleague.exe, opacity 1.0 override 1.0 override 1.0 override"
-
-        "match:title ^Calculator$, float on"
-        "match:title ^Calculator$, center on"
       ];
       # ... , mirror, eDP-1
 
@@ -210,9 +201,7 @@ in
         "clean-run wl-paste --type image --watch cliphist store"
         "hyprctl setcursor Bibata-Modern-Ice 24"
         "clean-run blueman-applet"
-        "clean-run swaync &"
         "hyprlock"
-        "clean-run qs -c minimal &"
       ];
 
       animations = {

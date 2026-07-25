@@ -1,0 +1,8 @@
+# Paths are relative to $HOME unless absolute.
+Downloads
+Documents
+Pictures
+Projects
+wallpapers
+.config/nvim
+.config/ghostty

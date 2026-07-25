@@ -4,7 +4,7 @@ let
   qs = quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 pkgs.stdenv.mkDerivation {
-  pname = "illogical-impulse-quickshell-wrapper";
+  pname = "quickshell-wrapper";
   version = "unstable";
 
   dontUnpack = true;
