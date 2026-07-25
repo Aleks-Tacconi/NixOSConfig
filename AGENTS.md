@@ -15,7 +15,7 @@
 - `configuration/homemanagerconfig/*.nix`: shared HM settings (themes, env vars, services).
 - `home.nix`: Home Manager root module for user `aleks`.
 - `Makefile`: primary operational commands for rebuild/update/cleanup.
-- `RootMakefile`: utility tasks (Jellyfin/Tailscale reset, jdtls config copy).
+- `RootMakefile`: utility tasks (Jellyfin reset, disk inspection, jdtls config copy).
 
 ## Cursor / Copilot Rule Files
 - Checked `.cursor/rules/`: not present.
@@ -47,13 +47,10 @@
   `nix run nixpkgs#nixfmt-rfc-style -- $(git ls-files '*.nix')`
 - Nix lint suggestions: `nix run nixpkgs#statix -- check .`
 - Nix dead code scan: `nix run nixpkgs#deadnix -- .`
-- Shell lint (all shell scripts):
+- Shell lint (when shell scripts are present):
   `nix run nixpkgs#shellcheck -- $(git ls-files '*.sh')`
 - Shell syntax check (single file): `bash -n path/to/script.sh`
-- Python format check: `nix run nixpkgs#black -- --check $(git ls-files '*.py')`
-- Python import sort check: `nix run nixpkgs#isort -- --check-only $(git ls-files '*.py')`
-- Python lint: `nix run nixpkgs#python313Packages.pylint -- $(git ls-files '*.py')`
-- Python compile smoke check: `python3 -m py_compile $(git ls-files '*.py')`
+- Python checks apply only when Python files are present.
 
 ## Test Commands (and "Single Test" Guidance)
 - There is no dedicated unit/integration test suite in this repo today.
@@ -65,9 +62,6 @@
   `nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run`
 - Single option evaluation example:
   `nix eval .#nixosConfigurations.laptop.config.programs.wireshark.enable`
-- Single-script validation examples:
-  `nix run nixpkgs#shellcheck -- configuration/applications/waybar/waybar/todo_rofi.sh`
-  `python3 -m py_compile configuration/applications/waybar/waybar/nixos_search/main.py`
 
 ## Nix Code Style
 - Use 2-space indentation consistently.
@@ -94,7 +88,7 @@
 - Keep import lists readable and stable; avoid unnecessary reordering.
 
 ## Naming Conventions
-- Directory names are lowercase (examples: `waybar`, `hyprlock`, `tailscale`).
+- Directory names are lowercase (examples: `chrome`, `hyprlock`, `quickshell`).
 - Nix module files are usually descriptive snake_case or conventional names:
   `configuration.nix`, `home-manager.nix`, `display_manager.nix`.
 - Keep host names exactly as flake outputs define them: `laptop`, `pc`.
@@ -126,9 +120,10 @@
 - Add type hints where they improve clarity (`def main() -> None`).
 - Prefer straightforward stdlib usage unless regex/unicode handling needs external libs.
 
-## JSON / CSS / SCSS / Yuck Conventions
+## QML / JSON / CSS Conventions
 - Preserve existing formatting style within each file rather than reformatting wholesale.
-- Keep keys grouped logically in JSON configs (Waybar/SwayNC modules).
+- Keep keys grouped logically in JSON and JSONC configs.
+- Keep shared Quickshell popup behavior in `modules/frame` rather than duplicating it.
 - Keep CSS selectors grouped by component/area.
 - Avoid mass reindent changes unless requested.
 
