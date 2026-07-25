@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, lib, ... }:
+{ pkgs, ... }:
 
 {
   hardware.keyboard.qmk.enable = true;
@@ -8,7 +8,8 @@
   ];
 
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
-    users."aleks" = { imports = [ ./home-manager.nix ]; };
+    users."aleks" = {
+      imports = [ ./home-manager.nix ];
+    };
   };
 }

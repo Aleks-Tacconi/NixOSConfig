@@ -1,14 +1,7 @@
-{
-  config,
-  pkgs,
-  inputs,
-  lib,
-  ...
-}:
+_:
 
 {
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
     users."aleks" = {
       imports = [ ./ghostty.nix ];
     };

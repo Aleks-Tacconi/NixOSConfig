@@ -42,7 +42,6 @@
     ./hardware-configuration-pc.nix
 
     ../configuration/applications/emulator/configuration.nix
-    ../configuration/applications/steam/configuration.nix
     ../configuration/nvidia/configuration.nix
   ];
   boot.loader.grub.useOSProber = true;

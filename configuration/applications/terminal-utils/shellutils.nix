@@ -96,10 +96,8 @@ in
 
     # Core CLI utilities
     zip
-    eza
     tree
     xdg-utils
-    marksman
     php84Packages.composer
     php
     julia_111-bin
@@ -144,7 +142,6 @@ in
       ps: with ps; [
         debugpy
         demjson3
-        tkinter
         numpy
         regex
         tkinter

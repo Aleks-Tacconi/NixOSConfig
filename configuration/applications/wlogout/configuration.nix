@@ -1,8 +1,9 @@
-{ config, pkgs, inputs, lib, ... }:
+_:
 
 {
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
-    users."aleks" = { imports = [ ./home-manager.nix ]; };
+    users."aleks" = {
+      imports = [ ./home-manager.nix ];
+    };
   };
 }

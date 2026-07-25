@@ -1,16 +1,9 @@
-{
-  config,
-  pkgs,
-  inputs,
-  lib,
-  ...
-}:
+_:
 
 {
   imports = [ ./zsh.nix ];
 
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
     users."aleks" = {
       imports = [
         ./shellutils.nix

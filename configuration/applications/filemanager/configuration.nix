@@ -1,10 +1,4 @@
-{
-  config,
-  pkgs,
-  inputs,
-  lib,
-  ...
-}:
+{ pkgs, ... }:
 
 {
   programs.nautilus-open-any-terminal = {
@@ -19,7 +13,6 @@
   ];
 
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
     users."aleks" = {
       imports = [ ./home-manager.nix ];
     };

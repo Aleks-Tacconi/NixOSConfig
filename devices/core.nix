@@ -37,8 +37,6 @@
   ];
 
   hardware.enableAllFirmware = true;
-  nixpkgs.config.android_sdk.accept_license = true;
-
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     useGlobalPkgs = true;
@@ -78,27 +76,15 @@
     ../configuration/nixconfig/users.nix
 
     # applications
-    # ../configuration/applications/appeditor/configuration.nix
-    # ../configuration/applications/chromium/configuration.nix
-    # ../configuration/applications/eclipse/configuration.nix
-    # ../configuration/applications/globalprotect/configuration.nix
-    # ../configuration/applications/brave/configuration.nix
-    # ../configuration/applications/dbeaver/configuration.nix
-    # ../configuration/applications/android/configuration.nix
-    # ../configuration/applications/teams/configuration.nix
-    # ../configuration/applications/tailscale/configuration.nix
-    # ../configuration/applications/snappy-switcher/configuration.nix
-    # ../configuration/applications/calculator/configuration.nix
-
     ../configuration/applications/opencode/configuration.nix
     ../configuration/applications/herdr/configuration.nix
+    ../configuration/applications/chrome/configuration.nix
     ../configuration/applications/helium/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix
     ../configuration/applications/filemanager/configuration.nix
-    ../configuration/applications/gimp/configuration.nix
     ../configuration/applications/hyprland/configuration.nix
     ../configuration/applications/hyprlock/configuration.nix
     ../configuration/applications/kdeconnect/configuration.nix
@@ -111,12 +97,7 @@
     ../configuration/applications/obsidian/configuration.nix
     ../configuration/applications/obsstudio/configuration.nix
     ../configuration/applications/qbittorrent/configuration.nix
-    ../configuration/applications/rofi/configuration.nix
     ../configuration/applications/spotify/configuration.nix
-    ../configuration/applications/swaync/configuration.nix
-    ../configuration/applications/tmux/configuration.nix
-    ../configuration/applications/waybar/configuration.nix
-    ../configuration/applications/whatsapp/configuration.nix
     ../configuration/applications/wlogout/configuration.nix
   ];
 

@@ -1,10 +1,4 @@
-{
-  config,
-  pkgs,
-  inputs,
-  lib,
-  ...
-}:
+{ config, ... }:
 
 {
   hardware = {
@@ -21,7 +15,6 @@
   services.xserver.videoDrivers = [ "nvidia" ];
 
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
     users."aleks" = {
       imports = [ ./home-manager.nix ];
     };
