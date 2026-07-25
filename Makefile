@@ -2,7 +2,6 @@
 
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
-RED := \033[0;31m
 NC := \033[0m  # No Color
 
 GIT_ADD := git add -A
@@ -12,10 +11,6 @@ REBUILD := sudo nixos-rebuild switch --flake ./
 MSG ?= new version
 
 laptop:
-	@echo ""
-	@echo -e "$(YELLOW)==> Setting ulimit...$(NC)"
-	$(ULIMIT)
-
 	@echo ""
 	@echo -e "$(YELLOW)==> Mounting /boot if needed...$(NC)"
 	
@@ -32,7 +27,7 @@ laptop:
 
 	@echo ""
 	@echo -e "$(YELLOW)==> Rebuilding NixOS configuration for laptop...$(NC)"
-	$(REBUILD)#laptop
+	$(ULIMIT) && $(REBUILD)#laptop
 
 	@echo ""
 	@echo -e "$(GREEN)==> Laptop rebuild complete!$(NC)"
@@ -40,16 +35,12 @@ laptop:
 
 pc:
 	@echo ""
-	@echo -e "$(YELLOW)==> Setting ulimit...$(NC)"
-	$(ULIMIT)
-
-	@echo ""
 	@echo -e "$(YELLOW)==> Staging changes for git...$(NC)"
 	$(GIT_ADD)
 
 	@echo ""
 	@echo -e "$(YELLOW)==> Rebuilding NixOS configuration for PC...$(NC)"
-	$(REBUILD)#pc
+	$(ULIMIT) && $(REBUILD)#pc
 
 	@echo ""
 	@echo -e "$(GREEN)==> PC rebuild complete!$(NC)"
@@ -103,4 +94,3 @@ all: update git laptop
 	@echo ""
 	@echo -e "$(GREEN)==> All tasks complete!$(NC)"
 	@echo ""
-

@@ -6,15 +6,10 @@ reset-jellyfin:
 	rm -rf ~/Media/config
 	mkdir ~/Media/config
 
-	sudo systemctl enable --now tailscale
 	sudo systemctl restart jellyfin
 
 clean-harddisk:
-    ncdu /
-
-reset-tailscale:
-	sudo rm -r /var/lib/tailscale
-	sudo tailscale up
+	ncdu /
 
 jdtls-config:
 	mkdir -p $(HOME)/.local/share/jdtls && \
