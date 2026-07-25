@@ -131,22 +131,6 @@
         "type": "github"
       }
     },
-    "hymission": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1780824101,
-        "narHash": "sha256-91nwy36nk3Pqp12URNfw0mB8peut7QmVSkuWWpO7/Yw=",
-        "owner": "gfhdhytghd",
-        "repo": "hymission",
-        "rev": "20afc79357b7b5f1a82718dc71d9171a8a282d21",
-        "type": "github"
-      },
-      "original": {
-        "owner": "gfhdhytghd",
-        "repo": "hymission",
-        "type": "github"
-      }
-    },
     "hyprcursor": {
       "inputs": {
         "hyprlang": [
@@ -550,7 +534,6 @@
         "helium-flake": "helium-flake",
         "herdr": "herdr",
         "home-manager": "home-manager",
-        "hymission": "hymission",
         "hyprland": "hyprland",
         "nixpkgs": "nixpkgs_2",
         "quickshell": "quickshell"

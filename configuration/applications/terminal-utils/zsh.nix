@@ -54,7 +54,6 @@ in
       eval "$(zoxide init zsh)"
       setopt appendhistory
       export PATH=$PATH:$HOME/.cargo/bin
-      export PATH=$PATH:$HOME/.opencode/bin/
       export LD_LIBRARY_PATH="${pkgs.gcc.cc.lib}/lib:$HOME/.nix-profile/lib:$HOME/.nix-profile/lib64''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
       export JDTLS_HOME="$HOME/.local/share/jdtls"
       export BAT_THEME="ansi"

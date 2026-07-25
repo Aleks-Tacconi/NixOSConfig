@@ -19,4 +19,4 @@ command = ["bash", "bootstrap.sh"]
 id = "agent"
 title = "Agent"
 placement = "tab"
-command = ["/home/aleks/.opencode/bin/opencode"]
+command = ["opencode"]

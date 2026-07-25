@@ -1,37 +1,110 @@
-## General instructions
-
-- Prefer small patches over large changes
-- If a change is large break it up into multiple small patches
-
 ## Conversation Guidelines
 
-- Make your answers as concise and simple as possible.
-- Do NOT use emojis 
+- Keep answers concise and simple.
+- Do not use emojis.
+- Say what you changed and why.
+- Be precise about uncertainty.
+- Ask when requirements or project patterns are unclear.
 
-## Available Subagents
+## Core Workflow
 
-- The following is a description of available subagents and when to use them
-  - context-gatherer: Use only when repository evidence is needed and missing. Keep the result structured and concise.
-  - implementation-planner: Use after the request is clear to decide concrete next steps before proceeding with an implementation.
-  - refactor-reviewer: Use for refactoring / optimisation tasks 
+### 1. Read Before Writing
 
-## Planning workflow
+Before changing code:
 
-- Preferred sequence: Ask / clarify -> optional context-gatherer -> implementation-planner -> build
-- Do not call context-gatherer by default. Use it when the answer or plan depends on verified repository behavior.
-- Reuse previously gathered context in the same thread when it still matches the current scope. Re-run context-gatherer only when scope changed, context is incomplete, or the repository likely changed materially.
+- Read the files you are about to touch.
+- Check nearby patterns, imports, naming, and project conventions.
+- Prefer existing project style over introducing a new style.
+- Do not guess how the codebase works.
+
+### 2. Think Before Coding
+
+Before implementing:
+
+- State the intended approach for non-trivial changes.
+- Name assumptions and tradeoffs.
+- Define what success looks like.
+- Ask instead of filling gaps with plausible code.
+
+### 3. Make Surgical Changes
+
+- Keep diffs as small as the task allows.
+- Do not touch unrelated code.
+- Do not reformat unrelated files.
+- Every changed line should be justified by the task.
+- Avoid “while I was here” changes.
 
 ## Coding Guidelines
 
-- Avoid deep layers of nesting when writing code, if nesting becomes excessive consider abstracting logic to a helper function
-- Avoid large functions. Functions should not exceed 50 lines, unless necessary
-- Avoid large files. Files should be kept under 250 lines unless otherwise specified in the project, or necessary
-- SRP. Keep to the single responsibility principle, each class and function should have 1 job and 1 job only
-- Prefer abstraction of logic into small immutable functions, write deterministic code and eliminate as much state from the code as possible
-- Refrain from unnecessary guard checks, only employ guard checks on code when critical to do so
-- Prefer the use of intermediary variables for code documentation
-- Every module, function and class should contain docstrings. Keep these docstrings short and simple. Keep the docstrings self sustainable, If possible the docstrings should contain all the information needed to understand the purpose of the function without any other knowledge of the codebase (This will not be possible in some cases, that is fine). 
-- All written code should be highly cohesive, loosely coupled, and composable so it remains modular and works well as a whole.
-- Commit format: <type>: <description> — Types: feat, fix, refactor, docs, test, chore, perf, ci
-- Always update README.md to stay aligned with any changes made, however DO NOT add sections to the README.md unless prompted to. Only modify present sections
-- Use Context7 MCP to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service - even well-known ones. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer -- your training data may not reflect recent changes. Prefer this over web search for library docs. Fallback to web-search.
+### Simplicity
+
+- Write the minimum code needed to solve the current problem.
+- Do not overbuild for hypothetical future requirements.
+- Avoid premature abstraction.
+- Hardcode values until there is a real reason to configure them.
+- Prefer straightforward code over clever code.
+
+### Structure
+
+- Avoid deep nesting.
+- If nesting becomes excessive, extract helper functions.
+- Avoid large functions.
+- Functions should stay under 50 lines unless necessary.
+- Avoid large files.
+- Files should stay under 250 lines unless the project requires otherwise.
+- Follow the single responsibility principle.
+- Each class, function, and module should have one clear job.
+
+### Code Style
+
+- Prefer small, immutable, deterministic functions.
+- Minimize shared mutable state.
+- Prefer intermediary variables when they improve readability.
+- Keep code highly cohesive, loosely coupled, and composable.
+- Avoid unnecessary guard checks.
+- Use guard checks only when they protect meaningful failure cases.
+- Do not hide real bugs with defensive code.
+
+### Documentation
+
+- Every module, function, and class should have a short docstring.
+- Docstrings should explain purpose, not restate implementation.
+- Keep docstrings self-contained when practical.
+- Do not write long or noisy documentation.
+
+## Verification
+
+- Test behavior that can actually break.
+- When fixing a bug, reproduce it before changing code.
+- Prefer writing a failing test first, then make it pass.
+- Do not claim something works without checking it.
+- If something is hard to test, mention that as a design concern.
+
+## Debugging
+
+- Investigate before changing code.
+- Read the full error and stack trace.
+- Reproduce the problem first.
+- Change one thing at a time.
+- Do not paper over unexpected `null`, `undefined`, or invalid state.
+- Find the cause, not just the symptom.
+
+## Dependencies
+
+- Avoid adding dependencies unless necessary.
+- Prefer the standard library or existing project dependencies.
+- Every new dependency must have a clear reason.
+- Do not add packages for small utilities that can be written simply.
+
+## Common Failure Modes
+
+Avoid these patterns:
+
+- **Kitchen Sink**: changing unrelated parts of the codebase.
+- **Wrong Abstraction**: abstracting before duplication proves the need.
+- **Optimistic Path**: handling only the happy path.
+- **Runaway Refactor**: letting a small fix expand across many files.
+- **Plausible Guessing**: writing code that looks right without verifying it.
+
+When one of these appears, stop and narrow the change.
+

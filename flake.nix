@@ -21,11 +21,6 @@
 
     herdr.url = "github:ogulcancelik/herdr/v0.7.3";
 
-    hymission = {
-      url = "github:gfhdhytghd/hymission";
-      flake = false;
-    };
-
     helium-flake = {
       url = "github:oxcl/nix-flake-helium-browser";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -33,18 +28,18 @@
   };
 
   outputs =
+    { nixpkgs, ... }@inputs:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
+    in
     {
-      self,
-      nixpkgs,
-      home-manager,
-      ...
-    }@inputs:
-    {
+      devShells.${system}.opencode = import ./opencodeconfig/shell.nix { inherit pkgs; };
+
       nixosConfigurations."pc" = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
         modules = [
           ./devices/pc.nix
-          inputs.home-manager.nixosModules.default
         ];
       };
 
@@ -52,7 +47,6 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./devices/laptop.nix
-          inputs.home-manager.nixosModules.default
         ];
       };
     };
