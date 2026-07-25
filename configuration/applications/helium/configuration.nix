@@ -1,15 +1,8 @@
-{
-  config,
-  pkgs,
-  inputs,
-  lib,
-  ...
-}:
+{ pkgs, inputs, ... }:
 
 {
   environment.systemPackages = [
     inputs.helium-flake.packages.${pkgs.stdenv.hostPlatform.system}.default
-    pkgs.google-chrome
     pkgs.firefox
   ];
 }

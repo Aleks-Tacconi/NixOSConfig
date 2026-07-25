@@ -1,19 +1,14 @@
 let
-  browser = "helium.desktop";
+  browser = "google-chrome.desktop";
   editor = "nvim.desktop";
-  imageEditor = "gimp.desktop";
   office = "onlyoffice-desktopeditors.desktop";
 in
-{
-  config,
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
 
 {
   home.sessionVariables = {
     EDITOR = "nvim";
-    BROWSER = "helium";
+    BROWSER = "google-chrome-stable";
     TERMINAL = "ghostty";
     FILEMANAGER = "nautilus";
 
@@ -70,15 +65,6 @@ in
       "text/x-python" = [ editor ];
       "text/x-rust" = [ editor ];
       "text/x-shellscript" = [ editor ];
-
-      "image/avif" = [ imageEditor ];
-      "image/bmp" = [ imageEditor ];
-      "image/gif" = [ imageEditor ];
-      "image/jpeg" = [ imageEditor ];
-      "image/png" = [ imageEditor ];
-      "image/svg+xml" = [ imageEditor ];
-      "image/tiff" = [ imageEditor ];
-      "image/webp" = [ imageEditor ];
 
       "application/pdf" = [ office ];
       "application/msword" = [ office ];
