@@ -21,7 +21,6 @@
     ./configuration/homemanagerconfig/envvars.nix
     ./configuration/homemanagerconfig/themes.nix
     ./configuration/homemanagerconfig/desktopentries.nix
-    ./configuration/homemanagerconfig/services.nix
   ];
 
   home.file.".pylintrc".text = ''

@@ -8,6 +8,8 @@
 
 {
   virtualisation.docker.enable = true;
+
+  services.tailscale.enable = true;
   services.speechd = {
     enable = true;
     config = ''
@@ -50,10 +52,9 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
-    espeak-ng
-    gramps
     xdg-desktop-portal
     xdg-desktop-portal-gtk
+    antigravity-cli
   ];
 
   programs.xwayland.enable = true;
@@ -77,8 +78,10 @@
 
     # applications
     ../configuration/applications/opencode/configuration.nix
+    ../configuration/applications/pi/configuration.nix
     ../configuration/applications/herdr/configuration.nix
     ../configuration/applications/chrome/configuration.nix
+    ../configuration/applications/gdrive/configuration.nix
     ../configuration/applications/helium/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
@@ -98,6 +101,8 @@
     ../configuration/applications/obsstudio/configuration.nix
     ../configuration/applications/qbittorrent/configuration.nix
     ../configuration/applications/spotify/configuration.nix
+    ../configuration/applications/syncthing/configuration.nix
+    ../configuration/applications/tmux/configuration.nix
     ../configuration/applications/wlogout/configuration.nix
   ];
 

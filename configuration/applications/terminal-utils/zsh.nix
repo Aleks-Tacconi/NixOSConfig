@@ -45,7 +45,7 @@ in
       fi
 
       if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-        exec ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all ${hyprlandPkg}/bin/start-hyprland
+        exec ${pkgs.coreutils}/bin/env -u LD_LIBRARY_PATH ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all ${hyprlandPkg}/bin/start-hyprland
       fi
 
       autoload -Uz compinit

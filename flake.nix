@@ -10,8 +10,7 @@
     };
 
     hyprland = {
-      url = "github:hyprwm/Hyprland/v0.53.0";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:hyprwm/Hyprland/v0.56.1";
     };
 
     quickshell = {

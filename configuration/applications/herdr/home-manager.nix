@@ -61,9 +61,11 @@ in
   '';
 
   home.activation.linkHerdrWorktreeBootstrap = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if ${herdrPackage}/bin/herdr status server >/dev/null 2>&1; then
-      $DRY_RUN_CMD ${herdrPackage}/bin/herdr plugin link "${pluginPath}" >/dev/null
-      $DRY_RUN_CMD ${herdrPackage}/bin/herdr server reload-config >/dev/null
-    fi
+    case "$(${herdrPackage}/bin/herdr status server 2>/dev/null)" in
+      *"status: running"*)
+        $DRY_RUN_CMD ${herdrPackage}/bin/herdr plugin link "${pluginPath}" >/dev/null
+        $DRY_RUN_CMD ${herdrPackage}/bin/herdr server reload-config >/dev/null
+        ;;
+    esac
   '';
 }

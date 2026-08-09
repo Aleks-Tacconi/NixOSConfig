@@ -32,6 +32,10 @@ in
   };
 
   home.packages = with pkgs; [
+    k9s
+    kubectl
+    kubernetes-helm
+
     # nvim stuff
     vscode-extensions.ms-vscode.cpptools-extension-pack
     vscode-extensions.ms-vscode.cpptools

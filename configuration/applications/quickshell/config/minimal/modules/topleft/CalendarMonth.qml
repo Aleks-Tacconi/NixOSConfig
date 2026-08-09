@@ -265,7 +265,7 @@ Item {
             id: selectedStrip
 
             width: parent.width
-            height: 72
+            height: 112
 
             Rectangle {
                 anchors.top: parent.top
@@ -308,17 +308,57 @@ Item {
                     elide: Text.ElideRight
                 }
 
-                Text {
+                Flickable {
+                    id: agendaList
+
                     width: parent.width
-                    text: root.hasSelection && root.selectedEvents.length > 0
-                        ? root.selectedEvents.map(event => event.startTime.length > 0 ? `${event.startTime} // ${event.title}` : event.title).join("    ")
-                        : "No events"
-                    color: root.selectedEvents.length > 0 ? Theme.fg : Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelMetaSize
-                    maximumLineCount: 1
-                    elide: Text.ElideRight
-                    textFormat: Text.PlainText
+                    height: 54
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    contentWidth: width
+                    contentHeight: agendaEvents.implicitHeight
+                    interactive: contentHeight > height
+
+                    Connections {
+                        target: root
+
+                        function onSelectedKeyChanged() {
+                            agendaList.contentY = 0;
+                        }
+                    }
+
+                    Column {
+                        id: agendaEvents
+
+                        width: parent.width
+                        spacing: Theme.gap
+
+                        Text {
+                            width: parent.width
+                            visible: !root.hasSelection || root.selectedEvents.length === 0
+                            text: "No events"
+                            color: Theme.muted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.panelMetaSize
+                        }
+
+                        Repeater {
+                            model: root.hasSelection ? root.selectedEvents : []
+
+                            Text {
+                                required property var modelData
+
+                                width: parent.width
+                                text: modelData.startTime.length > 0 ? `${modelData.startTime} // ${modelData.title}` : modelData.title
+                                color: Theme.fg
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.panelMetaSize
+                                maximumLineCount: 1
+                                elide: Text.ElideRight
+                                textFormat: Text.PlainText
+                            }
+                        }
+                    }
                 }
             }
         }

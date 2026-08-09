@@ -24,8 +24,7 @@
 - No external editor-agent rule files are currently defined.
 
 ## Build / Rebuild Commands
-- Laptop rebuild (preferred local shortcut): `make laptop`
-- PC rebuild (preferred local shortcut): `make pc`
+- Rebuild the current host (preferred local shortcut): `make rebuild`
 - Direct laptop switch: `sudo nixos-rebuild switch --flake ./#laptop`
 - Direct PC switch: `sudo nixos-rebuild switch --flake ./#pc`
 - Evaluate all flake outputs/checks: `nix flake check`
@@ -35,9 +34,9 @@
 - Cleanup old generations/artifacts: `make clean`
 
 ## Important Command Side Effects
-- `make laptop` and `make pc` both run `git add -A` before rebuilding.
+- `make rebuild` runs `git add -A` before rebuilding the host selected by `NIXOS_HOST`.
 - `make git` stages, commits, and pushes to `origin/main`.
-- `make all` runs `update`, `git`, and `laptop` (includes push).
+- `make all` runs `update`, `git`, and `rebuild` (includes push).
 - Do not run `make git` or `make all` unless the user explicitly requests commit/push behavior.
 
 ## Lint / Format Commands

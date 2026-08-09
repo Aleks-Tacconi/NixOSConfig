@@ -478,7 +478,7 @@ Item {
 
                     Rectangle {
                         width: parent.width
-                        height: 390
+                        height: 430
                         color: "transparent"
                         clip: true
 

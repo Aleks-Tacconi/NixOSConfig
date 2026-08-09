@@ -24,6 +24,22 @@ let
     ${hyprlandPkg}/bin/hyprctl dispatch movecursor "$center_x" "$center_y"
     qs -c minimal ipc --any-display call appLauncher open
   '';
+  lua = lib.generators.mkLuaInline;
+  mkBind = keys: dispatcher: {
+    _args = [
+      keys
+      (lua dispatcher)
+    ];
+  };
+  mkExecBind = keys: command: mkBind keys "hl.dsp.exec_cmd(${builtins.toJSON command})";
+  mkMouseBind = keys: dispatcher: {
+    _args = [
+      keys
+      (lua dispatcher)
+      { mouse = true; }
+    ];
+  };
+  modKey = key: lua ''mod .. " + ${key}"'';
 in
 {
   home.packages = with pkgs; [
@@ -43,7 +59,7 @@ in
   wayland.windowManager.hyprland = {
     enable = true;
     package = hyprlandPkg;
-    configType = "hyprlang";
+    configType = "lua";
     systemd = {
       enable = true;
       variables = [
@@ -55,46 +71,45 @@ in
     };
 
     settings = {
-      "$mod" = "SUPER";
+      mod._var = "SUPER";
 
       bind = [
-        "$mod, Q, exec, clean-run ghostty"
-        "$mod, E, exec, clean-run nautilus"
-        "$mod, C, killactive,"
-        "$mod, W, exec, clean-run google-chrome-stable"
-        # "$mod, M, exit,"
-        "$mod, N, exec, clean-run qs -c minimal ipc --any-display call notifications toggle"
-        "$mod, V, togglefloating,"
+        (mkExecBind (modKey "Q") "clean-run ghostty")
+        (mkExecBind (modKey "E") "clean-run nautilus")
+        (mkBind (modKey "C") "hl.dsp.window.close()")
+        (mkExecBind (modKey "W") "clean-run google-chrome-stable")
+        (mkExecBind (modKey "N") "clean-run qs -c minimal ipc --any-display call notifications toggle")
+        (mkBind (modKey "V") ''hl.dsp.window.float({ action = "toggle" })'')
 
-        "$mod, Space, exec, clean-run app-launcher"
-        "ALT, Space, exec, playerctl play-pause"
+        (mkExecBind (modKey "Space") "clean-run app-launcher")
+        (mkExecBind "ALT + Space" "playerctl play-pause")
 
-        ", XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
-        ", XF86AudioLowerVolume,exec, swayosd-client --output-volume lower"
-        ", XF86AudioMute, exec, swayosd-client --output-volume mute-toggle"
-        ", XF86AudioMicMute, exec, swayosd-client --input-volume mute-toggle"
-        "CAPS, Caps_Lock, exec, swayosd-client --caps-lock"
-        ", XF86MonBrightnessUp, exec, swayosd-client --brightness raise"
-        ", XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
+        (mkExecBind "XF86AudioRaiseVolume" "swayosd-client --output-volume raise")
+        (mkExecBind "XF86AudioLowerVolume" "swayosd-client --output-volume lower")
+        (mkExecBind "XF86AudioMute" "swayosd-client --output-volume mute-toggle")
+        (mkExecBind "XF86AudioMicMute" "swayosd-client --input-volume mute-toggle")
+        (mkExecBind "CAPS + Caps_Lock" "swayosd-client --caps-lock")
+        (mkExecBind "XF86MonBrightnessUp" "swayosd-client --brightness raise")
+        (mkExecBind "XF86MonBrightnessDown" "swayosd-client --brightness lower")
 
-        ", Print, exec, clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m region; fi'"
-        "SHIFT, Print, exec, clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'"
+        (mkExecBind "Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m region; fi'")
+        (mkExecBind "SHIFT + Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'")
 
-        "$mod, h, movefocus, l"
-        "$mod, l, movefocus, r"
-        "$mod, k, movefocus, u"
-        "$mod, j, movefocus, d"
-        "$mod SHIFT, H, movewindow, l"
-        "$mod SHIFT, L, movewindow, r"
-        "$mod SHIFT, K, movewindow, u"
-        "$mod SHIFT, J, movewindow, d"
-        "ALT, L, resizeactive, 150 0"
-        "ALT, H, resizeactive, -150 0"
-        "ALT, k, resizeactive, 0 -150"
-        "ALT, J, resizeactive, 0 150"
-        "$mod,F,fullscreen"
-        "$mod, S, togglespecialworkspace, magic"
-        "$mod SHIFT, S, movetoworkspace, special:magic"
+        (mkBind (modKey "h") ''hl.dsp.focus({ direction = "l" })'')
+        (mkBind (modKey "l") ''hl.dsp.focus({ direction = "r" })'')
+        (mkBind (modKey "k") ''hl.dsp.focus({ direction = "u" })'')
+        (mkBind (modKey "j") ''hl.dsp.focus({ direction = "d" })'')
+        (mkBind (modKey "SHIFT + H") ''hl.dsp.window.move({ direction = "l" })'')
+        (mkBind (modKey "SHIFT + L") ''hl.dsp.window.move({ direction = "r" })'')
+        (mkBind (modKey "SHIFT + K") ''hl.dsp.window.move({ direction = "u" })'')
+        (mkBind (modKey "SHIFT + J") ''hl.dsp.window.move({ direction = "d" })'')
+        (mkBind "ALT + L" "hl.dsp.window.resize({ x = 150, y = 0, relative = true })")
+        (mkBind "ALT + H" "hl.dsp.window.resize({ x = -150, y = 0, relative = true })")
+        (mkBind "ALT + k" "hl.dsp.window.resize({ x = 0, y = -150, relative = true })")
+        (mkBind "ALT + J" "hl.dsp.window.resize({ x = 0, y = 150, relative = true })")
+        (mkBind (modKey "F") "hl.dsp.window.fullscreen()")
+        (mkBind (modKey "S") ''hl.dsp.workspace.toggle_special("magic")'')
+        (mkBind (modKey "SHIFT + S") ''hl.dsp.window.move({ workspace = "special:magic" })'')
       ]
       ++ (builtins.concatLists (
         builtins.genList (
@@ -103,190 +118,367 @@ in
             ws = i + 1;
           in
           [
-            "$mod, code:1${toString i}, workspace, ${toString ws}"
-            "$mod SHIFT, code:1${toString i}, movetoworkspace, ${toString ws}"
+            (mkBind (modKey "code:1${toString i}") "hl.dsp.focus({ workspace = ${toString ws} })")
+            (mkBind (modKey "SHIFT + code:1${toString i}") "hl.dsp.window.move({ workspace = ${toString ws} })")
           ]
-
         ) 9
-      ));
-
-      bindm = [
-        "$mod, mouse:272, movewindow"
-        "$mod, mouse:273, resizewindow"
-        "$mod SHIFT, mouse:272, resizewindow"
+      ))
+      ++ [
+        (mkMouseBind (modKey "mouse:272") "hl.dsp.window.drag()")
+        (mkMouseBind (modKey "mouse:273") "hl.dsp.window.resize()")
+        (mkMouseBind (modKey "SHIFT + mouse:272") "hl.dsp.window.resize()")
       ];
 
-      bindr = [ ];
-
-      misc = {
-        "force_default_wallpaper" = "0";
-        "disable_hyprland_logo" = "true";
-        "focus_on_activate" = "true";
-      };
-
-      layerrule = [
-        "no_anim on, match:namespace selection"
-
-        "blur on, match:namespace quickshell:topBar"
-        "ignore_alpha 0.05, match:namespace quickshell:topBar"
-        "blur on, match:namespace quickshell:appLauncher"
-        "ignore_alpha 0.05, match:namespace quickshell:appLauncher"
-        "blur on, match:namespace quickshell:appLauncherPreview"
-        "ignore_alpha 0.05, match:namespace quickshell:appLauncherPreview"
-        "blur on, match:namespace quickshell:topLeftNotificationsPullout"
-        "ignore_alpha 0.05, match:namespace quickshell:topLeftNotificationsPullout"
-        "blur on, match:namespace quickshell:topLeftCalendarPullout"
-        "ignore_alpha 0.05, match:namespace quickshell:topLeftCalendarPullout"
-        "blur on, match:namespace quickshell:topLeftNotification"
-        "ignore_alpha 0.05, match:namespace quickshell:topLeftNotification"
-        "blur on, match:namespace quickshell:topRightAudioPullout"
-        "ignore_alpha 0.05, match:namespace quickshell:topRightAudioPullout"
-        "blur on, match:namespace quickshell:topRightNetworkPullout"
-        "ignore_alpha 0.05, match:namespace quickshell:topRightNetworkPullout"
-        "blur on, match:namespace quickshell:topRightBatteryPullout"
-        "ignore_alpha 0.05, match:namespace quickshell:topRightBatteryPullout"
-        "blur on, match:namespace quickshell:topBarDockPullout"
-        "ignore_alpha 0.05, match:namespace quickshell:topBarDockPullout"
-        "no_anim on, match:namespace quickshell:topBarDockPullout"
-        "blur on, match:namespace quickshell:powerMenu"
-        "ignore_alpha 0.05, match:namespace quickshell:powerMenu"
-
-        "no_anim on, match:namespace quickshell:overview"
-        "blur on, match:namespace quickshell:overview"
-        "ignore_alpha 0.3, match:namespace quickshell:overview"
+      layer_rule = [
+        {
+          match.namespace = "selection";
+          no_anim = true;
+        }
+        {
+          match.namespace = "quickshell:topBar";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topBar";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:appLauncher";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:appLauncher";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:appLauncherPreview";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:appLauncherPreview";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topLeftNotificationsPullout";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topLeftNotificationsPullout";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topLeftCalendarPullout";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topLeftCalendarPullout";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topLeftNotification";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topLeftNotification";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topRightAudioPullout";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topRightAudioPullout";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topRightNetworkPullout";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topRightNetworkPullout";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topRightBatteryPullout";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topRightBatteryPullout";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topBarDockPullout";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:topBarDockPullout";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:topBarDockPullout";
+          no_anim = true;
+        }
+        {
+          match.namespace = "quickshell:powerMenu";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:powerMenu";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:overview";
+          no_anim = true;
+        }
+        {
+          match.namespace = "quickshell:overview";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:overview";
+          ignore_alpha = 0.3;
+        }
       ];
 
-      windowrule = [
-        "match:class showmethekey-gtk, float on"
-        "match:class showmethekey-gtk, pin on"
-        "match:class showmethekey-gtk, border_size 0"
-        "match:class showmethekey-gtk, no_initial_focus on"
-
-        "match:title ^Extension: \(Bitwarden Password Manager\).*, float on"
-        "match:title ^Extension: \(Bitwarden Password Manager\).*, center on"
-
-        "match:title ^Save File$, float on"
-        "match:title ^Save File$, center on"
-        "match:title .*wants to save$, float on"
-        "match:title .*wants to save$, center on"
-
+      window_rule = [
+        {
+          match.class = "showmethekey-gtk";
+          float = true;
+        }
+        {
+          match.class = "showmethekey-gtk";
+          pin = true;
+        }
+        {
+          match.class = "showmethekey-gtk";
+          border_size = 0;
+        }
+        {
+          match.class = "showmethekey-gtk";
+          no_initial_focus = true;
+        }
+        {
+          match.title = "^Extension: (Bitwarden Password Manager).*";
+          float = true;
+        }
+        {
+          match.title = "^Extension: (Bitwarden Password Manager).*";
+          center = true;
+        }
+        {
+          match.title = "^Save File$";
+          float = true;
+        }
+        {
+          match.title = "^Save File$";
+          center = true;
+        }
+        {
+          match.title = ".*wants to save$";
+          float = true;
+        }
+        {
+          match.title = ".*wants to save$";
+          center = true;
+        }
       ];
-      # ... , mirror, eDP-1
 
       monitor = [
-        "HDMI-A-2, 2560x1440@60, auto, 1"
-        "eDP-1,1920x1200@60,auto,1"
-        # ", preferred, auto, 1, mirror, eDP-1"
+        {
+          output = "HDMI-A-2";
+          mode = "2560x1440@60";
+          position = "auto";
+          scale = 1;
+        }
+        {
+          output = "eDP-1";
+          mode = "1920x1200@60";
+          position = "auto";
+          scale = 1;
+        }
       ];
 
-      workspace = [
-        "1, monitor:eDP-1, default:true"
-        "2, monitor:eDP-1"
-        "3, monitor:eDP-1"
-        "4, monitor:eDP-1"
-        "5, monitor:eDP-1"
-        "6, monitor:eDP-1"
-        "7, monitor:HDMI-A-2, default:true"
-        "8, monitor:HDMI-A-2"
-        "9, monitor:HDMI-A-2"
+      workspace_rule = [
+        {
+          workspace = "1";
+          monitor = "eDP-1";
+          default = true;
+        }
+        {
+          workspace = "2";
+          monitor = "eDP-1";
+        }
+        {
+          workspace = "3";
+          monitor = "eDP-1";
+        }
+        {
+          workspace = "4";
+          monitor = "eDP-1";
+        }
+        {
+          workspace = "5";
+          monitor = "eDP-1";
+        }
+        {
+          workspace = "6";
+          monitor = "eDP-1";
+        }
+        {
+          workspace = "7";
+          monitor = "HDMI-A-2";
+          default = true;
+        }
+        {
+          workspace = "8";
+          monitor = "HDMI-A-2";
+        }
+        {
+          workspace = "9";
+          monitor = "HDMI-A-2";
+        }
       ];
 
-      cursor = {
-        "no_hardware_cursors" = "true";
+      config = {
+        animations.enabled = true;
+
+        cursor.no_hardware_cursors = 1;
+
+        decoration = {
+          rounding = 6;
+          active_opacity = 1;
+          inactive_opacity = 0.95;
+          fullscreen_opacity = 1;
+          dim_inactive = true;
+          dim_strength = 0.08;
+          blur = {
+            enabled = true;
+            size = 8;
+            passes = 3;
+            new_optimizations = true;
+            xray = false;
+            ignore_opacity = true;
+          };
+          shadow = {
+            enabled = true;
+            range = 10;
+            render_power = 2;
+            color = "rgba(00000070)";
+            color_inactive = "rgba(00000045)";
+          };
+        };
+
+        dwindle.preserve_split = true;
+
+        general = {
+          gaps_in = 1;
+          gaps_out = 2;
+          border_size = 2;
+          col = {
+            active_border = "rgba(f2f2f266)";
+            inactive_border = "rgba(00000080)";
+          };
+          layout = "dwindle";
+          allow_tearing = false;
+          resize_on_border = true;
+          extend_border_grab_area = 60;
+          hover_icon_on_border = true;
+          snap = {
+            enabled = true;
+            window_gap = 10;
+          };
+        };
+
+        input = {
+          kb_layout = "gb";
+          kb_variant = "";
+          kb_model = "";
+          kb_options = "";
+          kb_rules = "";
+          follow_mouse = 1;
+          touchpad = {
+            natural_scroll = true;
+            disable_while_typing = true;
+            scroll_factor = 0.15;
+          };
+          sensitivity = 0.1;
+        };
+
+        misc = {
+          force_default_wallpaper = 0;
+          disable_hyprland_logo = true;
+          focus_on_activate = true;
+        };
       };
 
-      exec = [ ];
-      exec-once = [
-        "clean-run wl-paste --type text --watch cliphist store"
-        "clean-run wl-paste --type image --watch cliphist store"
-        "hyprctl setcursor Bibata-Modern-Ice 24"
-        "clean-run blueman-applet"
-        "hyprlock"
+      curve._args = [
+        "soft"
+        {
+          type = "bezier";
+          points = [
+            [
+              0.18
+              1.0
+            ]
+            [
+              0.3
+              1.0
+            ]
+          ];
+        }
       ];
 
-      animations = {
-        "enabled" = "true";
+      animation = [
+        {
+          leaf = "windows";
+          enabled = true;
+          speed = 2;
+          bezier = "default";
+        }
+        {
+          leaf = "fade";
+          enabled = true;
+          speed = 2;
+          bezier = "default";
+        }
+        {
+          leaf = "workspaces";
+          enabled = true;
+          speed = 3;
+          bezier = "soft";
+          style = "slide 12%";
+        }
+        {
+          leaf = "workspacesOut";
+          enabled = false;
+        }
+        {
+          leaf = "workspacesIn";
+          enabled = true;
+          speed = 3;
+          bezier = "soft";
+          style = "slide 12%";
+        }
+        {
+          leaf = "specialWorkspace";
+          enabled = true;
+          speed = 3;
+          bezier = "soft";
+          style = "slidevert 20%";
+        }
+      ];
 
-        bezier = [
-          "soft, 0.18, 1.0, 0.3, 1.0"
-        ];
-
-        animation = [
-          "windows, 1, 2, default"
-          "fade, 1, 2, default"
-          "workspaces, 1, 3, soft, slide 12%"
-          "workspacesOut, 0"
-          "workspacesIn, 1, 3, soft, slide 12%"
-          "specialWorkspace, 1, 3, soft, slidevert 20%"
-        ];
-      };
-
-      decoration = {
-        "rounding" = "6";
-        "active_opacity" = "1";
-        "inactive_opacity" = "0.95";
-        "fullscreen_opacity" = "1";
-        "dim_inactive" = "true";
-        "dim_strength" = "0.08";
-        blur = {
-          "enabled" = "true";
-          "size" = "8";
-          "passes" = "3";
-          "new_optimizations" = "true";
-          "xray" = "false";
-          "ignore_opacity" = "true";
-        };
-        shadow = {
-          "enabled" = "true";
-          "range" = "10";
-          "render_power" = "2";
-          "color" = "rgba(00000070)";
-          "color_inactive" = "rgba(00000045)";
-        };
-      };
-
-      dwindle = {
-        "pseudotile" = "yes";
-        "preserve_split" = "yes";
-      };
-
-      general = {
-        "gaps_in" = "1";
-        # Top, Right, Bottom, Left
-        # cypberpunk gaps: "gaps_out" = "4,-2,-3,-2";
-        "gaps_out" = "2,2,2,2";
-        "border_size" = "2";
-        "col.active_border" = "rgba(f2f2f266)";
-        "col.inactive_border" = "rgba(00000080)";
-        "layout" = "dwindle";
-        "allow_tearing" = "false";
-        "resize_on_border" = "true";
-        "extend_border_grab_area" = "60";
-        "hover_icon_on_border" = "true";
-        snap = {
-          "enabled" = "true";
-          "window_gap" = "10";
-        };
-      };
-
-      input = {
-        "kb_layout" = "gb";
-        "kb_variant" = "";
-        "kb_model" = "";
-        "kb_options" = "";
-        "kb_rules" = "";
-
-        "follow_mouse" = "1";
-
-        touchpad = {
-          "natural_scroll" = "true";
-          "disable_while_typing" = "true";
-          "scroll_factor" = "0.15";
-        };
-
-        "sensitivity" = "0.1";
-      };
     };
+
+    extraConfig = ''
+      hl.on("hyprland.start", function()
+        hl.exec_cmd("clean-run wl-paste --type text --watch cliphist store")
+        hl.exec_cmd("clean-run wl-paste --type image --watch cliphist store")
+        hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")
+        hl.exec_cmd("clean-run blueman-applet")
+        hl.exec_cmd("hyprlock")
+      end)
+    '';
 
   };
 

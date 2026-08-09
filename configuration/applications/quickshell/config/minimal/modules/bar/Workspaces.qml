@@ -83,7 +83,7 @@ RowLayout {
                 hoverEnabled: true
 
                 onClicked: {
-                    Hyprland.dispatch("workspace " + button.workspaceId);
+                    Hyprland.dispatch("hl.dsp.focus({ workspace = " + button.workspaceId + " })");
                 }
             }
 
