@@ -213,8 +213,7 @@ Use `#pc` for the desktop host.
 | Command | Behavior |
 | --- | --- |
 | `nix flake check` | Evaluate the flake |
-| `make laptop` | Mount the configured laptop boot partition if needed, stage all Git changes, and rebuild `laptop` |
-| `make pc` | Stage all Git changes and rebuild `pc` |
+| `make rebuild` | Rebuild the system |
 | `make update` | Update all flake inputs |
 | `make clean` | Remove old user/system profile history and run system and user garbage collection |
 | `make git MSG="message"` | Stage, commit, and push to `origin/main` |
