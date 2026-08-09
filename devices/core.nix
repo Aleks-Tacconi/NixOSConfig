@@ -59,7 +59,6 @@
 
     # applications
     ../configuration/applications/opencode/configuration.nix
-    ../configuration/applications/pi/configuration.nix
     ../configuration/applications/chrome/configuration.nix
     ../configuration/applications/gdrive/configuration.nix
     ../configuration/applications/helium/configuration.nix

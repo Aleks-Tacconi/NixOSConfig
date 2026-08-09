@@ -1,9 +1,0 @@
-{
-  "defaultProvider": "openai",
-  "defaultModel": "gpt-5.5",
-  "enableInstallTelemetry": false,
-  "compaction": {
-    "enabled": true,
-    "reserveTokens": 10000
-  }
-}
