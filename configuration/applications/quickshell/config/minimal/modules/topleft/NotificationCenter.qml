@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
+import "../.." as ShellConfig
 
 Scope {
     id: root
@@ -14,16 +15,26 @@ Scope {
     property string calendarPreview: "No events"
     property var calendarEvents: []
     property bool colorPickerActive: false
-    property bool hyprsunsetEnabled: false
     property var notificationServer: notificationService
+    property var notificationQueue: []
+    property var activeNotification: null
+    property int activeNotificationRemaining: notificationPopupTimeout
+    property double activeNotificationDeadline: 0
+    property bool discardActiveAfterExit: false
+    property bool hyprsunsetTargetEnabled: false
 
     signal menuActionRequested(string action)
 
+    readonly property int notificationPopupTimeout: ShellConfig.Config.notifications.popupTimeout
+    readonly property int notificationQueueLimit: ShellConfig.Config.notifications.queueLimit
+    readonly property int notificationExitDuration: 180
     readonly property var notifications: root.notificationServer?.trackedNotifications ?? null
     readonly property var notificationValues: root.notifications?.values ?? []
     readonly property bool hasNotifications: root.notificationValues.length > 0
     readonly property int notificationCount: root.notificationValues.length
     readonly property bool menuOpen: openMenuCount > 0
+    readonly property bool hyprsunsetEnabled: hyprsunsetProcess.running && hyprsunsetProcess.processId > 0
+    readonly property bool hyprsunsetPending: root.hyprsunsetTargetEnabled !== root.hyprsunsetEnabled
 
     property var openMenuKeys: ({})
 
@@ -48,25 +59,113 @@ Scope {
             root.notificationPopupScreenKey = "";
     }
 
-    function showNotificationPopup() {
+    function enqueueNotification(notification) {
+        if (root.dndEnabled)
+            return;
+
+        const next = root.notificationQueue.slice();
+        next.push(notification);
+
+        while (next.length > root.notificationQueueLimit)
+            next.shift();
+
+        root.notificationQueue = next;
+        root.showNextNotification();
+    }
+
+    function showNextNotification() {
+        if (root.dndEnabled || root.menuOpen || root.activeNotification !== null || notificationExitTimer.running)
+            return;
+
+        const next = root.notificationQueue.slice();
+        let notification = null;
+
+        while (next.length > 0 && notification === null)
+            notification = next.shift() ?? null;
+
+        root.notificationQueue = next;
+
+        if (notification === null)
+            return;
+
+        root.activeNotification = notification;
+        root.activeNotificationRemaining = root.notificationPopupTimeout;
         root.notificationPulse += 1;
+        root.resumeActiveNotification();
+    }
+
+    function resumeActiveNotification() {
+        if (root.activeNotification === null || root.dndEnabled || root.menuOpen)
+            return;
+
+        const remaining = Math.max(1, root.activeNotificationRemaining);
+        root.activeNotificationDeadline = Date.now() + remaining;
+        root.notificationPopupOpen = true;
+        notificationDwellTimer.interval = remaining;
+        notificationDwellTimer.restart();
+    }
+
+    function hideActiveNotification(discard) {
+        const wasVisible = root.notificationPopupOpen;
+        notificationDwellTimer.stop();
+
+        if (!discard && wasVisible)
+            root.activeNotificationRemaining = Math.max(0, root.activeNotificationDeadline - Date.now());
+
+        root.notificationPopupOpen = false;
+
+        if (notificationExitTimer.running) {
+            root.discardActiveAfterExit = root.discardActiveAfterExit || discard;
+            return;
+        }
+
+        root.discardActiveAfterExit = discard;
+
+        if (wasVisible) {
+            notificationExitTimer.restart();
+            return;
+        }
+
+        root.finishNotificationExit();
+    }
+
+    function finishNotificationExit() {
+        if (root.discardActiveAfterExit) {
+            root.activeNotification = null;
+            root.activeNotificationDeadline = 0;
+            root.activeNotificationRemaining = root.notificationPopupTimeout;
+        }
+
+        root.discardActiveAfterExit = false;
 
         if (root.dndEnabled || root.menuOpen)
             return;
 
-        root.notificationPopupOpen = true;
-        notificationPopupTimer.restart();
+        if (root.activeNotification !== null)
+            root.resumeActiveNotification();
+        else
+            root.showNextNotification();
+    }
+
+    function dismissActiveNotification(notification) {
+        if (root.activeNotification === null || (notification !== undefined && notification !== root.activeNotification))
+            return;
+
+        root.hideActiveNotification(true);
+    }
+
+    function suppressNotificationPopups() {
+        root.notificationQueue = [];
+
+        if (root.activeNotification !== null)
+            root.hideActiveNotification(true);
     }
 
     function clearNotifications() {
+        root.suppressNotificationPopups();
+
         for (const notification of root.notificationValues)
             notification.dismiss();
-    }
-
-    function latestNotification() {
-        const values = root.notificationValues;
-
-        return values.length > 0 ? values[values.length - 1] : null;
     }
 
     function refreshAgenda() {
@@ -128,23 +227,35 @@ Scope {
         colorPickerDelay.restart();
     }
 
-    function refreshHyprsunset() {
-        hyprsunsetStatusProcess.exec(["pgrep", "-x", "hyprsunset"]);
-    }
-
     function takeScreenshot() {
-        screenshotProcess.exec(["hyprshot", "-m", "region", "--clipboard"]);
+        screenshotProcess.exec(["hyprshot", "--silent", "-m", "region", "--clipboard"]);
     }
 
     function toggleHyprsunset() {
-        if (root.hyprsunsetEnabled) {
-            hyprsunsetStopProcess.exec(["pkill", "-x", "hyprsunset"]);
-            root.hyprsunsetEnabled = false;
+        if (root.hyprsunsetPending)
+            return;
+
+        root.hyprsunsetTargetEnabled = !root.hyprsunsetEnabled;
+        hyprsunsetProcess.running = root.hyprsunsetTargetEnabled;
+    }
+
+    onDndEnabledChanged: {
+        if (root.dndEnabled)
+            root.suppressNotificationPopups();
+        else
+            root.showNextNotification();
+    }
+
+    onMenuOpenChanged: {
+        if (root.menuOpen) {
+            if (root.activeNotification !== null && root.notificationPopupOpen)
+                root.hideActiveNotification(false);
+
             return;
         }
 
-        hyprsunsetStartProcess.exec(["hyprsunset", "-t", "3500"]);
-        root.hyprsunsetEnabled = true;
+        if (!notificationExitTimer.running)
+            root.finishNotificationExit();
     }
 
     IpcHandler {
@@ -176,15 +287,21 @@ Scope {
             notification.tracked = true;
 
             if (!notification.lastGeneration)
-                root.showNotificationPopup();
+                root.enqueueNotification(notification);
         }
     }
 
     Timer {
-        id: notificationPopupTimer
+        id: notificationDwellTimer
 
-        interval: 4800
-        onTriggered: root.notificationPopupOpen = false
+        onTriggered: root.hideActiveNotification(true)
+    }
+
+    Timer {
+        id: notificationExitTimer
+
+        interval: root.notificationExitDuration
+        onTriggered: root.finishNotificationExit()
     }
 
     Timer {
@@ -200,14 +317,6 @@ Scope {
         running: true
         triggeredOnStart: true
         onTriggered: root.refreshAgenda()
-    }
-
-    Timer {
-        interval: 5000
-        repeat: true
-        running: true
-        triggeredOnStart: true
-        onTriggered: root.refreshHyprsunset()
     }
 
     Process {
@@ -227,26 +336,23 @@ Scope {
     }
 
     Process {
-        id: hyprsunsetStatusProcess
+        id: hyprsunsetProcess
 
-        stdout: StdioCollector {
-            id: hyprsunsetStatusOutput
-
-            onStreamFinished: root.hyprsunsetEnabled = hyprsunsetStatusOutput.text.trim().length > 0
-        }
-    }
-
-    Process {
-        id: hyprsunsetStartProcess
-    }
-
-    Process {
-        id: hyprsunsetStopProcess
-
-        onExited: root.refreshHyprsunset()
+        command: ["hyprsunset", "-t", String(ShellConfig.Config.nightLight.temperature)]
+        onExited: root.hyprsunsetTargetEnabled = false
     }
 
     Process {
         id: screenshotProcess
+    }
+
+    Connections {
+        target: root.activeNotification
+        enabled: root.activeNotification !== null
+        ignoreUnknownSignals: true
+
+        function onClosed() {
+            root.dismissActiveNotification();
+        }
     }
 }

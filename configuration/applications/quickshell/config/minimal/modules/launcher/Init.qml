@@ -7,6 +7,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import "../frame" as Frame
 import "../../theme"
+import "../.." as ShellConfig
 
 /**
  * Centered application launcher and picker popup.
@@ -15,7 +16,8 @@ Scope {
     id: root
 
     property bool open: false
-    property string mode: "applications"
+    readonly property var enabledModes: ShellConfig.Config.launcher.enabledModes
+    property string mode: root.enabledModes[0]
     property real panelWidth: 920
     property real panelDepth: 550
     property real previewWidth: 360
@@ -24,7 +26,7 @@ Scope {
 
     function show() {
         root.targetMonitorId = Hyprland.focusedMonitor?.id ?? -1;
-        root.mode = "applications";
+        root.mode = root.enabledModes[0];
         root.open = true;
     }
 
@@ -40,18 +42,13 @@ Scope {
     }
 
     function nextMode() {
-        if (root.mode === "applications")
-            root.mode = "files";
-        else if (root.mode === "files")
-            root.mode = "emoji";
-        else if (root.mode === "emoji")
-            root.mode = "clipboard";
-        else
-            root.mode = "applications";
+        const currentIndex = root.enabledModes.indexOf(root.mode);
+        root.mode = root.enabledModes[(currentIndex + 1) % root.enabledModes.length];
     }
 
     function setMode(mode) {
-        root.mode = mode;
+        if (root.enabledModes.includes(mode))
+            root.mode = mode;
     }
 
     function isTargetScreen(screen) {
@@ -104,12 +101,12 @@ Scope {
                 exclusionMode: ExclusionMode.Ignore
                 visible: screenRoot.wantsOpen || launcherPanel.progress > 0
                 mask: Region {
-                    item: launcherPanel
+                    item: launcherHost
                 }
 
                 WlrLayershell.namespace: "quickshell:appLauncher"
                 WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.keyboardFocus: screenRoot.wantsOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: screenRoot.wantsOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
                 anchors {
                     top: true
@@ -161,6 +158,7 @@ Scope {
 
                             open: screenRoot.wantsOpen
                             mode: root.mode
+                            enabledModes: root.enabledModes
                             onRequestClose: root.hide()
                             onRequestModeCycle: root.nextMode()
                             onModeRequested: mode => root.setMode(mode)

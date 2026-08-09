@@ -69,14 +69,30 @@ Scope {
                     }
                 }
 
-                TopLeft.Init {
-                    popupScreen: bar.modelData
-                    notificationCenter: root.notificationCenter
+                Row {
+                    id: leftCluster
 
                     anchors {
                         left: parent.left
                         leftMargin: Theme.gap * 4
                         verticalCenter: parent.verticalCenter
+                    }
+                    spacing: Theme.gap * 5 + 2
+
+                    TopLeft.Init {
+                        popupScreen: bar.modelData
+                        notificationCenter: root.notificationCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    AppMenu {
+                        id: appMenu
+
+                        popupScreen: bar.modelData
+                        parentWindow: bar
+                        popupLeftMargin: leftCluster.x + appMenu.x - Theme.gap * 2
+                        maxWidth: Math.max(132, Math.min(340, bar.width * 0.27))
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 

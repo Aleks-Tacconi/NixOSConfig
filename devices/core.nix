@@ -9,7 +9,19 @@
 {
   virtualisation.docker.enable = true;
 
-  services.tailscale.enable = true;
+  services.tailscale = {
+    enable = true;
+    extraSetFlags = [ "--operator=aleks" ];
+  };
+  desktop.quickshell.launcher.fileSearch.paths = [
+    "Downloads"
+    "Documents"
+    "Pictures"
+    "Projects"
+    ".hyprland-assets"
+    ".config/nvim"
+    ".config/ghostty"
+  ];
   programs.wireshark = {
     enable = true;
     package = pkgs.wireshark;
@@ -61,7 +73,7 @@
     ../configuration/applications/opencode/configuration.nix
     ../configuration/applications/chrome/configuration.nix
     ../configuration/applications/gdrive/configuration.nix
-    ../configuration/applications/helium/configuration.nix
+    ../configuration/applications/firefox/configuration.nix
     ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
     ../configuration/applications/eza/configuration.nix

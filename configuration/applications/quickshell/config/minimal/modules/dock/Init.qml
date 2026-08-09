@@ -16,6 +16,7 @@ Item {
     property real maxWidth: 260
     property real buttonSize: 30
     property real dockGap: Theme.gap
+    property real hoverOverflow: Theme.gap
     property real popupWidth: 360
     property real popupMaxHeight: Math.max(540, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6)
     property real popupRightMargin: Theme.gap * 2
@@ -31,12 +32,12 @@ Item {
     property bool fadeInAfterResize: false
 
     readonly property int appCount: dockData.appGroups.length
-    readonly property real fullWidth: Math.max(0, dockRow.implicitWidth)
+    readonly property real fullWidth: Math.max(0, dockRow.implicitWidth + root.hoverOverflow * 2)
 
     width: Math.min(root.maxWidth, root.fullWidth)
     height: Theme.barHeight
     visible: root.appCount > 0
-    clip: true
+    clip: false
 
     DockData {
         id: dockData
@@ -251,13 +252,14 @@ Item {
 
         clip: true
         boundsBehavior: Flickable.StopAtBounds
-        contentWidth: dockRow.implicitWidth
+        contentWidth: root.fullWidth
         contentHeight: height
         interactive: contentWidth > width
 
         Row {
             id: dockRow
 
+            x: root.hoverOverflow
             y: (parent.height - height) / 2
             height: root.buttonSize
             spacing: root.dockGap

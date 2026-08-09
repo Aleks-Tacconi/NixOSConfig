@@ -28,6 +28,7 @@ Item {
 
     width: 30
     height: 30
+    z: root.hovered ? 1 : 0
 
     onAppGroupChanged: root.lastFocused = -1
 
@@ -42,12 +43,16 @@ Item {
     }
 
     Rectangle {
-        anchors.centerIn: iconLayer
-        visible: false
-        width: 26
-        height: 26
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+            leftMargin: -Theme.gap
+            rightMargin: -Theme.gap
+        }
         radius: Theme.radius
-        color: root.hovered ? Theme.bg2 : Theme.bg
+        color: root.hovered ? Theme.panelSurfaceHover : "transparent"
     }
 
     Item {

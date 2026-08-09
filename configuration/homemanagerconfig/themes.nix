@@ -101,9 +101,6 @@ in
     theme=${kvantumThemeName}
   '';
 
-  home.file.".icon.png".source = config.lib.file.mkOutOfStoreSymlink ./.icon.png;
-  home.file.".logo.jpeg".source = config.lib.file.mkOutOfStoreSymlink ./.logo.jpeg;
-  home.file.".wallpaper-current".source =
-    config.lib.file.mkOutOfStoreSymlink ./wallpapers/wallpaper.png;
-  home.file."wallpapers".source = config.lib.file.mkOutOfStoreSymlink ./wallpapers;
+  home.file.".hyprland-assets/icon.png".source = ./.icon.png;
+  home.file.".hyprland-assets/wallpaper.jpg".source = ./wallpapers/moon.jpg;
 }

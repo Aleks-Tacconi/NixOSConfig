@@ -13,6 +13,7 @@ Rectangle {
     property string icon: ""
     property bool active: false
     property color accentColor: Theme.red
+    property string detailText: ""
     property string trailingText: "›"
     property bool showTrailing: trailingText.length > 0
     property real horizontalPadding: Theme.gap * 2
@@ -59,6 +60,15 @@ Rectangle {
             font.pixelSize: Theme.panelMetaSize
             elide: Text.ElideRight
             text: root.label
+        }
+
+        Text {
+            visible: root.detailText.length > 0
+            color: root.active && root.enabled ? root.accentColor : Theme.muted
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.panelMetaSize
+            horizontalAlignment: Text.AlignRight
+            text: root.detailText
         }
 
         Text {

@@ -25,6 +25,8 @@ Item {
     property string networkType: "none"
     property string networkState: "unavailable"
     property string networkLabel: "No network"
+    property bool tailscaleConnected: false
+    property bool tailscalePending: false
     property string sysfsBatteryPath: ""
     property bool sysfsBatteryPresent: false
     property int sysfsBatteryPercentValue: 0
@@ -37,6 +39,7 @@ Item {
     readonly property bool networkOpen: root.openPopup === "network"
     readonly property bool batteryOpen: root.openPopup === "battery"
     readonly property int audioPercent: Math.round((Pipewire.defaultAudioSink?.audio?.volume ?? 0) * 100)
+    readonly property bool audioMuted: Pipewire.defaultAudioSink?.audio?.muted ?? false
     readonly property string networkIcon: iconForNetwork()
     readonly property var laptopBattery: laptopBatteryDevice()
     readonly property bool hasBattery: laptopBattery !== null || sysfsBatteryPresent
@@ -128,7 +131,10 @@ Item {
         repeat: true
         running: true
         triggeredOnStart: true
-        onTriggered: root.updateNetworkStatus()
+        onTriggered: {
+            root.updateNetworkStatus();
+            root.updateTailscaleStatus();
+        }
     }
 
     Timer {
@@ -146,6 +152,25 @@ Item {
             id: networkStatusOutput
 
             onStreamFinished: root.applyNetworkStatus(networkStatusOutput.text)
+        }
+    }
+
+    Process {
+        id: tailscaleStatusProcess
+
+        stdout: StdioCollector {
+            id: tailscaleStatusOutput
+
+            onStreamFinished: root.applyTailscaleStatus(tailscaleStatusOutput.text)
+        }
+    }
+
+    Process {
+        id: tailscaleToggleProcess
+
+        onExited: {
+            root.tailscalePending = false;
+            root.updateTailscaleStatus();
         }
     }
 
@@ -188,6 +213,28 @@ Item {
         root.networkType = device?.type ?? "none";
         root.networkState = device?.state ?? "unavailable";
         root.networkLabel = device?.label ?? "No network";
+    }
+
+    function updateTailscaleStatus() {
+        if (!tailscaleStatusProcess.running)
+            tailscaleStatusProcess.exec(["tailscale", "status", "--json"]);
+    }
+
+    function applyTailscaleStatus(output) {
+        try {
+            const status = JSON.parse(output);
+            root.tailscaleConnected = status.BackendState === "Running";
+        } catch (error) {
+            root.tailscaleConnected = false;
+        }
+    }
+
+    function toggleTailscale() {
+        if (root.tailscalePending)
+            return;
+
+        root.tailscalePending = true;
+        tailscaleToggleProcess.exec(["tailscale", root.tailscaleConnected ? "down" : "up"]);
     }
 
     function iconForNetwork() {
@@ -347,8 +394,22 @@ Item {
                 id: audioSegment
 
                 y: (statusContent.implicitHeight - height) / 2
+                z: audioTrigger.containsMouse ? 1 : 0
                 width: audioRow.implicitWidth
                 height: 28
+
+                Rectangle {
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        left: parent.left
+                        right: parent.right
+                        leftMargin: -Theme.gap * 1.5
+                        rightMargin: -Theme.gap * 1.5
+                    }
+                    color: audioTrigger.containsMouse ? Theme.panelSurfaceHover : "transparent"
+                    radius: Theme.radius
+                }
 
                 Row {
                     id: audioRow
@@ -357,16 +418,16 @@ Item {
                     spacing: Theme.gap * 2
 
                     Text {
-                        text: ""
-                        color: Theme.red
+                        text: root.audioMuted ? "󰖁" : ""
+                        color: root.audioMuted ? Theme.muted : Theme.red
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize + 1
                         font.bold: true
                     }
 
                     Text {
-                        text: root.formatPercent(root.audioPercent)
-                        color: Theme.fg
+                        text: root.audioMuted ? "Muted" : root.formatPercent(root.audioPercent)
+                        color: root.audioMuted ? Theme.muted : Theme.fg
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize + 1
                         font.bold: true
@@ -393,8 +454,22 @@ Item {
                 id: networkSegment
 
                 y: (statusContent.implicitHeight - height) / 2
+                z: networkTrigger.containsMouse ? 1 : 0
                 width: networkRow.implicitWidth
                 height: 28
+
+                Rectangle {
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        left: parent.left
+                        right: parent.right
+                        leftMargin: -Theme.gap * 1.5
+                        rightMargin: -Theme.gap * 1.5
+                    }
+                    color: networkTrigger.containsMouse ? Theme.panelSurfaceHover : "transparent"
+                    radius: Theme.radius
+                }
 
                 Row {
                     id: networkRow
@@ -437,9 +512,23 @@ Item {
                 id: batterySegment
 
                 y: (statusContent.implicitHeight - height) / 2
+                z: batteryTrigger.containsMouse ? 1 : 0
                 visible: root.hasBattery
                 width: visible ? batteryRow.implicitWidth : 0
                 height: 28
+
+                Rectangle {
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        left: parent.left
+                        right: parent.right
+                        leftMargin: -Theme.gap * 1.5
+                        rightMargin: -Theme.gap * 2
+                    }
+                    color: batteryTrigger.containsMouse ? Theme.panelSurfaceHover : "transparent"
+                    radius: Theme.radius
+                }
 
                 Row {
                     id: batteryRow
@@ -625,6 +714,9 @@ Item {
                         type: root.networkType
                         down: root.formatRate(root.downloadBytesPerSecond)
                         up: root.formatRate(root.uploadBytesPerSecond)
+                        tailscaleConnected: root.tailscaleConnected
+                        tailscalePending: root.tailscalePending
+                        onTailscaleToggleRequested: root.toggleTailscale()
                     }
                 }
             }

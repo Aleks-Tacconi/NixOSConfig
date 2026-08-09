@@ -17,6 +17,7 @@ Rectangle {
     signal hoveredRequested
 
     readonly property bool hovered: mouseArea.containsMouse
+    readonly property bool copyable: ["file", "emoji", "clipboard"].includes(root.item.kind)
     readonly property string actionIcon: root.item.kind === "application" || root.item.kind === "file" ? "" : (root.item.kind === "directory" ? "" : "")
 
     radius: Theme.surfaceRadius
@@ -94,7 +95,7 @@ Rectangle {
         Rectangle {
             id: actionPill
 
-            width: Theme.fontSize + 14
+            width: root.copyable ? 52 : Theme.fontSize + 14
             height: parent.height
             anchors.verticalCenter: parent.verticalCenter
             color: "transparent"
@@ -107,8 +108,9 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 color: root.selected ? Theme.red : Theme.muted
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelBodySize
-                text: root.actionIcon
+                font.pixelSize: root.copyable ? Theme.panelCaptionSize : Theme.panelBodySize
+                font.bold: root.copyable
+                text: root.copyable ? "Ctrl+C" : root.actionIcon
             }
         }
     }

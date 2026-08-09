@@ -3,6 +3,7 @@
   pkgs,
   lib,
   inputs,
+  osConfig,
   ...
 }:
 
@@ -22,7 +23,7 @@ let
     center_y=$((y + height / 2))
 
     ${hyprlandPkg}/bin/hyprctl dispatch movecursor "$center_x" "$center_y"
-    qs -c minimal ipc --any-display call appLauncher open
+    qs ipc --any-display call appLauncher open
   '';
   lua = lib.generators.mkLuaInline;
   mkBind = keys: dispatcher: {
@@ -40,6 +41,7 @@ let
     ];
   };
   modKey = key: lua ''mod .. " + ${key}"'';
+  quickshellCfg = osConfig.desktop.quickshell;
 in
 {
   home.packages = with pkgs; [
@@ -78,7 +80,7 @@ in
         (mkExecBind (modKey "E") "clean-run nautilus")
         (mkBind (modKey "C") "hl.dsp.window.close()")
         (mkExecBind (modKey "W") "clean-run google-chrome-stable")
-        (mkExecBind (modKey "N") "clean-run qs -c minimal ipc --any-display call notifications toggle")
+        (mkExecBind (modKey "N") "clean-run qs ipc --any-display call notifications toggle")
         (mkBind (modKey "V") ''hl.dsp.window.float({ action = "toggle" })'')
 
         (mkExecBind (modKey "Space") "clean-run app-launcher")
@@ -92,8 +94,8 @@ in
         (mkExecBind "XF86MonBrightnessUp" "swayosd-client --brightness raise")
         (mkExecBind "XF86MonBrightnessDown" "swayosd-client --brightness lower")
 
-        (mkExecBind "Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m region; fi'")
-        (mkExecBind "SHIFT + Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot -m window; fi'")
+        (mkExecBind "Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m region; fi'")
+        (mkExecBind "SHIFT + Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m window; fi'")
 
         (mkBind (modKey "h") ''hl.dsp.focus({ direction = "l" })'')
         (mkBind (modKey "l") ''hl.dsp.focus({ direction = "r" })'')
@@ -140,6 +142,14 @@ in
         }
         {
           match.namespace = "quickshell:topBar";
+          ignore_alpha = 0.05;
+        }
+        {
+          match.namespace = "quickshell:appMenuActions";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:appMenuActions";
           ignore_alpha = 0.05;
         }
         {
@@ -472,8 +482,10 @@ in
 
     extraConfig = ''
       hl.on("hyprland.start", function()
-        hl.exec_cmd("clean-run wl-paste --type text --watch cliphist store")
-        hl.exec_cmd("clean-run wl-paste --type image --watch cliphist store")
+        ${lib.optionalString (quickshellCfg.enable && quickshellCfg.launcher.clipboard) ''
+          hl.exec_cmd("clean-run wl-paste --type text --watch cliphist store")
+          hl.exec_cmd("clean-run wl-paste --type image --watch cliphist store")
+        ''}
         hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")
         hl.exec_cmd("clean-run blueman-applet")
         hl.exec_cmd("hyprlock")
@@ -489,7 +501,7 @@ in
       wallpaper = [
         {
           monitor = "";
-          path = "~/wallpapers/moon.jpg";
+          path = "~/.hyprland-assets/wallpaper.jpg";
           fit_mode = "cover";
         }
       ];

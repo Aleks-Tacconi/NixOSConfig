@@ -80,18 +80,20 @@ Column {
             }
 
             Rectangle {
-                Layout.preferredWidth: 30
+                Layout.preferredWidth: root.pinned ? 30 : pinLabel.implicitWidth + Theme.gap * 4
                 Layout.preferredHeight: 30
                 radius: Theme.surfaceRadius
                 color: pinMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
 
                 Text {
+                    id: pinLabel
+
                     anchors.centerIn: parent
                     color: root.pinned ? Theme.red : Theme.muted
                     font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize + 1
+                    font.pixelSize: root.pinned ? Theme.fontSize + 1 : Theme.panelMetaSize
                     font.bold: true
-                    text: root.pinned ? "󰐃" : "󰐂"
+                    text: root.pinned ? "󰐃" : "pin"
                 }
 
                 MouseArea {

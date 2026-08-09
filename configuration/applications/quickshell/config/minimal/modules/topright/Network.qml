@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "../frame" as Frame
 import "../../theme"
+import "../.." as ShellConfig
 
 /**
  * Network connection and live transfer-rate readout.
@@ -17,8 +18,12 @@ Item {
     property string type: "none"
     property string down: "0 KB/s"
     property string up: "0 KB/s"
+    property bool tailscaleConnected: false
+    property bool tailscalePending: false
     readonly property bool connected: state === "connected"
     readonly property bool wired: type === "ethernet"
+
+    signal tailscaleToggleRequested
 
     function stateText() {
         if (root.state === "connected")
@@ -58,13 +63,15 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: Theme.gap * 3
+            spacing: Theme.gap * 2
 
             Text {
+                Layout.preferredWidth: Theme.fontSize + 10
                 text: root.iconText()
                 color: root.connected ? Theme.fg : Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize + 4
+                horizontalAlignment: Text.AlignHCenter
             }
 
             ColumnLayout {
@@ -91,31 +98,59 @@ Item {
             }
         }
 
-        RowLayout {
+        GridLayout {
             Layout.fillWidth: true
-            spacing: Theme.gap * 4
+            Layout.leftMargin: Theme.fontSize + 10 + Theme.gap * 2
+            columns: 2
+            columnSpacing: Theme.panelItemGap
+            rowSpacing: Theme.gap
 
             Text {
-                text: `↓ ${root.down}`
+                text: "↓ Download"
                 color: Theme.red
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelMetaSize
             }
 
             Text {
-                text: `↑ ${root.up}`
-                color: Theme.red
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-            }
-
-            Item {
                 Layout.fillWidth: true
+                text: root.down
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+                horizontalAlignment: Text.AlignRight
+            }
+
+            Text {
+                text: "↑ Upload"
+                color: Theme.red
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: root.up
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+                horizontalAlignment: Text.AlignRight
             }
         }
 
         Frame.PanelDivider {
             Layout.fillWidth: true
+        }
+
+        Frame.PanelActionRow {
+            visible: ShellConfig.Config.network.tailscale
+            Layout.fillWidth: true
+            label: "Tailscale"
+            icon: "󰒍"
+            active: root.tailscaleConnected
+            enabled: !root.tailscalePending
+            detailText: root.tailscalePending ? "Working" : (root.tailscaleConnected ? "On" : "Off")
+            onClicked: root.tailscaleToggleRequested()
         }
     }
 }

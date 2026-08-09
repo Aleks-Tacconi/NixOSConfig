@@ -113,8 +113,8 @@ DNSEC
 Dockerfiles
 docstrings
 DoH
-DoQ
 DOQ
+DoQ
 DoS
 dosen't
 DoT
@@ -188,8 +188,8 @@ GenAI
 generateReport
 GID
 GIDs
-Github
 github
+Github
 GitLab
 gitlab
 GL
@@ -234,8 +234,8 @@ inodes
 instance
 internets
 Interthread
-IOT
 IoT
+IOT
 IPC
 IPSec
 IPv4
@@ -247,8 +247,8 @@ Isort
 ith
 Ivar
 IY2840
-JaCoCo
 Jacoco
+JaCoCo
 Javadoc
 JavaDoc
 Javascript
@@ -256,8 +256,8 @@ JDBC
 JDBC's
 Jeffries
 JetBrains
-JISC
 Jisc
+JISC
 js
 JUnit
 k1
@@ -366,8 +366,8 @@ Plaintext
 plaintexts
 PMD
 POSIX
-postgresql
 PostgreSQL
+postgresql
 PostgreSQL's
 PostrgreSQL
 pq
@@ -375,8 +375,8 @@ Praerit
 preimage
 preorder
 prolog
-Pseudorandomness
 pseudorandomness
+Pseudorandomness
 pseudotransitivity
 Pthreads
 PVV
@@ -432,8 +432,8 @@ Sedol
 sequence
 Serialisability
 serialisable
-Serializer
 serializer
+Serializer
 serializers
 ServerSide
 SFTP
@@ -501,8 +501,8 @@ TODO
 TODO's
 Toon
 TOU
-Traceroute
 traceroute
+Traceroute
 Tracert
 Trygve
 TSL
@@ -526,8 +526,8 @@ Unlicense
 Unlinkability
 URIs
 URNs
-userid
 UserID
+userid
 Utd
 v2
 v3
@@ -535,8 +535,8 @@ v4
 v6
 varient
 VCS
-vibecoding
 Vibecoding
+vibecoding
 Vite
 VLR
 VSC

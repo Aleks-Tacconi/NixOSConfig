@@ -60,9 +60,23 @@ Item {
 
     width: root.indicatorSize
     height: 28
+    z: indicatorMouse.containsMouse ? 1 : 0
 
     Process {
         id: actionRunner
+    }
+
+    Rectangle {
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+            leftMargin: -Theme.gap
+            rightMargin: -Theme.gap
+        }
+        color: indicatorMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
+        radius: Theme.radius
     }
 
     function runAction(command) {

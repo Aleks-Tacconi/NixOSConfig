@@ -56,6 +56,7 @@ RowLayout {
             property bool hovered: workspaceMouse.containsMouse
             readonly property color surfaceColor: "transparent"
 
+            z: button.hovered ? 1 : 0
             Layout.preferredWidth: 22
             Layout.preferredHeight: 28
 
@@ -63,6 +64,19 @@ RowLayout {
             color: button.surfaceColor
             border.width: 0
             scale: 1
+
+            Rectangle {
+                anchors {
+                    top: parent.top
+                    bottom: parent.bottom
+                    left: parent.left
+                    right: parent.right
+                    leftMargin: -Theme.gap
+                    rightMargin: -Theme.gap
+                }
+                color: button.hovered ? Theme.panelSurfaceHover : "transparent"
+                radius: Theme.radius
+            }
 
             Text {
                 anchors.centerIn: parent

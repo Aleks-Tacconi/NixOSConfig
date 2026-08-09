@@ -1,7 +1,24 @@
 { pkgs, quickshell, ... }:
 
 let
-  qs = quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  upstreamQs = quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  patchedUnwrapped = upstreamQs.unwrapped.overrideAttrs (previous: {
+    patches = (previous.patches or [ ]) ++ [ ./patches/app-menu-registrar.patch ];
+  });
+  qs = upstreamQs.overrideAttrs (previous: {
+    installPhase = ''
+      mkdir -p $out
+      cp -r ${patchedUnwrapped}/* $out
+    '';
+    passthru = (previous.passthru or { }) // {
+      unwrapped = patchedUnwrapped;
+      withModules =
+        modules:
+        qs.overrideAttrs (attrs: {
+          buildInputs = attrs.buildInputs ++ modules;
+        });
+    };
+  });
 in
 pkgs.stdenv.mkDerivation {
   pname = "quickshell-wrapper";
@@ -50,4 +67,8 @@ pkgs.stdenv.mkDerivation {
     makeWrapper ${qs}/bin/qs $out/bin/qs \
       --prefix XDG_DATA_DIRS : ${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}
   '';
+
+  passthru = qs.passthru // {
+    wrapped = qs;
+  };
 }

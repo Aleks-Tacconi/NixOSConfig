@@ -10,6 +10,29 @@ Rectangle {
     id: root
 
     required property string mode
+    required property var enabledModes
+    readonly property var modes: [
+        {
+            key: "applications",
+            label: "Apps",
+            icon: ""
+        },
+        {
+            key: "files",
+            label: "Files",
+            icon: "󰈔"
+        },
+        {
+            key: "emoji",
+            label: "Emoji",
+            icon: "󰞅"
+        },
+        {
+            key: "clipboard",
+            label: "Copy",
+            icon: ""
+        }
+    ].filter(item => root.enabledModes.includes(item.key))
     height: 36
     radius: Theme.surfaceRadius
     color: "transparent"
@@ -26,28 +49,7 @@ Rectangle {
         spacing: Theme.gap
 
         Repeater {
-            model: [
-                {
-                    key: "applications",
-                    label: "Apps",
-                    icon: ""
-                },
-                {
-                    key: "files",
-                    label: "Files",
-                    icon: "󰈔"
-                },
-                {
-                    key: "emoji",
-                    label: "Emoji",
-                    icon: "󰞅"
-                },
-                {
-                    key: "clipboard",
-                    label: "Copy",
-                    icon: ""
-                }
-            ]
+            model: root.modes
 
             delegate: Item {
                 id: tabRoot
@@ -57,7 +59,7 @@ Rectangle {
                 readonly property bool active: modelData.key === root.mode
                 readonly property bool hovered: mouseArea.containsMouse
 
-                width: (parent.width - Theme.gap * 3) / 4
+                width: (parent.width - Theme.gap * Math.max(0, root.modes.length - 1)) / root.modes.length
                 height: parent.height
 
                 Rectangle {

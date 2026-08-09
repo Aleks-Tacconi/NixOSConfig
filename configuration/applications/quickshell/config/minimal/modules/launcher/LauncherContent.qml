@@ -13,6 +13,7 @@ Item {
 
     required property bool open
     required property string mode
+    required property var enabledModes
 
     property int selectedIndex: 0
     property int rowHeight: 64
@@ -32,10 +33,16 @@ Item {
                 search: emoji.join(" ").toLowerCase()
             }))
     readonly property var applicationItems: root.buildApplicationItems()
-    readonly property string launcherConfigDir: `${Quickshell.env("HOME")}/.config/quickshell/minimal/modules/launcher`
+    readonly property string launcherConfigDir: `${Quickshell.env("HOME")}/.config/quickshell/default/modules/launcher`
     readonly property string fileWhitelistPath: `${root.launcherConfigDir}/whitelist.txt`
     readonly property string fileBlacklistPath: `${root.launcherConfigDir}/blacklist.txt`
-    readonly property var sourceItems: root.mode === "applications" ? root.applicationItems : (root.mode === "emoji" ? root.emojiItems : (root.mode === "files" ? root.fileItems : root.clipboardItems))
+    readonly property var sourceItemsByMode: ({
+            applications: root.applicationItems,
+            files: root.fileItems,
+            emoji: root.emojiItems,
+            clipboard: root.clipboardItems
+        })
+    readonly property var sourceItems: root.enabledModes.includes(root.mode) ? root.sourceItemsByMode[root.mode] : []
     readonly property var filteredItems: root.filterItems()
     readonly property int resultsHeight: root.maxVisibleRows * root.rowHeight + Math.max(0, root.maxVisibleRows - 1) * Theme.gap
     readonly property bool previewMode: root.mode === "files" || root.mode === "clipboard"
@@ -215,18 +222,30 @@ Item {
         fileSearchTimer.restart();
     }
 
-    function copySelectedFile() {
+    function copySelectedItem() {
         const item = root.selectedItem();
 
-        if (!item || item.kind !== "file")
+        if (!item || !["file", "emoji", "clipboard"].includes(item.kind))
             return false;
 
-        copyProcess.exec({
-            command: ["sh", "-c", "printf 'file://%s\\n' \"$FILE_PATH\" | wl-copy --type text/uri-list"],
-            environment: ({
-                    FILE_PATH: item.path
-                })
-        });
+        if (item.kind === "file") {
+            copyProcess.exec({
+                command: ["sh", "-c", "printf 'file://%s\\n' \"$FILE_PATH\" | wl-copy --type text/uri-list"],
+                environment: ({
+                        FILE_PATH: item.path
+                    })
+            });
+        } else if (item.kind === "emoji") {
+            copyProcess.exec(["wl-copy", item.value]);
+        } else {
+            copyProcess.exec({
+                command: ["sh", "-c", "printf %s \"$CLIPHIST_ENTRY\" | cliphist decode | wl-copy"],
+                environment: ({
+                        CLIPHIST_ENTRY: item.raw
+                    })
+            });
+        }
+
         root.requestClose();
         return true;
     }
@@ -238,7 +257,7 @@ Item {
         } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_K) {
             root.moveSelection(-1);
             event.accepted = true;
-        } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_C && root.copySelectedFile()) {
+        } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_C && root.copySelectedItem()) {
             event.accepted = true;
         } else if (event.key === Qt.Key_Escape && root.mode === "files" && root.selectedFileDir.length > 0) {
             root.selectedFileDir = "";
@@ -312,6 +331,7 @@ Item {
         LauncherModeTabs {
             width: parent.width
             mode: root.mode
+            enabledModes: root.enabledModes
             onModeRequested: mode => root.chooseMode(mode)
         }
 

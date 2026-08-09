@@ -13,11 +13,11 @@ Scope {
 
     readonly property var activeToplevel: ToplevelManager.activeToplevel
     readonly property string stateHome: {
-        const configuredStateHome = Quickshell.env("XDG_STATE_HOME");
+        const configuredStateHome = Quickshell.env("XDG_STATE_HOME") ?? "";
 
-        return configuredStateHome.length > 0 ? configuredStateHome : `${Quickshell.env("HOME")}/.local/state`;
+        return configuredStateHome.length > 0 ? configuredStateHome : `${Quickshell.env("HOME") ?? ""}/.local/state`;
     }
-    readonly property string pinsPath: `${root.stateHome}/quickshell/minimal/dock-pins.json`
+    readonly property string pinsPath: `${root.stateHome}/quickshell/dock-pins.json`
     readonly property var appGroups: {
         const groups = new Map()
         const pinnedApps = dockPins.pinnedApps ?? []

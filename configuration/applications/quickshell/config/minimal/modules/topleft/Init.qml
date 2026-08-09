@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import "../frame" as Frame
 import "../../theme"
+import "../.." as ShellConfig
 
 /**
  * Top-left status cluster with time, notifications, and calendar preview.
@@ -28,10 +29,7 @@ Item {
     readonly property bool colorPickerActive: root.notificationCenter?.colorPickerActive ?? false
     readonly property bool menuOpen: !root.colorPickerActive && (root.notificationsOpen || root.calendarOpen || notificationsPanel.progress > 0 || calendarPanel.progress > 0)
     readonly property bool ownsNotificationPopup: root.notificationCenter !== null && root.notificationCenter.notificationPopupScreenKey === root.currentScreenKey
-    readonly property var latestNotification: {
-        const pulse = root.notificationCenter?.notificationPulse ?? 0;
-        return root.notificationCenter?.latestNotification() ?? null;
-    }
+    readonly property var activeNotification: root.notificationCenter?.activeNotification ?? null
 
     function notificationIcon() {
         return root.notificationCenter?.dndEnabled ? "󰂛" : "󰂚";
@@ -126,8 +124,22 @@ Item {
             Item {
                 id: calendarSegment
 
+                z: calendarTrigger.containsMouse ? 1 : 0
                 width: calendarStatusRow.implicitWidth
                 height: 28
+
+                Rectangle {
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        left: parent.left
+                        right: parent.right
+                        leftMargin: -Theme.gap * 2
+                        rightMargin: -Theme.gap * 2
+                    }
+                    color: calendarTrigger.containsMouse ? Theme.panelSurfaceHover : "transparent"
+                    radius: Theme.radius
+                }
 
                 Row {
                     id: calendarStatusRow
@@ -162,8 +174,22 @@ Item {
             Item {
                 id: notificationsSegment
 
+                z: notificationsTrigger.containsMouse ? 1 : 0
                 width: notificationsStatus.width
                 height: 28
+
+                Rectangle {
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        left: parent.left
+                        right: parent.right
+                        leftMargin: -Theme.gap * 2
+                        rightMargin: -Theme.gap * 2
+                    }
+                    color: notificationsTrigger.containsMouse ? Theme.panelSurfaceHover : "transparent"
+                    radius: Theme.radius
+                }
 
                 StatusCell {
                     id: notificationsStatus
@@ -236,7 +262,7 @@ Item {
                 id: notificationsPanel
 
                 corner: "topLeft"
-                requestedOpen: root.notificationsOpen && !root.colorPickerActive
+                requestedOpen: root.notificationsOpen && !root.colorPickerActive && notificationPanel.progress <= 0
                 forceClose: root.colorPickerActive
                 activatorMouseArea: notificationsTrigger
                 dismissOnExit: true
@@ -303,9 +329,11 @@ Item {
 
                         ActionButton {
                             width: parent.width
-                            label: root.notificationCenter?.hyprsunsetEnabled ? "Night Light On" : "Night Light Off"
+                            label: "Night Light"
                             icon: "󰖔"
                             active: root.notificationCenter?.hyprsunsetEnabled ?? false
+                            enabled: !(root.notificationCenter?.hyprsunsetPending ?? false)
+                            detailText: (root.notificationCenter?.hyprsunsetEnabled ?? false) ? "On" : "Off"
                             onClicked: root.notificationCenter?.toggleHyprsunset()
                         }
 
@@ -393,6 +421,7 @@ Item {
 
                                 width: ListView.view.width
                                 notification: modelData
+                                onDismissRequested: notification => root.notificationCenter?.dismissActiveNotification(notification)
                             }
                         }
                     }
@@ -502,7 +531,7 @@ Item {
         screen: root.popupScreen
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
-        visible: root.ownsNotificationPopup && (root.notificationCenter?.notificationPopupOpen ?? false) && root.latestNotification !== null
+        visible: root.ownsNotificationPopup && ((root.activeNotification !== null && (root.notificationCenter?.notificationPopupOpen ?? false)) || notificationPanel.progress > 0)
         implicitWidth: notificationPanel.length + notificationPanel.curveRadius
         implicitHeight: notificationPanel.depth + notificationPanel.curveRadius
         mask: Region {
@@ -533,7 +562,7 @@ Item {
                 id: notificationPanel
 
                 corner: "topLeft"
-                requestedOpen: notificationPopupWindow.visible
+                requestedOpen: root.ownsNotificationPopup && root.activeNotification !== null && (root.notificationCenter?.notificationPopupOpen ?? false)
                 autoClose: false
                 length: 390
                 depth: Math.max(118, toastCard.implicitHeight + Theme.panelPadding * 2)
@@ -551,8 +580,9 @@ Item {
 
                     anchors.centerIn: parent
                     width: parent.width - Theme.panelPadding * 2
-                    notification: root.latestNotification
+                    notification: root.activeNotification
                     toast: true
+                    onDismissRequested: notification => root.notificationCenter?.dismissActiveNotification(notification)
                 }
             }
         }

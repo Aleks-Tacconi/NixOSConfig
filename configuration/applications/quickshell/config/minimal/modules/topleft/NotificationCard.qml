@@ -8,6 +8,8 @@ Rectangle {
     property bool toast: false
     property real cardPadding: root.toast ? Theme.gap * 3 : Theme.gap * 2
 
+    signal dismissRequested(var notification)
+
     width: parent?.width ?? 0
     implicitHeight: Math.max(72, cardContent.implicitHeight + root.cardPadding * 2)
     height: implicitHeight
@@ -113,7 +115,10 @@ Rectangle {
             acceptedButtons: Qt.LeftButton
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            onClicked: root.notification?.dismiss()
+            onClicked: {
+                root.dismissRequested(root.notification);
+                root.notification?.dismiss();
+            }
         }
     }
 }
