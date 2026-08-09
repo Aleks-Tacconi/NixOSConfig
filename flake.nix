@@ -17,13 +17,6 @@
       url = "github:quickshell-mirror/quickshell/7511545ee20664e3b8b8d3322c0ffe7567c56f7a";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    herdr.url = "github:ogulcancelik/herdr/v0.7.3";
-
-    helium-flake = {
-      url = "github:oxcl/nix-flake-helium-browser";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
