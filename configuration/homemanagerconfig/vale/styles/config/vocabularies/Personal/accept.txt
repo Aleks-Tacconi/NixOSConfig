@@ -24,8 +24,8 @@ and
 Anley
 APIs
 APNIC
-Args
 args
+Args
 ARIN
 arity
 ARP
@@ -75,8 +75,8 @@ coprimes
 CORS
 Covid
 CreateProcess
-creational
 Creational
+creational
 creativecommons
 CS2800
 CS2860
@@ -89,8 +89,8 @@ CustomerController
 CVE
 CW1
 CW2
-Cyclomatic
 cyclomatic
+Cyclomatic
 Daemen
 DAO
 ddd
@@ -113,8 +113,8 @@ DNSEC
 Dockerfiles
 docstrings
 DoH
-DOQ
 DoQ
+DOQ
 DoS
 dosen't
 DoT
@@ -188,8 +188,8 @@ GenAI
 generateReport
 GID
 GIDs
-github
 Github
+github
 GitLab
 gitlab
 GL
@@ -234,8 +234,8 @@ inodes
 instance
 internets
 Interthread
-IoT
 IOT
+IoT
 IPC
 IPSec
 IPv4
@@ -247,8 +247,8 @@ Isort
 ith
 Ivar
 IY2840
-Jacoco
 JaCoCo
+Jacoco
 Javadoc
 JavaDoc
 Javascript
@@ -263,14 +263,14 @@ JUnit
 k1
 Kaminsky
 Kaminskys
-kanban
 Kanban
+kanban
 KDF
 keccak
 Kerighan
 keystream
-keystreams
 Keystreams
+keystreams
 KLOC
 Koblitz
 Kohnfelder
@@ -375,8 +375,8 @@ Praerit
 preimage
 preorder
 prolog
-pseudorandomness
 Pseudorandomness
+pseudorandomness
 pseudotransitivity
 Pthreads
 PVV
@@ -394,8 +394,8 @@ README's
 reddit
 Reenskaug
 refactorings
-Referer
 referer
+Referer
 refl
 RelationalModel
 relationhip
@@ -456,8 +456,8 @@ Soton
 sp
 spdx
 SPDX
-spotbugs
 SpotBugs
+spotbugs
 SpringBootTest
 SQLi
 SQLite
@@ -479,8 +479,8 @@ SubscriberEmailAddresses
 SubscriberHomeAddresses
 SubscriberID
 sudo
-superkey
 Superkey
+superkey
 superkeys
 Tacconi
 TCF
@@ -501,8 +501,8 @@ TODO
 TODO's
 Toon
 TOU
-traceroute
 Traceroute
+traceroute
 Tracert
 Trygve
 TSL
@@ -526,8 +526,8 @@ Unlicense
 Unlinkability
 URIs
 URNs
-UserID
 userid
+UserID
 Utd
 v2
 v3
@@ -535,8 +535,8 @@ v4
 v6
 varient
 VCS
-Vibecoding
 vibecoding
+Vibecoding
 Vite
 VLR
 VSC
