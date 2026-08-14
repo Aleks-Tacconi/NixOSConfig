@@ -113,8 +113,8 @@ DNSEC
 Dockerfiles
 docstrings
 DoH
-DOQ
 DoQ
+DOQ
 DoS
 dosen't
 DoT
@@ -209,8 +209,8 @@ hostnames
 HPLMN
 htmlhint
 HyperText
-i
 I
+i
 IANA
 iBGP
 IBMs
@@ -234,8 +234,8 @@ inodes
 instance
 internets
 Interthread
-IoT
 IOT
+IoT
 IPC
 IPSec
 IPv4
@@ -256,8 +256,8 @@ JDBC
 JDBC's
 Jeffries
 JetBrains
-JISC
 Jisc
+JISC
 js
 JUnit
 k1
@@ -269,8 +269,8 @@ KDF
 keccak
 Kerighan
 keystream
-keystreams
 Keystreams
+keystreams
 KLOC
 Koblitz
 Kohnfelder
@@ -323,8 +323,8 @@ mvn
 MvnRepository
 MySQL
 NCLOC
-NeoVim
 Neovim
+NeoVim
 netmask
 NFRs
 NIST
@@ -361,13 +361,13 @@ PINs
 PKE
 PKI
 PKIs
-plaintext
 Plaintext
+plaintext
 plaintexts
 PMD
 POSIX
-PostgreSQL
 postgresql
+PostgreSQL
 PostgreSQL's
 PostrgreSQL
 pq
@@ -375,8 +375,8 @@ Praerit
 preimage
 preorder
 prolog
-Pseudorandomness
 pseudorandomness
+Pseudorandomness
 pseudotransitivity
 Pthreads
 PVV
@@ -394,8 +394,8 @@ README's
 reddit
 Reenskaug
 refactorings
-referer
 Referer
+referer
 refl
 RelationalModel
 relationhip
@@ -432,8 +432,8 @@ Sedol
 sequence
 Serialisability
 serialisable
-Serializer
 serializer
+Serializer
 serializers
 ServerSide
 SFTP
@@ -454,8 +454,8 @@ smartcard
 SonarQube
 Soton
 sp
-spdx
 SPDX
+spdx
 SpotBugs
 spotbugs
 SpringBootTest
@@ -479,8 +479,8 @@ SubscriberEmailAddresses
 SubscriberHomeAddresses
 SubscriberID
 sudo
-superkey
 Superkey
+superkey
 superkeys
 Tacconi
 TCF
@@ -501,8 +501,8 @@ TODO
 TODO's
 Toon
 TOU
-Traceroute
 traceroute
+Traceroute
 Tracert
 Trygve
 TSL
@@ -526,8 +526,8 @@ Unlicense
 Unlinkability
 URIs
 URNs
-UserID
 userid
+UserID
 Utd
 v2
 v3
