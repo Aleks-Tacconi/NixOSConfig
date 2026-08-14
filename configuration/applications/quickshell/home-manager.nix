@@ -26,6 +26,12 @@ let
       exec ${gtkActionsPython}/bin/python ${./gtk-actions.py} "$@"
     '';
   };
+  qtMenu = pkgs.writeShellApplication {
+    name = "quickshell-qt-menu";
+    text = ''
+      exec ${gtkActionsPython}/bin/python ${./qt-menu.py} "$@"
+    '';
+  };
   fileSearchPaths = pkgs.writeText "quickshell-file-search-paths" ''
     ${lib.concatStringsSep "\n" cfg.launcher.fileSearch.paths}
   '';
@@ -79,6 +85,7 @@ in
   home.packages = [
     quickshellPackage
     gtkActions
+    qtMenu
   ]
   ++ lib.optionals cfg.launcher.clipboard [ pkgs.cliphist ]
   ++ lib.optionals (cfg.launcher.clipboard || cfg.launcher.files || cfg.launcher.emoji) [

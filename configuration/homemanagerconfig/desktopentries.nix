@@ -7,6 +7,13 @@
 }:
 
 {
+  home.file.".local/share/applications/kvantummanager.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=Kvantum Manager
+    NoDisplay=true
+  '';
+
   home.file.".local/share/applications/uuctl.desktop".text = ''
     [Desktop Entry]
     Type=Application

@@ -24,6 +24,7 @@ in
     papirus-icon-theme
     gtkTheme
     kvantumTheme
+    kdePackages.breeze
     libsForQt5.qtstyleplugin-kvantum
     kdePackages.qtstyleplugin-kvantum
   ];
@@ -66,7 +67,8 @@ in
 
   qt = {
     enable = true;
-    platformTheme.name = "qtct";
+    platformTheme.name = "kde";
+    style.name = "kvantum";
     style.package = with pkgs; [
       libsForQt5.qtstyleplugin-kvantum
       kdePackages.qtstyleplugin-kvantum

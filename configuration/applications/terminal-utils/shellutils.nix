@@ -160,7 +160,6 @@ in
 
         # for jupyter notebooks
         jupyter
-        jupyter-client
         jupytext
       ]
     ))

@@ -1,28 +1,36 @@
-{ config, pkgs, lib, inputs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 
 {
-  services.kdeconnect.enable = true;
+  services.kdeconnect = {
+    enable = true;
+    indicator = true;
+  };
 
-  home.file.".local/share/applications/org.kde.kdeconnect.nonplasma.desktop".text =
-    ''
-      [Desktop Entry]
-      Name=KDE Connect Indicator
-      Name[en_GB]=KDE Connect Indicator
-      Comment=Display information about your devices
-      Comment[en_GB]=Display information about your devices
-      Exec=kdeconnect-indicator
-      Icon=kdeconnect
-      Type=Application
-      Terminal=false
-      Categories=Qt;KDE;Network;
-      NotShowIn=KDE;
-      Name[en_GB.UTF-8]=KDE Connect Indicator
-      X-GNOME-FullName[en_GB.UTF-8]=KDE Connect Indicator
-      Comment[en_GB.UTF-8]=Display information about your devices
-      NoDisplay=jpeg
-      Path=
-      X-GNOME-UsesNotifications=false
-    '';
+  home.file.".local/share/applications/org.kde.kdeconnect.nonplasma.desktop".text = ''
+    [Desktop Entry]
+    Name=KDE Connect Indicator
+    Name[en_GB]=KDE Connect Indicator
+    Comment=Display information about your devices
+    Comment[en_GB]=Display information about your devices
+    Exec=kdeconnect-indicator
+    Icon=kdeconnect
+    Type=Application
+    Terminal=false
+    Categories=Qt;KDE;Network;
+    NotShowIn=KDE;
+    Name[en_GB.UTF-8]=KDE Connect Indicator
+    X-GNOME-FullName[en_GB.UTF-8]=KDE Connect Indicator
+    Comment[en_GB.UTF-8]=Display information about your devices
+    NoDisplay=jpeg
+    Path=
+    X-GNOME-UsesNotifications=false
+  '';
 
   home.file.".local/share/applications/org.kde.kdeconnect.sms.desktop".text = ''
     [Desktop Entry]

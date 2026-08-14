@@ -29,13 +29,16 @@ Item {
     property var actionPresentation: null
     property var pendingWindowRequest: null
     property var pendingGtkRequest: null
+    property var deferredGtkResult: null
     property var pendingActivationRequest: null
+    property int pendingNativeProbePid: 0
+    property bool nativeMenuOpen: false
+    property bool actionOpenRequested: false
     property bool presentationReusable: false
 
     readonly property bool actionsOpen: root.actionState === "open"
     readonly property bool actionResolving: root.actionState === "resolving-window"
         || root.actionState === "resolving-gtk"
-        || root.actionState === "ready"
     readonly property bool actionPresentationActive: root.actionState === "ready"
         || root.actionsOpen
         || root.actionState === "closing"
@@ -71,6 +74,7 @@ Item {
     readonly property bool actionInteractionHovered: identityMouse.containsMouse
         || triggerBridgeHover.hovered
         || actionsPanel.panelHovered
+        || root.nativeMenuOpen
     readonly property string appName: root.actionPresentation?.appName
         ?? root.actionRequest?.appName
         ?? root.entryName(root.desktopEntry, root.appId)
@@ -82,6 +86,12 @@ Item {
     width: visible ? Math.min(root.maxWidth, menuRow.implicitWidth) : 0
     height: Theme.barHeight
     clip: false
+
+    Component.onCompleted: {
+        root.queueNativeMenuProbe();
+        Qt.callLater(() => root.prefetchActions());
+    }
+    onActivePidChanged: root.queueNativeMenuProbe()
 
     onActionStateChanged: {
         actionHoverClose.stop();
@@ -115,8 +125,58 @@ Item {
 
         function onActiveToplevelChanged() {
             const active = ToplevelManager.activeToplevel;
-            if (active !== null && root.actionTarget !== null && active !== root.actionTarget)
+            if (!root.nativeMenuOpen
+                    && active !== null && root.actionTarget !== null && active !== root.actionTarget)
                 root.invalidateActionTarget();
+
+            Qt.callLater(() => root.prefetchActions());
+        }
+    }
+
+    function prefetchActions() {
+        const active = ToplevelManager.activeToplevel;
+        if (root.nativeMenuOpen || active === null || root.actionsOpen || root.actionState === "closing")
+            return;
+        if (root.actionTarget === active && (root.actionResolving || root.actionState === "ready"))
+            return;
+
+        root.beginActionRequest(false);
+    }
+
+    function queueNativeMenuProbe() {
+        const pid = root.activePid;
+        if (!ShellConfig.Config.appMenu.nativeMenus || pid <= 0 || root.nativeMenu !== null)
+            return;
+
+        root.pendingNativeProbePid = pid;
+        root.startPendingNativeMenuProbe();
+    }
+
+    function startPendingNativeMenuProbe() {
+        if (qtMenuProbeProcess.running || root.pendingNativeProbePid <= 0)
+            return;
+
+        const pid = root.pendingNativeProbePid;
+        root.pendingNativeProbePid = 0;
+        if (pid !== root.activePid)
+            return;
+
+        qtMenuProbeProcess.probedPid = pid;
+        qtMenuProbeProcess.exec(["quickshell-qt-menu", String(pid)]);
+    }
+
+    function finishNativeMenuProbe(pid, exitCode, output) {
+        if (exitCode !== 0 || pid !== root.activePid)
+            return;
+
+        try {
+            const endpoint = JSON.parse(output);
+            if (endpoint !== null
+                    && typeof endpoint.service === "string" && endpoint.service.startsWith(":")
+                    && typeof endpoint.path === "string" && endpoint.path.startsWith("/"))
+                AppMenuRegistrar.registerMenuForPid(pid, endpoint.service, endpoint.path);
+        } catch (error) {
+            return;
         }
     }
 
@@ -273,7 +333,7 @@ Item {
             && String(request.address ?? "") === String(root.actionRequest.address ?? "");
     }
 
-    function beginActionRequest() {
+    function beginActionRequest(openWhenReady) {
         const target = ToplevelManager.activeToplevel;
         if (target === null)
             return;
@@ -301,9 +361,16 @@ Item {
 
         root.actionPresentation = null;
         root.presentationReusable = false;
+        root.actionOpenRequested = openWhenReady;
         root.actionRequest = request;
         root.actionState = "resolving-window";
         actionResolutionDeadline.restart();
+
+        if (expectedAddress.length > 0 && Number(liveIpcWindow?.pid ?? 0) > 0) {
+            root.finishWindowRequest(request, 0, JSON.stringify(liveIpcWindow));
+            return;
+        }
+
         root.pendingWindowRequest = request;
         root.startPendingWindowRequest();
     }
@@ -360,6 +427,11 @@ Item {
         });
         root.actionRequest = resolved;
         root.actionState = "resolving-gtk";
+        if (root.hasNativeMenu) {
+            root.finalizeActionRequest(resolved, [], false);
+            return;
+        }
+
         root.pendingGtkRequest = resolved;
         root.startPendingGtkRequest();
     }
@@ -390,7 +462,24 @@ Item {
             return;
         }
 
+        if (actions.length === 0
+                && qtMenuProbeProcess.running
+                && qtMenuProbeProcess.probedPid === request.pid) {
+            root.deferredGtkResult = Object.freeze({
+                request: request,
+                actions: actions
+            });
+            return;
+        }
+
         root.finalizeActionRequest(request, actions, false);
+    }
+
+    function finishDeferredGtkRequest() {
+        const result = root.deferredGtkResult;
+        root.deferredGtkResult = null;
+        if (result !== null && root.requestIsCurrent(result.request))
+            root.finalizeActionRequest(result.request, result.actions, false);
     }
 
     function finalizeActionRequest(request, gtkActions, unavailable) {
@@ -416,21 +505,8 @@ Item {
         root.actionRequest = null;
         root.actionPresentation = presentation;
         root.presentationReusable = true;
-        root.actionState = "ready";
-        Qt.callLater(() => {
-            if (root.actionState !== "ready"
-                    || root.actionPresentation !== presentation
-                    || presentation.generation !== root.actionGeneration)
-                return;
-
-            const active = ToplevelManager.activeToplevel;
-            if (active !== null && active !== presentation.target) {
-                root.invalidateActionTarget();
-                return;
-            }
-
-            root.actionState = "open";
-        });
+        root.actionState = root.actionOpenRequested ? "open" : "ready";
+        root.actionOpenRequested = false;
     }
 
     function cancelResolution() {
@@ -440,6 +516,8 @@ Item {
         root.actionPresentation = null;
         root.pendingWindowRequest = null;
         root.pendingGtkRequest = null;
+        root.deferredGtkResult = null;
+        root.actionOpenRequested = false;
         root.presentationReusable = false;
         root.actionState = "idle";
     }
@@ -462,6 +540,8 @@ Item {
         root.actionRequest = null;
         root.pendingWindowRequest = null;
         root.pendingGtkRequest = null;
+        root.deferredGtkResult = null;
+        root.actionOpenRequested = false;
         root.presentationReusable = false;
         if (root.actionPresentation !== null && (root.actionsOpen || root.actionState === "closing")) {
             root.actionState = "closing";
@@ -475,9 +555,13 @@ Item {
         if (root.actionState !== "closing")
             return;
 
-        root.actionPresentation = null;
-        root.presentationReusable = false;
-        root.actionState = "idle";
+        if (root.presentationReusable) {
+            root.actionState = "ready";
+        } else {
+            root.actionPresentation = null;
+            root.actionState = "idle";
+            Qt.callLater(() => root.prefetchActions());
+        }
     }
 
     function presentationCanReopen() {
@@ -492,14 +576,21 @@ Item {
 
     function toggleActions() {
         if (root.actionResolving) {
-            root.cancelResolution();
+            root.actionOpenRequested = true;
         } else if (root.actionsOpen) {
             root.closePresentation();
         } else if (root.actionState === "closing") {
             if (root.presentationCanReopen())
                 root.actionState = "open";
+        } else if (root.actionState === "ready") {
+            if (root.presentationCanReopen()) {
+                root.actionState = "open";
+            } else {
+                root.invalidateActionTarget();
+                Qt.callLater(() => root.beginActionRequest(true));
+            }
         } else {
-            root.beginActionRequest();
+            root.beginActionRequest(true);
         }
     }
 
@@ -578,6 +669,23 @@ Item {
         onExited: {
             gtkActivateProcess.request = null;
             Qt.callLater(() => root.startPendingActivationRequest());
+        }
+    }
+
+    Process {
+        id: qtMenuProbeProcess
+
+        property int probedPid: 0
+
+        stdout: StdioCollector {
+            id: qtMenuProbeOutput
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            root.finishNativeMenuProbe(qtMenuProbeProcess.probedPid, exitCode, qtMenuProbeOutput.text);
+            qtMenuProbeProcess.probedPid = 0;
+            Qt.callLater(() => root.finishDeferredGtkRequest());
+            Qt.callLater(() => root.startPendingNativeMenuProbe());
         }
     }
 
@@ -671,54 +779,6 @@ Item {
                 onClicked: root.toggleActions()
             }
         }
-
-        Repeater {
-            model: root.hasNativeMenu ? nativeRoot.children : null
-
-            Item {
-                id: nativeButton
-
-                required property var modelData
-
-                visible: !modelData.isSeparator && modelData.text.length > 0
-                width: visible ? Math.min(96, nativeLabel.implicitWidth + Theme.gap * 4) : 0
-                height: menuRow.height
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: nativeMouse.containsMouse && nativeButton.modelData.enabled
-                        ? Theme.panelSurfaceHover
-                        : "transparent"
-                    radius: Theme.radius
-                }
-
-                Text {
-                    id: nativeLabel
-
-                    anchors.centerIn: parent
-                    width: Math.min(80, implicitWidth)
-                    color: nativeButton.modelData.enabled ? Theme.fg : Theme.muted
-                    elide: Text.ElideRight
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                    text: nativeButton.modelData.text
-                }
-
-                MouseArea {
-                    id: nativeMouse
-
-                    anchors.fill: parent
-                    enabled: nativeButton.modelData.enabled
-                    hoverEnabled: true
-                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    onClicked: {
-                        const point = nativeButton.mapToItem(null, 0, nativeButton.height);
-                        nativeButton.modelData.display(root.parentWindow, point.x, point.y);
-                    }
-                }
-            }
-        }
-
     }
 
     PanelWindow {
@@ -778,7 +838,7 @@ Item {
                 dismissOnExit: false
                 length: 280
                 depth: actionsContent.implicitHeight + Theme.panelPadding * 2
-                duration: 180
+                duration: 0
                 backgroundColor: Theme.panelBg
                 curveRadius: Theme.panelRadius
 
@@ -929,9 +989,44 @@ Item {
                             }
                         }
 
+                        Repeater {
+                            model: root.hasNativeMenu ? nativeRoot.children : null
+
+                            Frame.PanelActionRow {
+                                id: nativeActionRow
+
+                                required property var modelData
+
+                                Layout.fillWidth: true
+                                visible: !modelData.isSeparator && modelData.text.length > 0
+                                enabled: modelData.enabled
+                                label: modelData.text
+                                showTrailing: modelData.hasChildren
+                                onClicked: {
+                                    const point = mapToItem(null, width, 0);
+                                    root.nativeMenuOpen = true;
+                                    modelData.display(actionsWindow, point.x, point.y);
+                                }
+
+                                Connections {
+                                    target: nativeActionRow.modelData
+                                    ignoreUnknownSignals: true
+
+                                    function onOpened() {
+                                        root.nativeMenuOpen = true;
+                                    }
+
+                                    function onClosed() {
+                                        root.nativeMenuOpen = false;
+                                    }
+                                }
+                            }
+                        }
+
                         Text {
                             Layout.fillWidth: true
-                            visible: root.actionPresentation !== null
+                            visible: !root.hasNativeMenu
+                                && root.actionPresentation !== null
                                 && (root.actionPresentation.unavailable || root.actionItems.length === 0)
                             color: Theme.muted
                             horizontalAlignment: Text.AlignHCenter

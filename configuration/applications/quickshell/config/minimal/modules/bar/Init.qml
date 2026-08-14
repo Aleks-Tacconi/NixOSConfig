@@ -118,6 +118,14 @@ Scope {
                     Dock.Init {
                         popupScreen: bar.modelData
                         maxWidth: Math.max(96, Math.min(300, bar.width * 0.24))
+                        popupRightMargin: rightCluster.outerMargin + statusPowerCluster.width + tray.width + rightCluster.spacing * 2
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Tray {
+                        id: tray
+
+                        popupScreen: bar.modelData
                         popupRightMargin: rightCluster.outerMargin + statusPowerCluster.width + rightCluster.spacing
                         anchors.verticalCenter: parent.verticalCenter
                     }

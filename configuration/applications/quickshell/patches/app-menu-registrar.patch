@@ -27,7 +27,7 @@ new file mode 100644
 index 0000000..4b60d78
 --- /dev/null
 +++ b/src/dbus/dbusmenu/appmenuregistrar.hpp
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,71 @@
 +#pragma once
 +
 +#include <qdbuscontext.h>
@@ -59,6 +59,10 @@ index 0000000..4b60d78
 +
 +	/// Returns the sole menu endpoint registered by pid, or null when no exact match is safe.
 +	Q_INVOKABLE qs::menu::QsMenuHandle* menuForPid(quint32 pid) const;
++	/// Adds a verified menu endpoint exported without compositor appmenu support.
++	Q_INVOKABLE void registerMenuForPid(
++	    quint32 pid, const QString& service, const QString& path
++	);
 +
 +	// Canonical com.canonical.AppMenu.Registrar adaptor methods.
 +	// NOLINTBEGIN
@@ -100,7 +104,7 @@ new file mode 100644
 index 0000000..2232e80
 --- /dev/null
 +++ b/src/dbus/dbusmenu/appmenuregistrar.cpp
-@@ -0,0 +1,174 @@
+@@ -0,0 +1,204 @@
 +#include "appmenuregistrar.hpp"
 +
 +#include <appmenu_registrar.h>
@@ -247,6 +251,36 @@ index 0000000..2232e80
 +	}
 +
 +	return match == nullptr ? nullptr : match->handle;
++}
++
++void AppMenuRegistrar::registerMenuForPid(
++    quint32 pid,
++    const QString& service,
++    const QString& path
++) {
++	if (pid == 0 || service.isEmpty() || !path.startsWith('/')) return;
++
++	const auto pidReply = QDBusConnection::sessionBus().interface()->servicePid(service);
++	if (!pidReply.isValid() || pidReply.value() != pid) {
++		qWarning().noquote() << "Ignoring discovered AppMenu endpoint with mismatched pid from"
++		                     << service;
++		return;
++	}
++
++	auto& senderRegistrations = this->registrations[service];
++	auto existing = senderRegistrations.find(0);
++	if (existing != senderRegistrations.end()
++	    && existing->path == path
++	    && existing->pid == pid)
++		return;
++
++	if (existing != senderRegistrations.end()) existing->handle->deleteLater();
++
++	auto* handle = new DBusMenuHandle(this);
++	handle->setAddress(service, path);
++	senderRegistrations.insert(0, Registration {pid, service, path, handle});
++	this->serviceWatcher.addWatchedService(service);
++	this->markChanged();
 +}
 +
 +void AppMenuRegistrar::onServiceUnregistered(const QString& service) {
