@@ -1,48 +1,44 @@
 # NixOS Configuration
 
-Personal NixOS and Home Manager configuration for my `laptop` and `pc` hosts.
-The repository assumes the `aleks` user, host-specific hardware files, and my
-monitor and storage layout. It is intended as a reference rather than a
-drop-in configuration for another machine.
+Personal NixOS and Home Manager configuration for the `laptop` and `pc` hosts.
+It assumes the `aleks` user and host-specific hardware, monitor, and storage
+layouts, so it is a reference rather than a drop-in configuration.
 
 ![Desktop screenshot](./assets/1.png)
-![Desktop screenshot](./assets/2.png)
 
 ## Desktop
 
 - Hyprland with host-specific monitor and workspace layouts.
-- A Nix-managed Quickshell `minimal` configuration providing the top bar,
-  launcher, dock, notifications, calendar, media controls, network and battery
-  status, and power menu.
-- Click-open top-bar panels dismiss after the pointer leaves their trigger and
-  panel.
-- Google Chrome as the default browser, with Helium and Firefox also installed.
-- Ghostty, Nautilus, Hyprlock, SwayOSD, and Catppuccin/Papirus theming.
-- KDE Connect and Jellyfin.
-- Preservation-oriented Google Drive synchronization on both hosts.
-- Syncthing synchronization for `~/ObsidianVault` between both hosts.
-- OpenCode and selected global configuration files managed by Home Manager.
+- Nix-managed Quickshell `minimal`: top bar, launcher, dock, notifications,
+  calendar, media controls, network/battery status, and power menu. Click-open
+  top-bar panels close after the pointer leaves their trigger and panel.
+- Google Chrome by default, plus Helium and Firefox.
+- Ghostty, Nautilus, Hyprlock, SwayOSD, Catppuccin/Papirus theming, KDE Connect,
+  and Jellyfin.
+- Preservation-oriented Google Drive sync on both hosts and Syncthing for
+  `~/ObsidianVault` between them.
+- OpenCode and selected global configuration managed by Home Manager.
 
-Quickshell's static configuration is deployed to
-`~/.config/quickshell/minimal` from
-`configuration/applications/quickshell/config/minimal`. Mutable dock pins are
-stored in `~/.local/state/quickshell/minimal/dock-pins.json`.
+Quickshell's static configuration is deployed from
+`configuration/applications/quickshell/config/minimal` to
+`~/.config/quickshell/minimal`; mutable dock pins live at
+`~/.local/state/quickshell/minimal/dock-pins.json`.
 
 OpenCode's `AGENTS.md`, `opencode.jsonc`, sandbox shell, and RTK plugin are
-immutable Home Manager links sourced from `opencodeconfig/`. The surrounding
-config and plugin directories remain writable for notifier state, dependencies,
-and Herdr's generated integration.
+immutable Home Manager links from `opencodeconfig/`. The surrounding config and
+plugin directories stay writable for notifier state, dependencies, and Herdr's
+generated integration.
 
 ## Google Drive
 
-Both hosts keep a complete offline copy of the main Google Drive under
-`~/Google Drive`. Each host runs its own `rclone bisync` session directly against
-`gdrive:` on the same five-minute schedule. Both machines use the same package,
-commands, state layout, and systemd units. User lingering keeps the timers active
-after logout.
+Both hosts keep a complete offline copy at `~/Google Drive`. Each independently
+runs `rclone bisync` directly against `gdrive:` every five minutes, using the
+same package, commands, state layout, and systemd units. User lingering keeps
+timers active after logout.
 
-Set up each machine independently in either order. On each machine, authorize
-rclone as `aleks` and initialize an empty local folder:
+### Setup
+
+Set up each host independently, in either order, as `aleks`:
 
 ```bash
 rclone config
@@ -51,99 +47,87 @@ gdrive-sync
 gdrive-sync status
 ```
 
-In `rclone config`, create a Google Drive remote named exactly `gdrive`, use
-full Drive access, and complete the browser OAuth flow. A personal Google API
-client ID is recommended for regular synchronization but is not required.
-Credentials remain in `~/.config/rclone/rclone.conf`; do not add that file or
-its OAuth tokens to this repository. Initialization refuses a non-empty
-`~/Google Drive` and uses Drive as the authoritative first copy. Scheduled jobs
-wait for the first successful manual `gdrive-sync`, which initializes the folder
-when needed and activates subsequent five-minute synchronization automatically.
+In `rclone config`, create a remote named exactly `gdrive`, grant full Drive
+access, and complete browser OAuth. A personal Google API client ID is
+recommended for regular sync but is optional. Credentials remain in
+`~/.config/rclone/rclone.conf`; never commit that file or its OAuth tokens.
+
+Initialization refuses a non-empty `~/Google Drive` and uses Drive as the
+authoritative first copy. Scheduled jobs wait for the first successful manual
+`gdrive-sync`, which initializes the folder when needed and enables automatic
+five-minute sync.
+
+Monitor the timer and service with:
 
 ```bash
 systemctl --user status google-drive-sync.timer
 journalctl --user -u google-drive-sync.service -f
 ```
 
-Create, edit, rename, move, or delete ordinary files normally inside
-`~/Google Drive`. Bisync represents a move as a copy to the new path followed by
-deletion of the old path, so it reaches Drive and the other host normally while
-the old path is archived. Deletions propagate to Drive and the other host, but
-they are not permanent: replaced or deleted local versions are moved under
-`~/.local/state/gdrive-sync/backups/`, and Drive versions are moved under
-`gdrive:.gdrive-sync/history/`. UUID-based run directories prevent history
-collisions. Google Drive trash is also forced on.
+### Behavior
 
-When both hosts edit the same path before either synchronizes, the newer
-modification time wins. The losing version is renamed with a numbered
-`conflict` suffix instead of being discarded. A run
-aborts before applying more than 1000 deletions at once. Transfer logs are stored
-under `~/.local/state/gdrive-sync/reports/` and failures trigger a desktop
-notification.
+- Create, edit, rename, move, or delete ordinary files normally in
+  `~/Google Drive`.
+- A move is copied to the new path, then deleted from the old path. It propagates
+  normally while the old path is archived.
+- Deletions propagate but are recoverable: replaced/deleted local versions go
+  to `~/.local/state/gdrive-sync/backups/`, and Drive versions go to
+  `gdrive:.gdrive-sync/history/`. UUID-based run directories prevent history
+  collisions, and Google Drive trash is forced on.
+- If both hosts edit the same path before syncing, the newer modification time
+  wins and the losing version gets a numbered `conflict` suffix.
+- A run aborts before applying more than 1000 deletions. Reports are stored in
+  `~/.local/state/gdrive-sync/reports/`; failures trigger a desktop notification.
+- Daily cleanup retains local backups and Drive history for 30 days and reports
+  for 14 days. It permanently removes expired reserved Drive history to release
+  storage, never active files. Both hosts use the same cleanup service with a
+  random delay to reduce simultaneous remote cleanup.
+- Google Docs, Sheets, Slides, and Drawings appear in their normal hierarchy as
+  `.url` files that open the browser document. They require internet access and
+  are edited in Drive; no separate offline export folder exists.
+- Any file or directory name beginning with uppercase `PRIVATE` is excluded at
+  any depth and never uploads or downloads. The rule is case-sensitive, for
+  example `PRIVATE-notes.txt` and `work/PRIVATE-project/`.
+- `.gdrive-sync` is excluded so archived versions cannot re-enter the live tree.
 
-A daily cleanup keeps local backups and Drive history for 30 days, and transfer
-reports for 14 days. Expired Drive history is deleted permanently from the
-reserved history directory so it releases storage; active Drive files are never
-touched by cleanup. Both machines use the same cleanup service, with a random
-delay to reduce simultaneous remote cleanup.
+### Recovery and Security
 
-Google-native Docs, Sheets, Slides, and Drawings appear in their normal
-`~/Google Drive` hierarchy as `.url` files that open the real browser document.
-They require an internet connection and are edited in Google Drive; no separate
-offline export folder is created.
-
-Paths whose file or directory name starts with uppercase `PRIVATE` are excluded
-at any depth. For example, `PRIVATE-notes.txt` and `work/PRIVATE-project/` neither
-upload nor download. The rule is case-sensitive. The reserved `.gdrive-sync`
-directory is also excluded so archived versions cannot re-enter the live tree.
-
-Useful manual commands are:
-
-```bash
-gdrive-sync
-gdrive-sync status
-```
-
-Bisync never runs an automatic resync. If rclone reports that state recovery is
-required, preserve any unsynchronized local work outside `~/Google Drive`, then
-run a Drive-authoritative recovery:
+Bisync never resyncs automatically. If rclone requires state recovery, first
+preserve unsynchronized local work outside `~/Google Drive`, then run the
+Drive-authoritative recovery:
 
 ```bash
 gdrive-sync resync
 ```
 
 The health check requires rclone's Google Drive backend and rejects disabled TLS
-certificate verification. Transfers use certificate-validated HTTPS, so data
-is encrypted in transit but remains readable by Google. Simultaneous runs can
-overlap because Google Drive does not provide rclone with a distributed lock;
-numbered conflicts and UUID-based histories provide recovery rather than an
-absolute zero-loss guarantee.
+certificate verification. Certificate-validated HTTPS encrypts transfers in
+transit, but Google can read the data. Google Drive provides no distributed
+rclone lock, so simultaneous runs can overlap; numbered conflicts and UUID-based
+histories aid recovery but do not guarantee zero data loss.
 
 ## Syncthing
 
-Syncthing runs as `aleks` on both hosts and synchronizes `~/ObsidianVault`.
-Its web interface is available locally at <http://127.0.0.1:8384>. Device
-discovery and transfer ports are open in the firewall, but the web interface is
-not exposed to the network.
+Syncthing runs as `aleks` on both hosts and syncs `~/ObsidianVault`. Its web UI
+is local-only at <http://127.0.0.1:8384>; firewall ports are open for device
+discovery and transfers, not the web UI.
 
-Set up the vault as follows:
+Start with the existing vault on one host only and let Syncthing populate the
+other:
 
-1. Rebuild both hosts so Syncthing is running on each machine.
-2. Open <http://127.0.0.1:8384> on both hosts.
-3. On one host, select **Actions > Show ID** and copy its device ID.
-4. On the other host, select **Add Remote Device**, enter that ID, give the
-   device a recognizable name, and save it.
-5. Accept the pending device request on the first host.
-6. On the host containing the existing vault, select **Add Folder** and set the
-   folder path to `/home/aleks/ObsidianVault`.
-7. Select the other device under **Sharing**, then save the folder.
-8. Accept the folder request on the other host and set its folder path to
-   `/home/aleks/ObsidianVault`.
-9. Wait until both hosts report **Up to Date**, then open that directory as a
-   vault in Obsidian on each host.
+1. Rebuild both hosts and open <http://127.0.0.1:8384> on each.
+2. On one host, select **Actions > Show ID** and copy its device ID.
+3. On the other, select **Add Remote Device**, enter the ID and a recognizable
+   name, then save.
+4. Accept the pending device request on the first host.
+5. On the host with the vault, select **Add Folder**, set the path to
+   `/home/aleks/ObsidianVault`, select the other device under **Sharing**, and
+   save.
+6. Accept the folder request on the other host and use the same path.
+7. When both report **Up to Date**, open the directory as an Obsidian vault on
+   each host.
 
-Start with the existing vault on only one host and let Syncthing populate the
-other host. Service status and logs are available with:
+Check service status and logs with:
 
 ```bash
 systemctl status syncthing.service
@@ -193,20 +177,11 @@ The leader key is Super.
 
 1. Clone the repository.
 2. Review the username, hardware configuration, boot device, monitor names,
-   storage mounts, and host-specific settings under `devices/`.
-3. Evaluate the selected host before switching:
+   storage mounts, and host-specific settings in `devices/`.
+3. Evaluate the host: `nix build .#nixosConfigurations.laptop.config.system.build.toplevel --dry-run`.
+4. Switch to it: `sudo nixos-rebuild switch --flake .#laptop`.
 
-```bash
-nix build .#nixosConfigurations.laptop.config.system.build.toplevel --dry-run
-```
-
-4. Switch to the selected host:
-
-```bash
-sudo nixos-rebuild switch --flake .#laptop
-```
-
-Use `#pc` for the desktop host.
+Use `#pc` instead for the desktop host.
 
 ## Commands
 
@@ -220,8 +195,6 @@ Use `#pc` for the desktop host.
 | `make all MSG="message"` | Update, commit, push, and rebuild the laptop |
 | `nix develop .#opencode` | Enter the isolated OpenCode/Ollama development shell |
 
-`make git` and `make all` push changes. `make clean` removes old generations.
-Review their recipes before running them.
-
-Utility targets in `RootMakefile` are invoked with
+`make git` and `make all` push changes; `make clean` removes old generations.
+Review their recipes before use. Run `RootMakefile` utilities with
 `make -f RootMakefile <target>`.
