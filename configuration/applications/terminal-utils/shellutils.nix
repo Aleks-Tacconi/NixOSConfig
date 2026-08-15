@@ -159,7 +159,7 @@ in
         virtualenv
 
         # for jupyter notebooks
-        jupyter
+        ipykernel
         jupytext
       ]
     ))

@@ -16,6 +16,7 @@
       "hyprland"
       "gtk"
     ];
+    config.hyprland."org.freedesktop.impl.portal.Settings" = "gtk";
   };
 
   home-manager = {

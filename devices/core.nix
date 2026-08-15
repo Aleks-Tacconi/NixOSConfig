@@ -15,12 +15,6 @@
   };
   desktop.quickshell.launcher.fileSearch.paths = [
     "Downloads"
-    "Documents"
-    "Pictures"
-    "Projects"
-    ".hyprland-assets"
-    ".config/nvim"
-    ".config/ghostty"
   ];
   programs.wireshark = {
     enable = true;

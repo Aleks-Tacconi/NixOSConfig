@@ -19,7 +19,7 @@ Rectangle {
         },
         {
             key: "files",
-            label: "Files",
+            label: "Downloads",
             icon: "󰈔"
         },
         {

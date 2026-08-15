@@ -24,8 +24,8 @@ and
 Anley
 APIs
 APNIC
-args
 Args
+args
 ARIN
 arity
 ARP
@@ -75,8 +75,8 @@ coprimes
 CORS
 Covid
 CreateProcess
-creational
 Creational
+creational
 creativecommons
 CS2800
 CS2860
@@ -89,8 +89,8 @@ CustomerController
 CVE
 CW1
 CW2
-cyclomatic
 Cyclomatic
+cyclomatic
 Daemen
 DAO
 ddd
@@ -190,8 +190,8 @@ GID
 GIDs
 Github
 github
-gitlab
 GitLab
+gitlab
 GL
 Goodharts
 Grossmano
@@ -249,8 +249,8 @@ Ivar
 IY2840
 Jacoco
 JaCoCo
-Javadoc
 JavaDoc
+Javadoc
 Javascript
 JDBC
 JDBC's
@@ -269,8 +269,8 @@ KDF
 keccak
 Kerighan
 keystream
-Keystreams
 keystreams
+Keystreams
 KLOC
 Koblitz
 Kohnfelder
@@ -361,13 +361,13 @@ PINs
 PKE
 PKI
 PKIs
-Plaintext
 plaintext
+Plaintext
 plaintexts
 PMD
 POSIX
-postgresql
 PostgreSQL
+postgresql
 PostgreSQL's
 PostrgreSQL
 pq
@@ -432,8 +432,8 @@ Sedol
 sequence
 Serialisability
 serialisable
-serializer
 Serializer
+serializer
 serializers
 ServerSide
 SFTP
@@ -501,8 +501,8 @@ TODO
 TODO's
 Toon
 TOU
-traceroute
 Traceroute
+traceroute
 Tracert
 Trygve
 TSL
@@ -535,8 +535,8 @@ v4
 v6
 varient
 VCS
-Vibecoding
 vibecoding
+Vibecoding
 Vite
 VLR
 VSC

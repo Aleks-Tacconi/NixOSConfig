@@ -145,6 +145,14 @@ in
           ignore_alpha = 0.05;
         }
         {
+          match.namespace = "quickshell:systemTray";
+          blur = true;
+        }
+        {
+          match.namespace = "quickshell:systemTray";
+          ignore_alpha = 0.05;
+        }
+        {
           match.namespace = "quickshell:appMenuActions";
           blur = true;
         }

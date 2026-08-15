@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  lib,
   ...
 }:
 
@@ -16,7 +17,7 @@ let
     variant = "mocha";
   };
   gtkThemeName = "catppuccin-mocha-red-standard+rimless";
-  iconThemeName = "Papirus-Dark";
+  iconThemeName = "Papirus";
   kvantumThemeName = "Catppuccin-Mocha-Red";
 in
 {
@@ -28,6 +29,9 @@ in
     libsForQt5.qtstyleplugin-kvantum
     kdePackages.qtstyleplugin-kvantum
   ];
+
+  # Home Manager maps qtct to qt5ct, but KDE Connect uses Qt 6.
+  home.sessionVariables.QT_QPA_PLATFORMTHEME = lib.mkForce "qt6ct";
 
   home.pointerCursor = {
     gtk.enable = true;
@@ -67,8 +71,7 @@ in
 
   qt = {
     enable = true;
-    platformTheme.name = "kde";
-    style.name = "kvantum";
+    platformTheme.name = "qtct";
     style.package = with pkgs; [
       libsForQt5.qtstyleplugin-kvantum
       kdePackages.qtstyleplugin-kvantum
@@ -89,12 +92,10 @@ in
         style = "kvantum";
       };
     };
-    kde.settings = {
-      kdeglobals = {
-        General.ColorScheme = "BreezeDark";
-        Icons.Theme = iconThemeName;
-        KDE.widgetStyle = "kvantum";
-      };
+    kde.settings.kdeglobals = {
+      General.ColorScheme = "BreezeDark";
+      Icons.Theme = iconThemeName;
+      KDE.widgetStyle = "kvantum";
     };
   };
 
