@@ -17,7 +17,7 @@ Item {
     property real buttonSize: 30
     property real dockGap: Theme.gap
     property real hoverOverflow: Theme.gap
-    property real popupWidth: 300
+    property real popupWidth: 340
     property real popupMaxHeight: Math.max(180, Math.min(520, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
     property real popupRightMargin: Theme.gap * 2
     property real pulloutPadding: Theme.panelPadding
