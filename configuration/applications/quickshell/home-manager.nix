@@ -15,6 +15,15 @@ let
     "emoji"
     "clipboard"
   ];
+  launcherFileSearchPaths = map (
+    path:
+    if lib.hasPrefix "/" path then
+      path
+    else if lib.hasPrefix "~/" path then
+      "${config.home.homeDirectory}/${lib.removePrefix "~/" path}"
+    else
+      "${config.home.homeDirectory}/${path}"
+  ) cfg.launcher.fileSearch.paths;
   quickshellPackage = import ./quickshell-package.nix {
     inherit pkgs;
     inherit (inputs) quickshell;
@@ -57,6 +66,8 @@ let
             readonly property bool emoji: ${builtins.toJSON cfg.launcher.emoji}
             readonly property bool clipboard: ${builtins.toJSON cfg.launcher.clipboard}
             readonly property var enabledModes: ${builtins.toJSON launcherModes}
+            readonly property var fileSearchPaths: ${builtins.toJSON launcherFileSearchPaths}
+            readonly property string configDir: ${builtins.toJSON "${config.xdg.configHome}/quickshell/default/modules/launcher"}
         }
 
         readonly property QtObject notifications: QtObject {
@@ -96,6 +107,11 @@ in
     networkControl
   ]
   ++ lib.optionals cfg.launcher.clipboard [ pkgs.cliphist ]
+  ++ lib.optionals cfg.launcher.files [
+    pkgs.fd
+    pkgs.fzf
+  ]
+  ++ lib.optionals (cfg.launcher.clipboard || cfg.launcher.files) [ pkgs.xdg-utils ]
   ++ lib.optionals (cfg.launcher.clipboard || cfg.launcher.files || cfg.launcher.emoji) [
     pkgs.wl-clipboard
   ];
