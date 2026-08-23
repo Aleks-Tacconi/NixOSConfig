@@ -409,17 +409,15 @@ Item {
                         title: "Quick Actions"
                     }
 
-                    Grid {
+                    Column {
                         id: actionBar
 
                         width: parent.width
                         height: implicitHeight
-                        columns: 2
-                        columnSpacing: Theme.gap
-                        rowSpacing: Theme.gap
+                        spacing: Theme.gap
 
                         ActionButton {
-                            width: (actionBar.width - actionBar.columnSpacing) / 2
+                            width: actionBar.width
                             label: "Do Not Disturb"
                             icon: "󰂛"
                             active: root.notificationCenter?.dndEnabled ?? false
@@ -431,14 +429,14 @@ Item {
                         }
 
                         ActionButton {
-                            width: (actionBar.width - actionBar.columnSpacing) / 2
+                            width: actionBar.width
                             label: "Pick Color"
                             icon: ""
                             onClicked: root.notificationCenter?.pickColor()
                         }
 
                         ActionButton {
-                            width: (actionBar.width - actionBar.columnSpacing) / 2
+                            width: actionBar.width
                             label: "Night Light"
                             icon: "󰖔"
                             active: root.notificationCenter?.hyprsunsetEnabled ?? false
@@ -448,7 +446,7 @@ Item {
                         }
 
                         ActionButton {
-                            width: (actionBar.width - actionBar.columnSpacing) / 2
+                            width: actionBar.width
                             label: "Screenshot"
                             icon: ""
                             onClicked: root.notificationCenter?.takeScreenshot()
