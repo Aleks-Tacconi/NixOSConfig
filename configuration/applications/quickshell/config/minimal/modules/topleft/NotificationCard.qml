@@ -13,7 +13,7 @@ Rectangle {
 
     required property var notification
     property bool toast: false
-    property real cardPadding: root.toast ? Theme.gap * 3 : Theme.gap * 2
+    property real cardPadding: root.toast ? Theme.gap * 3 : Theme.gap * 1.5
 
     signal dismissRequested(var notification)
     signal actionRequested(var notification, var action)
@@ -29,7 +29,7 @@ Rectangle {
     readonly property bool interacting: hoverHandler.hovered
 
     width: parent?.width ?? 0
-    implicitHeight: Math.max(82, cardContent.implicitHeight + root.cardPadding * 2)
+    implicitHeight: Math.max(root.toast ? 74 : 58, cardContent.implicitHeight + root.cardPadding * 2)
     height: implicitHeight
     radius: root.toast ? 0 : Theme.surfaceRadius
     color: root.toast ? "transparent" : (root.interacting ? Theme.panelSurfaceHover : Theme.panelSurface)

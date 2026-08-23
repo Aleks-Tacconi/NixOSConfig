@@ -307,7 +307,7 @@ Item {
 
                             anchors {
                                 fill: parent
-                                margins: Theme.gap * 2
+                                margins: Theme.gap
                             }
                             spacing: Theme.panelItemGap
 
