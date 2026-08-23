@@ -15,18 +15,8 @@ Item {
     width: statusFrame.width
     height: Theme.barHeight
 
+    required property var networkService
     property var popupScreen: null
-    property real downloadBytesPerSecond: 0
-    property real uploadBytesPerSecond: 0
-    property real previousRxBytes: 0
-    property real previousTxBytes: 0
-    property real previousTrafficTime: 0
-    property string activeInterface: ""
-    property string networkType: "none"
-    property string networkState: "unavailable"
-    property string networkLabel: "No network"
-    property bool tailscaleConnected: false
-    property bool tailscalePending: false
     property string sysfsBatteryPath: ""
     property bool sysfsBatteryPresent: false
     property int sysfsBatteryPercentValue: 0
@@ -45,29 +35,16 @@ Item {
     readonly property bool hasBattery: laptopBattery !== null || sysfsBatteryPresent
     readonly property int batteryPercent: Math.round(laptopBattery?.percentage ?? sysfsBatteryPercentValue)
     readonly property real audioPanelHeight: Math.min(520, Math.max(220, audioContent.implicitHeight + Theme.panelPadding * 2))
-    readonly property real networkPanelHeight: networkContent.implicitHeight + Theme.panelPadding * 2
+    readonly property real networkPanelHeight: 510
     readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
 
-    onActiveInterfaceChanged: resetTraffic()
+    onNetworkOpenChanged: {
+        if (root.networkOpen)
+            root.networkService.requestScan(true);
+    }
 
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink]
-    }
-
-    FileView {
-        id: rxBytesFile
-
-        path: root.activeInterface.length > 0 ? `/sys/class/net/${root.activeInterface}/statistics/rx_bytes` : ""
-        blockAllReads: true
-        printErrors: false
-    }
-
-    FileView {
-        id: txBytesFile
-
-        path: root.activeInterface.length > 0 ? `/sys/class/net/${root.activeInterface}/statistics/tx_bytes` : ""
-        blockAllReads: true
-        printErrors: false
     }
 
     FileView {
@@ -119,59 +96,11 @@ Item {
     }
 
     Timer {
-        interval: 1000
-        repeat: true
-        running: root.activeInterface.length > 0
-        triggeredOnStart: true
-        onTriggered: root.updateTraffic()
-    }
-
-    Timer {
-        interval: 5000
-        repeat: true
-        running: true
-        triggeredOnStart: true
-        onTriggered: {
-            root.updateNetworkStatus();
-            root.updateTailscaleStatus();
-        }
-    }
-
-    Timer {
         interval: 30000
         repeat: true
         running: root.sysfsBatteryPath.length > 0 && root.laptopBattery === null
         triggeredOnStart: true
         onTriggered: root.updateSysfsBattery()
-    }
-
-    Process {
-        id: networkStatusProcess
-
-        stdout: StdioCollector {
-            id: networkStatusOutput
-
-            onStreamFinished: root.applyNetworkStatus(networkStatusOutput.text)
-        }
-    }
-
-    Process {
-        id: tailscaleStatusProcess
-
-        stdout: StdioCollector {
-            id: tailscaleStatusOutput
-
-            onStreamFinished: root.applyTailscaleStatus(tailscaleStatusOutput.text)
-        }
-    }
-
-    Process {
-        id: tailscaleToggleProcess
-
-        onExited: {
-            root.tailscalePending = false;
-            root.updateTailscaleStatus();
-        }
     }
 
     Process {
@@ -191,57 +120,11 @@ Item {
         return model?.values ?? [];
     }
 
-    function updateNetworkStatus() {
-        networkStatusProcess.exec(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device", "status"]);
-    }
-
-    function applyNetworkStatus(output) {
-        const devices = output.trim().split("\n").filter(line => line.length > 0).map(line => {
-            const parts = line.split(":");
-            return {
-                interfaceName: parts[0] ?? "",
-                type: parts[1] ?? "none",
-                state: parts[2] ?? "unavailable",
-                label: parts.slice(3).join(":") || parts[0] || "No network"
-            };
-        }).filter(device => device.interfaceName !== "lo");
-
-        const connected = devices.filter(device => device.state === "connected");
-        const device = connected.find(device => device.type === "wifi") ?? connected.find(device => device.type === "ethernet") ?? devices.find(device => device.type === "wifi") ?? devices.find(device => device.type === "ethernet") ?? null;
-
-        root.activeInterface = device?.interfaceName ?? "";
-        root.networkType = device?.type ?? "none";
-        root.networkState = device?.state ?? "unavailable";
-        root.networkLabel = device?.label ?? "No network";
-    }
-
-    function updateTailscaleStatus() {
-        if (!tailscaleStatusProcess.running)
-            tailscaleStatusProcess.exec(["tailscale", "status", "--json"]);
-    }
-
-    function applyTailscaleStatus(output) {
-        try {
-            const status = JSON.parse(output);
-            root.tailscaleConnected = status.BackendState === "Running";
-        } catch (error) {
-            root.tailscaleConnected = false;
-        }
-    }
-
-    function toggleTailscale() {
-        if (root.tailscalePending)
-            return;
-
-        root.tailscalePending = true;
-        tailscaleToggleProcess.exec(["tailscale", root.tailscaleConnected ? "down" : "up"]);
-    }
-
     function iconForNetwork() {
-        if (root.networkState !== "connected")
+        if (root.networkService.networkState !== "connected")
             return "󰤭";
 
-        if (root.networkType === "ethernet")
+        if (root.networkService.networkType === "ethernet")
             return "󰈀";
 
         return "󰤨";
@@ -304,45 +187,6 @@ Item {
         }
 
         root.sysfsBatterySecondsRemainingValue = 0;
-    }
-
-    function resetTraffic() {
-        root.downloadBytesPerSecond = 0;
-        root.uploadBytesPerSecond = 0;
-        root.previousRxBytes = 0;
-        root.previousTxBytes = 0;
-        root.previousTrafficTime = 0;
-    }
-
-    function updateTraffic() {
-        if (root.activeInterface.length === 0)
-            return;
-        rxBytesFile.reload();
-        txBytesFile.reload();
-
-        const rxBytes = Number(rxBytesFile.text().trim());
-        const txBytes = Number(txBytesFile.text().trim());
-        const now = Date.now();
-
-        if (!Number.isFinite(rxBytes) || !Number.isFinite(txBytes))
-            return;
-        if (root.previousTrafficTime > 0) {
-            const elapsedSeconds = Math.max(1, (now - root.previousTrafficTime) / 1000);
-
-            root.downloadBytesPerSecond = Math.max(0, (rxBytes - root.previousRxBytes) / elapsedSeconds);
-            root.uploadBytesPerSecond = Math.max(0, (txBytes - root.previousTxBytes) / elapsedSeconds);
-        }
-
-        root.previousRxBytes = rxBytes;
-        root.previousTxBytes = txBytes;
-        root.previousTrafficTime = now;
-    }
-
-    function formatRate(bytesPerSecond) {
-        if (bytesPerSecond >= 1048576)
-            return `${(bytesPerSecond / 1048576).toFixed(1)} MB/s`;
-
-        return `${Math.round(bytesPerSecond / 1024)} KB/s`;
     }
 
     function formatPercent(percent) {
@@ -486,7 +330,7 @@ Item {
                     }
 
                     Text {
-                        text: root.networkLabel
+                        text: root.networkService.networkLabel
                         width: Math.min(92, implicitWidth)
                         color: Theme.fg
                         font.family: Theme.fontFamily
@@ -656,6 +500,7 @@ Item {
 
         WlrLayershell.namespace: "quickshell:topRightNetworkPullout"
         WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: root.networkOpen && networkView.editing ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         anchors {
             top: true
@@ -680,12 +525,12 @@ Item {
                 corner: "topRight"
                 requestedOpen: root.networkOpen
                 activatorMouseArea: networkTrigger
-                dismissOnExit: true
+                dismissOnExit: !networkView.editing && !root.networkService.actionPending
                 onDismissRequested: root.closePopup("network")
 
-                length: 320
+                length: 360
                 depth: root.networkPanelHeight
-                duration: 180
+                duration: 150
 
                 backgroundColor: Theme.panelBg
                 curveRadius: Theme.panelRadius
@@ -695,7 +540,7 @@ Item {
                     right: parent.right
                 }
 
-                Column {
+                Flickable {
                     id: networkContent
 
                     anchors {
@@ -705,18 +550,18 @@ Item {
                         rightMargin: Theme.panelPadding
                         bottomMargin: Theme.panelPadding
                     }
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    contentWidth: width
+                    contentHeight: networkView.implicitHeight
+                    interactive: contentHeight > height
 
                     Network {
+                        id: networkView
+
                         width: parent.width
-                        interfaceName: root.activeInterface
-                        label: root.networkLabel
-                        state: root.networkState
-                        type: root.networkType
-                        down: root.formatRate(root.downloadBytesPerSecond)
-                        up: root.formatRate(root.uploadBytesPerSecond)
-                        tailscaleConnected: root.tailscaleConnected
-                        tailscalePending: root.tailscalePending
-                        onTailscaleToggleRequested: root.toggleTailscale()
+                        open: root.networkOpen
+                        service: root.networkService
                     }
                 }
             }

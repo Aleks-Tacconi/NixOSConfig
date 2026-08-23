@@ -11,6 +11,7 @@ Scope {
     id: root
 
     property var notificationCenter: null
+    required property var networkService
 
     Variants {
         model: Quickshell.screens
@@ -141,6 +142,7 @@ Scope {
 
                             popupScreen: bar.modelData
                             popupRightMargin: rightCluster.outerMargin + powerButton.width + statusPowerCluster.spacing
+                            networkService: root.networkService
                             anchors.verticalCenter: parent.verticalCenter
                         }
 

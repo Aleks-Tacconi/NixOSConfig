@@ -32,6 +32,13 @@ let
       exec ${gtkActionsPython}/bin/python ${./qt-menu.py} "$@"
     '';
   };
+  networkControl = pkgs.writeShellApplication {
+    name = "quickshell-network-control";
+    runtimeInputs = [ pkgs.networkmanager ];
+    text = ''
+      exec ${pkgs.python3}/bin/python ${./network_control.py} "$@"
+    '';
+  };
   fileSearchPaths = pkgs.writeText "quickshell-file-search-paths" ''
     ${lib.concatStringsSep "\n" cfg.launcher.fileSearch.paths}
   '';
@@ -86,6 +93,7 @@ in
     quickshellPackage
     gtkActions
     qtMenu
+    networkControl
   ]
   ++ lib.optionals cfg.launcher.clipboard [ pkgs.cliphist ]
   ++ lib.optionals (cfg.launcher.clipboard || cfg.launcher.files || cfg.launcher.emoji) [
