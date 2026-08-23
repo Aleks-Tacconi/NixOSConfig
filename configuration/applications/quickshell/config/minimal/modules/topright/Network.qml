@@ -140,26 +140,10 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
-                    text: root.service.interfaceName.length > 0 ? `${root.service.interfaceName} · ${root.service.networkType}` : "No active interface"
+                    text: root.service.networkState === "connected"
+                        ? `${root.service.networkType} · ${root.service.interfaceName} · ↓ ${root.formatRate(root.service.downloadBytesPerSecond)} · ↑ ${root.formatRate(root.service.uploadBytesPerSecond)}`
+                        : "No active connection"
                     elide: Text.ElideRight
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelCaptionSize
-                }
-            }
-
-            ColumnLayout {
-                spacing: 0
-
-                Text {
-                    text: `↓ ${root.formatRate(root.service.downloadBytesPerSecond)}`
-                    color: Theme.fg
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelCaptionSize
-                }
-
-                Text {
-                    text: `↑ ${root.formatRate(root.service.uploadBytesPerSecond)}`
                     color: Theme.muted
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelCaptionSize
@@ -172,59 +156,45 @@ Item {
             Layout.fillWidth: true
             spacing: Theme.panelItemGap
 
-            Frame.PanelActionRow {
-                Layout.fillWidth: true
-                label: "Wi-Fi"
-                icon: root.service.wifiEnabled ? "󰤨" : "󰤭"
-                active: root.service.wifiEnabled
-                enabled: !root.service.actionPending && root.service.wifiInterface.length > 0
-                detailText: root.service.wifiEnabled ? "On" : "Off"
-                showTrailing: false
-                onClicked: root.service.setWifiEnabled(!root.service.wifiEnabled)
-            }
-
             RowLayout {
-                visible: root.service.wifiEnabled
                 Layout.fillWidth: true
                 spacing: Theme.gap * 2
 
                 Frame.PanelGroupLabel {
                     Layout.fillWidth: true
-                    title: "Available networks"
-                    detail: root.service.scanPending ? "Scanning" : `${root.service.networks.length}`
+                    title: "Wi-Fi"
+                    detail: root.service.wifiEnabled
+                        ? (root.service.scanPending ? "Scanning" : `${root.service.networks.length} available`)
+                        : "Off"
                 }
 
-                Rectangle {
-                    Layout.preferredWidth: 30
-                    Layout.preferredHeight: 28
-                    radius: Theme.surfaceRadius
-                    color: scanMouse.containsMouse && scanMouse.enabled ? Theme.panelSurfaceHover : "transparent"
-                    opacity: scanMouse.enabled ? 1 : 0.4
+                Network.NetworkToolbarButton {
+                    icon: root.service.wifiEnabled ? "󰤨" : "󰤭"
+                    label: root.service.wifiEnabled ? "On" : "Off"
+                    active: root.service.wifiEnabled
+                    enabled: !root.service.actionPending && root.service.wifiInterface.length > 0
+                    onClicked: root.service.setWifiEnabled(!root.service.wifiEnabled)
+                }
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰑐"
-                        color: Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelMetaSize
-                    }
+                Network.NetworkToolbarButton {
+                    icon: "󰖩"
+                    label: "Hidden"
+                    enabled: root.service.wifiEnabled && !root.service.actionPending
+                    onClicked: root.showHidden()
+                }
 
-                    MouseArea {
-                        id: scanMouse
-
-                        anchors.fill: parent
-                        enabled: !root.service.scanPending && !root.service.actionPending
-                        hoverEnabled: true
-                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: root.service.requestScan(true)
-                    }
+                Network.NetworkToolbarButton {
+                    icon: "󰑐"
+                    label: "Scan"
+                    enabled: root.service.wifiEnabled && !root.service.scanPending && !root.service.actionPending
+                    onClicked: root.service.requestScan(true)
                 }
             }
 
             Item {
                 visible: root.service.wifiEnabled
                 Layout.fillWidth: true
-                Layout.preferredHeight: visible ? 192 : 0
+                Layout.preferredHeight: visible ? (root.service.errorText.length > 0 ? 132 : 184) : 0
 
                 Flickable {
                     anchors.fill: parent
@@ -267,16 +237,6 @@ Item {
                         }
                     }
                 }
-            }
-
-            Frame.PanelActionRow {
-                visible: root.service.wifiEnabled
-                Layout.fillWidth: true
-                label: "Join hidden network"
-                icon: "󰖩"
-                enabled: !root.service.actionPending
-                showTrailing: true
-                onClicked: root.showHidden()
             }
 
             Text {

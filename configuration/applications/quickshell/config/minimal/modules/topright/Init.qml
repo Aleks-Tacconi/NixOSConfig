@@ -35,7 +35,7 @@ Item {
     readonly property bool hasBattery: laptopBattery !== null || sysfsBatteryPresent
     readonly property int batteryPercent: Math.round(laptopBattery !== null ? laptopBattery.percentage * 100 : sysfsBatteryPercentValue)
     readonly property real audioPanelHeight: Math.min(560, Math.max(220, audioView.implicitHeight + Theme.panelPadding * 2))
-    readonly property real networkPanelHeight: 560
+    readonly property real networkPanelHeight: Math.min(440, Math.max(260, networkView.implicitHeight + Theme.panelPadding * 2))
     readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
 
     onNetworkOpenChanged: {
@@ -559,7 +559,7 @@ Item {
                     boundsBehavior: Flickable.StopAtBounds
                     contentWidth: width
                     contentHeight: networkView.implicitHeight
-                    interactive: (networkView.editing || root.networkService.errorText.length > 0) && contentHeight > height
+                    interactive: networkView.editing && contentHeight > height
 
                     Network {
                         id: networkView
