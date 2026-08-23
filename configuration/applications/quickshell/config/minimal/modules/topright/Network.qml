@@ -156,39 +156,12 @@ Item {
             Layout.fillWidth: true
             spacing: Theme.panelItemGap
 
-            RowLayout {
+            Frame.PanelGroupLabel {
                 Layout.fillWidth: true
-                spacing: Theme.gap * 2
-
-                Frame.PanelGroupLabel {
-                    Layout.fillWidth: true
-                    title: "Wi-Fi"
-                    detail: root.service.wifiEnabled
-                        ? (root.service.scanPending ? "Scanning" : `${root.service.networks.length} available`)
-                        : "Off"
-                }
-
-                Network.NetworkToolbarButton {
-                    icon: root.service.wifiEnabled ? "󰤨" : "󰤭"
-                    label: root.service.wifiEnabled ? "On" : "Off"
-                    active: root.service.wifiEnabled
-                    enabled: !root.service.actionPending && root.service.wifiInterface.length > 0
-                    onClicked: root.service.setWifiEnabled(!root.service.wifiEnabled)
-                }
-
-                Network.NetworkToolbarButton {
-                    icon: "󰖩"
-                    label: "Hidden"
-                    enabled: root.service.wifiEnabled && !root.service.actionPending
-                    onClicked: root.showHidden()
-                }
-
-                Network.NetworkToolbarButton {
-                    icon: "󰑐"
-                    label: "Scan"
-                    enabled: root.service.wifiEnabled && !root.service.scanPending && !root.service.actionPending
-                    onClicked: root.service.requestScan(true)
-                }
+                title: "Available networks"
+                detail: root.service.wifiEnabled
+                    ? (root.service.scanPending ? "Scanning" : `${root.service.networks.length}`)
+                    : "Wi-Fi off"
             }
 
             Item {
@@ -250,20 +223,56 @@ Item {
             }
 
             Item {
-                visible: ShellConfig.Config.network.tailscale
-                Layout.preferredHeight: visible ? Theme.panelSectionGap - Theme.panelItemGap : 0
+                Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
             }
 
-            Frame.PanelActionRow {
-                visible: ShellConfig.Config.network.tailscale
+            Column {
+                id: networkActions
+
                 Layout.fillWidth: true
-                label: "Tailscale VPN"
-                icon: "󰒍"
-                active: root.service.tailscaleConnected
-                enabled: !root.service.tailscalePending
-                detailText: root.service.tailscalePending ? "Working" : (root.service.tailscaleConnected ? "On" : "Off")
-                showTrailing: false
-                onClicked: root.service.toggleTailscale()
+                spacing: Theme.gap
+
+                Frame.PanelActionRow {
+                    width: networkActions.width
+                    label: "Wi-Fi"
+                    icon: root.service.wifiEnabled ? "󰤨" : "󰤭"
+                    active: root.service.wifiEnabled
+                    enabled: !root.service.actionPending && root.service.wifiInterface.length > 0
+                    detailText: root.service.wifiEnabled ? "On" : "Off"
+                    showTrailing: false
+                    onClicked: root.service.setWifiEnabled(!root.service.wifiEnabled)
+                }
+
+                Frame.PanelActionRow {
+                    width: networkActions.width
+                    label: "Scan networks"
+                    icon: "󰑐"
+                    enabled: root.service.wifiEnabled && !root.service.scanPending && !root.service.actionPending
+                    detailText: root.service.scanPending ? "Scanning" : ""
+                    showTrailing: false
+                    onClicked: root.service.requestScan(true)
+                }
+
+                Frame.PanelActionRow {
+                    width: networkActions.width
+                    label: "Join hidden network"
+                    icon: "󰖩"
+                    enabled: root.service.wifiEnabled && !root.service.actionPending
+                    showTrailing: true
+                    onClicked: root.showHidden()
+                }
+
+                Frame.PanelActionRow {
+                    visible: ShellConfig.Config.network.tailscale
+                    width: networkActions.width
+                    label: "Tailscale VPN"
+                    icon: "󰒍"
+                    active: root.service.tailscaleConnected
+                    enabled: !root.service.tailscalePending
+                    detailText: root.service.tailscalePending ? "Working" : (root.service.tailscaleConnected ? "On" : "Off")
+                    showTrailing: false
+                    onClicked: root.service.toggleTailscale()
+                }
             }
         }
 
