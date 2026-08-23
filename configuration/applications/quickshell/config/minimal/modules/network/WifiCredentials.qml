@@ -50,7 +50,7 @@ ColumnLayout {
             Qt.callLater(() => root.focusInput());
     }
 
-    Frame.PanelSectionHeader {
+    Frame.PanelGroupLabel {
         Layout.fillWidth: true
         title: root.hiddenMode ? "Join hidden network" : "Connect"
         detail: root.hiddenMode ? "Manual" : root.networkName

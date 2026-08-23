@@ -114,27 +114,23 @@ Item {
                 font.pixelSize: Theme.panelBodySize
             }
 
-            Row {
+            Rectangle {
                 Layout.fillWidth: true
-                spacing: 3
+                Layout.preferredHeight: 10
+                radius: 5
+                color: Theme.bg2
 
-                Repeater {
-                    model: 20
-
-                    Rectangle {
-                        width: Math.max(4, (parent.width - 57) / 20)
-                        height: 12
-                        radius: 1
-                        color: index < Math.round(root.percent / 5) ? Theme.red : Theme.bg2
-                        border.width: 0
-                    }
+                Rectangle {
+                    width: parent.width * Math.max(0, Math.min(100, root.percent)) / 100
+                    height: parent.height
+                    radius: parent.radius
+                    color: Theme.red
                 }
             }
         }
 
-        Frame.PanelSectionHeader {
-            Layout.fillWidth: true
-            title: "Details"
+        Item {
+            Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
         }
 
         GridLayout {
@@ -210,7 +206,11 @@ Item {
             }
         }
 
-        Frame.PanelSectionHeader {
+        Item {
+            Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
+        }
+
+        Frame.PanelGroupLabel {
             Layout.fillWidth: true
             title: "Power mode"
             detail: root.degradationText()

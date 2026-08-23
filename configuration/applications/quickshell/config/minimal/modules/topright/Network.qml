@@ -184,11 +184,42 @@ Item {
                 onClicked: root.service.setWifiEnabled(!root.service.wifiEnabled)
             }
 
-            Frame.PanelSectionHeader {
+            RowLayout {
                 visible: root.service.wifiEnabled
                 Layout.fillWidth: true
-                title: "Available networks"
-                detail: root.service.scanPending ? "Scanning" : `${root.service.networks.length}`
+                spacing: Theme.gap * 2
+
+                Frame.PanelGroupLabel {
+                    Layout.fillWidth: true
+                    title: "Available networks"
+                    detail: root.service.scanPending ? "Scanning" : `${root.service.networks.length}`
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: 30
+                    Layout.preferredHeight: 28
+                    radius: Theme.surfaceRadius
+                    color: scanMouse.containsMouse && scanMouse.enabled ? Theme.panelSurfaceHover : "transparent"
+                    opacity: scanMouse.enabled ? 1 : 0.4
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰑐"
+                        color: Theme.muted
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.panelMetaSize
+                    }
+
+                    MouseArea {
+                        id: scanMouse
+
+                        anchors.fill: parent
+                        enabled: !root.service.scanPending && !root.service.actionPending
+                        hoverEnabled: true
+                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: root.service.requestScan(true)
+                    }
+                }
             }
 
             Item {
@@ -242,16 +273,6 @@ Item {
             Frame.PanelActionRow {
                 visible: root.service.wifiEnabled
                 Layout.fillWidth: true
-                label: "Scan again"
-                icon: "󰑐"
-                enabled: !root.service.scanPending && !root.service.actionPending
-                showTrailing: false
-                onClicked: root.service.requestScan(true)
-            }
-
-            Frame.PanelActionRow {
-                visible: root.service.wifiEnabled
-                Layout.fillWidth: true
                 label: "Join hidden network"
                 icon: "󰖩"
                 enabled: !root.service.actionPending
@@ -269,16 +290,15 @@ Item {
                 wrapMode: Text.Wrap
             }
 
-            Frame.PanelSectionHeader {
+            Item {
                 visible: ShellConfig.Config.network.tailscale
-                Layout.fillWidth: true
-                title: "VPN"
+                Layout.preferredHeight: visible ? Theme.panelSectionGap - Theme.panelItemGap : 0
             }
 
             Frame.PanelActionRow {
                 visible: ShellConfig.Config.network.tailscale
                 Layout.fillWidth: true
-                label: "Tailscale"
+                label: "Tailscale VPN"
                 icon: "󰒍"
                 active: root.service.tailscaleConnected
                 enabled: !root.service.tailscalePending

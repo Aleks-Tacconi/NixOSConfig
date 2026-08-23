@@ -1,13 +1,12 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import "../frame" as Frame
 import "../../theme"
 
 /**
- * Pipewire output volume, device controls, and single selectable MPRIS media player.
+ * Pipewire volume and output controls followed by optional MPRIS playback.
  */
 Item {
     id: root
@@ -38,22 +37,17 @@ Item {
     function deviceName(node) {
         if (!node)
             return "No output device"
-
         if (node.description.length > 0)
             return node.description
         if (node.nickname.length > 0)
             return node.nickname
-
         return node.name
     }
 
     function setVolumePercent(percent) {
         const audio = root.defaultSink?.audio
-
-        if (!audio)
-            return
-
-        audio.volume = Math.max(0, Math.min(1.5, percent / 100))
+        if (audio)
+            audio.volume = Math.max(0, Math.min(1.5, percent / 100))
     }
 
     function adjustVolume(delta) {
@@ -62,23 +56,13 @@ Item {
 
     function toggleMute() {
         const audio = root.defaultSink?.audio
-
         if (audio)
             audio.muted = !audio.muted
     }
 
     function cyclePlayer() {
-        if (root.playerCount <= 1)
-            return
-
-        root.selectedPlayerIndex = (root.selectedPlayerIndex + 1) % root.playerCount
-    }
-
-    function formatTime(sec) {
-        const totalSeconds = Math.floor(sec)
-        const minutes = Math.floor(totalSeconds / 60)
-        const seconds = totalSeconds % 60
-        return `${minutes}:${seconds.toString().padStart(2, "0")}`
+        if (root.playerCount > 1)
+            root.selectedPlayerIndex = (root.selectedPlayerIndex + 1) % root.playerCount
     }
 
     ColumnLayout {
@@ -93,216 +77,10 @@ Item {
             primary: true
         }
 
-        Item {
-            id: mediaItem
-
-            Layout.fillWidth: true
-            implicitHeight: playerLayout.implicitHeight
-            visible: root.selectedPlayer !== null
-
-            readonly property var player: root.selectedPlayer
-            readonly property real trackLengthSec: player?.lengthSupported ? player.length : 0
-            readonly property real trackPositionSec: player?.position ?? 0
-
-            Timer {
-                interval: 1000
-                repeat: true
-                running: mediaItem.player?.isPlaying ?? false
-                onTriggered: mediaItem.player.positionChanged()
-            }
-
-            ColumnLayout {
-                id: playerLayout
-
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    top: parent.top
-                }
-
-                spacing: Theme.gap * 2
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.gap * 2
-
-                    Frame.PanelSectionHeader {
-                        Layout.fillWidth: true
-                        title: "Now playing"
-                        detail: root.playerCount > 1
-                            ? `${mediaItem.player?.identity || "Media"} · ${Math.min(root.selectedPlayerIndex + 1, root.playerCount)}/${root.playerCount}`
-                            : (mediaItem.player?.identity || "Media")
-                    }
-
-                    MediaControlButton {
-                        visible: root.playerCount > 1
-                        controlSize: 32
-                        icon: "󰑓"
-                        onClicked: root.cyclePlayer()
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.gap * 3
-
-                    Rectangle {
-                        Layout.preferredWidth: 56
-                        Layout.preferredHeight: 56
-                        radius: Theme.surfaceRadius
-                        color: Theme.panelSurface
-                        clip: true
-
-                        Image {
-                            id: artwork
-
-                            anchors.fill: parent
-                            source: mediaItem.player?.trackArtUrl ?? ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            visible: artwork.status !== Image.Ready
-                            text: "󰝚"
-                            color: Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize + 5
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.gap
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: mediaItem.player?.trackTitle || "No track"
-                            color: Theme.fg
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelBodySize
-                            font.bold: true
-                            elide: Text.ElideRight
-                            textFormat: Text.PlainText
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: mediaItem.player?.trackArtist || "Unknown artist"
-                            color: Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelMetaSize
-                            elide: Text.ElideRight
-                            textFormat: Text.PlainText
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.gap * 2
-
-                    Text {
-                        text: root.formatTime(mediaItem.trackPositionSec)
-                        color: Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelCaptionSize
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 8
-                        radius: 4
-                        color: Theme.bg2
-
-                        Rectangle {
-                            width: parent.width * (mediaItem.trackLengthSec > 0
-                                ? Math.min(mediaItem.trackPositionSec / mediaItem.trackLengthSec, 1)
-                                : 0)
-                            height: parent.height
-                            radius: parent.radius
-                            color: Theme.red
-                        }
-
-                        Rectangle {
-                            visible: mediaItem.player?.canSeek && mediaItem.player?.positionSupported && mediaItem.player?.lengthSupported && mediaItem.trackLengthSec > 0
-                            anchors.verticalCenter: parent.verticalCenter
-                            x: Math.max(0, Math.min(parent.width - width, parent.width * mediaItem.trackPositionSec / mediaItem.trackLengthSec - width / 2))
-                            width: 10
-                            height: 10
-                            radius: 5
-                            color: Theme.fg
-                        }
-
-                        MouseArea {
-                            anchors {
-                                fill: parent
-                                topMargin: -8
-                                bottomMargin: -8
-                            }
-                            enabled: mediaItem.player?.canSeek ?? false
-                            hoverEnabled: true
-                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: mouse => {
-                                if (mediaItem.player.positionSupported && mediaItem.player.lengthSupported && mediaItem.trackLengthSec > 0)
-                                    mediaItem.player.position = mouse.x / width * mediaItem.trackLengthSec;
-                            }
-                            onPositionChanged: mouse => {
-                                if (pressed && mediaItem.player.positionSupported && mediaItem.player.lengthSupported && mediaItem.trackLengthSec > 0)
-                                    mediaItem.player.position = Math.max(0, Math.min(mediaItem.trackLengthSec, mouse.x / width * mediaItem.trackLengthSec))
-                            }
-                            onWheel: wheel => mediaItem.player.seek(wheel.angleDelta.y > 0 ? 5 : -5)
-                        }
-                    }
-
-                    Text {
-                        text: root.formatTime(mediaItem.trackLengthSec)
-                        color: Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelCaptionSize
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.gap * 2
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    MediaControlButton {
-                        icon: "󰒮"
-                        enabled: mediaItem.player?.canGoPrevious ?? false
-                        onClicked: mediaItem.player.previous()
-                    }
-
-                    MediaControlButton {
-                        icon: mediaItem.player?.isPlaying ? "󰏤" : "󰐊"
-                        primary: true
-                        enabled: mediaItem.player?.canTogglePlaying ?? false
-                        onClicked: mediaItem.player.togglePlaying()
-                    }
-
-                    MediaControlButton {
-                        icon: "󰒭"
-                        enabled: mediaItem.player?.canGoNext ?? false
-                        onClicked: mediaItem.player.next()
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-                }
-            }
-        }
-
-        Frame.PanelSectionHeader {
+        Frame.PanelGroupLabel {
             Layout.fillWidth: true
             title: "Volume"
             detail: root.muted ? "Muted" : `${root.volume}%`
-            detailColor: root.muted ? Theme.muted : Theme.fg
         }
 
         RowLayout {
@@ -318,7 +96,7 @@ Item {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 4
+                Layout.preferredHeight: 4
                 radius: 2
                 color: Theme.bg2
 
@@ -361,9 +139,13 @@ Item {
             }
         }
 
-        Frame.PanelSectionHeader {
+        Item {
+            Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
+        }
+
+        Frame.PanelGroupLabel {
             Layout.fillWidth: true
-            title: "Output"
+            title: "Output device"
         }
 
         Column {
@@ -382,20 +164,14 @@ Item {
                     height: Theme.panelRowHeight
                     radius: Theme.surfaceRadius
                     color: modelData === root.defaultSink ? Theme.panelSurfaceHover : (deviceMouse.containsMouse ? Theme.panelSurface : "transparent")
-                    border.width: 0
 
                     RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: Theme.gap * 2
-                        anchors.rightMargin: Theme.gap * 2
-                        spacing: Theme.gap * 2
-
-                        Text {
-                            text: modelData === root.defaultSink ? "●" : "○"
-                            color: Theme.red
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelMetaSize
+                        anchors {
+                            fill: parent
+                            leftMargin: Theme.gap * 2
+                            rightMargin: Theme.gap * 2
                         }
+                        spacing: Theme.gap * 2
 
                         Text {
                             Layout.fillWidth: true
@@ -404,6 +180,14 @@ Item {
                             color: Theme.fg
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.panelMetaSize
+                        }
+
+                        Text {
+                            visible: modelData === root.defaultSink
+                            text: "Current"
+                            color: Theme.muted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.panelCaptionSize
                         }
                     }
 
@@ -425,6 +209,21 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelMetaSize
             }
+        }
+
+        Item {
+            visible: root.selectedPlayer !== null
+            Layout.preferredHeight: visible ? Theme.panelSectionGap - Theme.panelItemGap : 0
+        }
+
+        NowPlaying {
+            visible: root.selectedPlayer !== null
+            Layout.fillWidth: true
+            Layout.preferredHeight: visible ? implicitHeight : 0
+            player: root.selectedPlayer
+            playerCount: root.playerCount
+            selectedPlayerIndex: root.selectedPlayerIndex
+            onCyclePlayer: root.cyclePlayer()
         }
     }
 }

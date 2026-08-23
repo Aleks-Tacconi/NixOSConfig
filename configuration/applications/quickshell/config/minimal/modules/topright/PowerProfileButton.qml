@@ -17,8 +17,7 @@ Rectangle {
     radius: Theme.surfaceRadius
     color: root.active ? Theme.panelSurfaceHover : (profileMouse.containsMouse && root.enabled ? Theme.panelSurface : "transparent")
     opacity: root.enabled ? 1 : 0.38
-    border.width: root.active ? 1 : 0
-    border.color: Theme.popupInnerEdge
+    border.width: 0
 
     Row {
         anchors.centerIn: parent
