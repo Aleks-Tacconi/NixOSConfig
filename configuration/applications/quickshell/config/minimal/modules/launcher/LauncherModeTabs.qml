@@ -15,7 +15,7 @@ Rectangle {
         {
             key: "applications",
             label: "Apps",
-            icon: ""
+            icon: "󰕮"
         },
         {
             key: "files",
