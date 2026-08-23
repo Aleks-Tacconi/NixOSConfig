@@ -74,7 +74,6 @@ Item {
         Frame.PanelSectionHeader {
             Layout.fillWidth: true
             title: "Audio"
-            primary: true
         }
 
         Frame.PanelGroupLabel {

@@ -110,7 +110,6 @@ Item {
             title: "Network"
             detail: root.stateText()
             detailColor: root.service.networkState === "connected" ? Theme.fg : Theme.muted
-            primary: true
         }
 
         RowLayout {

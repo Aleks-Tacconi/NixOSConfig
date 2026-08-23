@@ -64,27 +64,15 @@ ClippingRectangle {
         }
     }
 
-    Rectangle {
-        visible: root.active
+    Text {
+        id: windowTitle
+
         anchors {
             left: parent.left
+            right: activeLabel.visible ? activeLabel.left : parent.right
             bottom: parent.bottom
             leftMargin: Theme.gap * 3
-            bottomMargin: Theme.gap * 3
-        }
-        width: 6
-        height: 6
-        radius: 3
-        color: Theme.fg
-    }
-
-    Text {
-        anchors {
-            left: parent.left
-            right: parent.right
-            bottom: parent.bottom
-            leftMargin: root.active ? Theme.gap * 6 : Theme.gap * 3
-            rightMargin: Theme.gap * 3
+            rightMargin: Theme.gap * 2
             bottomMargin: Theme.gap * 2
         }
         text: root.title
@@ -94,6 +82,23 @@ ClippingRectangle {
         font.bold: root.active
         elide: Text.ElideRight
         textFormat: Text.PlainText
+    }
+
+    Text {
+        id: activeLabel
+
+        visible: root.active
+        anchors {
+            right: parent.right
+            bottom: parent.bottom
+            rightMargin: Theme.gap * 3
+            bottomMargin: Theme.gap * 2
+        }
+        text: "Active"
+        color: Theme.fg
+        opacity: 0.72
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.panelCaptionSize
     }
 
     HoverHandler {

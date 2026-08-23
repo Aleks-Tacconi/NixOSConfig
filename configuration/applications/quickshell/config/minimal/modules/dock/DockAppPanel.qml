@@ -60,13 +60,7 @@ ColumnLayout {
             Layout.fillWidth: true
             title: root.appName
             detail: root.windowCount > 0 ? String(root.windowCount) : ""
-            primary: true
         }
-    }
-
-    Frame.PanelSectionHeader {
-        Layout.fillWidth: true
-        title: "Actions"
     }
 
     Frame.PanelActionRow {
@@ -111,7 +105,12 @@ ColumnLayout {
         }
     }
 
-    Frame.PanelSectionHeader {
+    Item {
+        visible: root.windowCount > 0
+        Layout.preferredHeight: visible ? Theme.panelSectionGap - Theme.panelItemGap : 0
+    }
+
+    Frame.PanelGroupLabel {
         visible: root.windowCount > 0
         Layout.fillWidth: true
         title: "Windows"

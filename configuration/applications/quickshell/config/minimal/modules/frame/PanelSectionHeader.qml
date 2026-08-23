@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import "../../theme"
 
 /**
- * Typographic popup title or subsection label with optional detail.
+ * Primary popup title with optional trailing detail.
  */
 Item {
     id: root
@@ -11,23 +11,20 @@ Item {
     required property string title
 
     property string detail: ""
-    property color titleColor: root.primary ? Theme.fg : Theme.muted
     property color detailColor: Theme.muted
     property bool detailStrong: false
-    property bool primary: false
-    property real topPadding: root.primary ? Theme.gap / 2 : Theme.gap * 3
-    property real bottomPadding: root.primary ? Theme.gap / 2 : Theme.gap
+    property real verticalPadding: Theme.gap / 2
 
     implicitWidth: headerRow.implicitWidth
-    implicitHeight: headerRow.implicitHeight + root.topPadding + root.bottomPadding
+    implicitHeight: headerRow.implicitHeight + root.verticalPadding * 2
 
     RowLayout {
         id: headerRow
 
         anchors {
             fill: parent
-            topMargin: root.topPadding
-            bottomMargin: root.bottomPadding
+            topMargin: root.verticalPadding
+            bottomMargin: root.verticalPadding
         }
         spacing: Theme.gap * 2
 
@@ -35,12 +32,10 @@ Item {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             text: root.title
-            color: root.titleColor
+            color: Theme.fg
             font.family: Theme.fontFamily
-            font.pixelSize: root.primary ? Theme.panelTitleSize : Theme.panelCaptionSize
+            font.pixelSize: Theme.panelTitleSize
             font.bold: true
-            font.capitalization: root.primary ? Font.MixedCase : Font.AllUppercase
-            font.letterSpacing: root.primary ? 0 : 0.6
             elide: Text.ElideRight
             maximumLineCount: 1
         }

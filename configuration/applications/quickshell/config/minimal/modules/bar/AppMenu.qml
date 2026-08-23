@@ -892,96 +892,6 @@ Item {
                         Frame.PanelSectionHeader {
                             Layout.fillWidth: true
                             title: root.appName
-                            primary: true
-                        }
-
-                        Frame.PanelSectionHeader {
-                            Layout.fillWidth: true
-                            title: "Details"
-                        }
-
-                        GridLayout {
-                            Layout.fillWidth: true
-                            columns: 2
-                            columnSpacing: Theme.panelItemGap
-                            rowSpacing: Theme.gap
-
-                            Text {
-                                color: Theme.muted
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: "Title"
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                color: Theme.fg
-                                elide: Text.ElideRight
-                                horizontalAlignment: Text.AlignRight
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: root.actionPresentation?.title ?? root.appName
-                            }
-
-                            Text {
-                                color: Theme.muted
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: "PID"
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                color: Theme.fg
-                                elide: Text.ElideRight
-                                horizontalAlignment: Text.AlignRight
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: root.activePid > 0 ? String(root.activePid) : "Unknown"
-                            }
-
-                            Text {
-                                color: Theme.muted
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: "Class"
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                color: Theme.fg
-                                elide: Text.ElideMiddle
-                                horizontalAlignment: Text.AlignRight
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: root.ipcWindow.class?.length > 0 ? root.ipcWindow.class : root.appId
-                            }
-
-                            Text {
-                                color: Theme.muted
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: "Workspace"
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                color: Theme.fg
-                                elide: Text.ElideRight
-                                horizontalAlignment: Text.AlignRight
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                text: root.ipcWindow.workspace?.name?.length > 0
-                                    ? root.ipcWindow.workspace.name
-                                    : root.ipcWindow.workspace?.id > 0
-                                        ? String(root.ipcWindow.workspace.id)
-                                        : "Unknown"
-                            }
-                        }
-
-                        Frame.PanelSectionHeader {
-                            Layout.fillWidth: true
-                            title: "Actions"
                         }
 
                         Repeater {
@@ -1050,6 +960,27 @@ Item {
                             text: root.actionPresentation?.unavailable
                                 ? "Actions unavailable"
                                 : "No actions available"
+                        }
+
+                        Item {
+                            Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
+                        }
+
+                        Frame.PanelGroupLabel {
+                            Layout.fillWidth: true
+                            title: "Window details"
+                        }
+
+                        WindowDetails {
+                            Layout.fillWidth: true
+                            windowTitle: root.actionPresentation?.title ?? root.appName
+                            pid: root.activePid > 0 ? String(root.activePid) : "Unknown"
+                            className: root.ipcWindow.class?.length > 0 ? root.ipcWindow.class : root.appId
+                            workspace: root.ipcWindow.workspace?.name?.length > 0
+                                ? root.ipcWindow.workspace.name
+                                : root.ipcWindow.workspace?.id > 0
+                                    ? String(root.ipcWindow.workspace.id)
+                                    : "Unknown"
                         }
                         }
                     }
