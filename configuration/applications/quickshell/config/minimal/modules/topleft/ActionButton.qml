@@ -6,4 +6,7 @@ import "../frame" as Frame
  */
 Frame.PanelActionRow {
     id: root
+
+    implicitHeight: 36
+    showTrailing: false
 }

@@ -19,7 +19,7 @@ QtObject {
     readonly property color glassShadow: "#70000000"
     readonly property color popupBorder: "#38FFFFFF"
     readonly property color popupInnerEdge: "#44000000"
-    readonly property color panelDivider: darkRed
+    readonly property color panelDivider: "#20FFFFFF"
 
     readonly property int barHeight: 44
     readonly property int frameSize: 0

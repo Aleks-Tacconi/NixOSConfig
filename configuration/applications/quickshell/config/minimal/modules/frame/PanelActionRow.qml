@@ -25,7 +25,7 @@ Rectangle {
     implicitHeight: Theme.panelRowHeight
     height: implicitHeight
     radius: Theme.surfaceRadius
-    color: root.hovered && root.enabled ? Theme.panelSurface : "transparent"
+    color: root.hovered && root.enabled ? Theme.panelSurfaceHover : (root.active && root.enabled ? Theme.panelSurface : "transparent")
     opacity: root.enabled ? 1 : 0.45
 
     Behavior on color {

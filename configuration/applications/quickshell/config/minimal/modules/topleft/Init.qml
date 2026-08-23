@@ -29,7 +29,7 @@ Item {
     readonly property bool menuOpen: !root.colorPickerActive && (root.notificationsOpen || root.calendarOpen || notificationsPanel.progress > 0 || calendarPanel.progress > 0)
     readonly property bool ownsNotificationPopup: root.notificationCenter !== null && root.notificationCenter.notificationPopupScreenKey === root.currentScreenKey
     readonly property var activeNotification: root.notificationCenter?.activeNotification ?? null
-    readonly property real notificationPanelDepth: Math.max(420, Math.min(560, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
+    readonly property real notificationPanelDepth: Math.max(0, Math.min(560, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
 
     function notificationIcon() {
         return root.notificationCenter?.dndEnabled ? "󰂛" : "󰂚";
@@ -291,165 +291,200 @@ Item {
                         bottomMargin: Theme.panelPadding
                     }
 
-                    spacing: Theme.panelItemGap
+                    spacing: Theme.panelSectionGap
 
-                    Item {
+                    Rectangle {
+                        id: notificationSection
+
                         width: parent.width
-                        height: 30
+                        height: Math.max(0, parent.height - quickActionsSection.height - (quickActionsSection.visible ? parent.spacing : 0))
+                        radius: Theme.cardRadius
+                        color: Theme.panelSurface
+                        border.width: 1
+                        border.color: Theme.popupBorder
+                        clip: true
 
-                        Text {
-                            id: notificationsLabel
-
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Notifications"
-                            color: Theme.red
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelTitleSize
-                            font.bold: true
-                        }
-
-                        Rectangle {
-                            id: clearButton
+                        Column {
+                            id: notificationSectionContent
 
                             anchors {
-                                right: parent.right
-                                verticalCenter: parent.verticalCenter
+                                fill: parent
+                                margins: Theme.gap * 2
                             }
-                            visible: root.notificationCenter?.hasNotifications ?? false
-                            width: 68
-                            height: 28
-                            radius: Theme.surfaceRadius
-                            color: clearMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
+                            spacing: Theme.panelItemGap
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Clear all"
-                                color: clearMouse.containsMouse ? Theme.fg : Theme.muted
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelCaptionSize
-                                font.bold: true
+                            Item {
+                                width: parent.width
+                                height: 30
+
+                                Frame.PanelSectionHeader {
+                                    anchors {
+                                        left: parent.left
+                                        right: parent.right
+                                        rightMargin: clearButton.visible ? clearButton.width + Theme.gap * 2 : 0
+                                        verticalCenter: parent.verticalCenter
+                                    }
+                                    title: "Notifications"
+                                    detail: String(root.notificationCenter?.notificationCount ?? 0)
+                                }
+
+                                Rectangle {
+                                    id: clearButton
+
+                                    anchors {
+                                        right: parent.right
+                                        verticalCenter: parent.verticalCenter
+                                    }
+                                    visible: root.notificationCenter?.hasNotifications ?? false
+                                    width: 68
+                                    height: 28
+                                    radius: Theme.surfaceRadius
+                                    color: clearMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "Clear all"
+                                        color: clearMouse.containsMouse ? Theme.fg : Theme.muted
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.panelCaptionSize
+                                        font.bold: true
+                                    }
+
+                                    MouseArea {
+                                        id: clearMouse
+
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.LeftButton
+                                        cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true
+                                        onClicked: root.notificationCenter?.clearNotifications()
+                                    }
+                                }
                             }
 
-                            MouseArea {
-                                id: clearMouse
+                            Item {
+                                id: notificationsViewport
 
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: Qt.PointingHandCursor
-                                hoverEnabled: true
-                                onClicked: root.notificationCenter?.clearNotifications()
+                                width: parent.width
+                                height: Math.max(0, parent.height - 30 - parent.spacing)
+                                clip: true
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: !(root.notificationCenter?.hasNotifications ?? false)
+                                    text: "No notifications"
+                                    color: Theme.muted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.panelMetaSize
+                                }
+
+                                ListView {
+                                    id: notificationsList
+
+                                    anchors.fill: parent
+                                    spacing: Theme.gap
+                                    clip: true
+                                    boundsBehavior: Flickable.StopAtBounds
+                                    model: root.notificationCenter?.newestNotifications ?? []
+
+                                    delegate: NotificationCard {
+                                        required property var modelData
+
+                                        width: ListView.view.width
+                                        notification: modelData
+                                        onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
+                                        onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
+                                    }
+                                }
+
+                                Rectangle {
+                                    visible: notificationsList.contentHeight > notificationsList.height
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 1
+                                    y: notificationsList.contentHeight > notificationsList.height
+                                        ? (parent.height - height) * notificationsList.contentY / (notificationsList.contentHeight - notificationsList.height)
+                                        : 0
+                                    width: 2
+                                    height: Math.max(28, parent.height * parent.height / notificationsList.contentHeight)
+                                    radius: 1
+                                    color: Theme.fg
+                                    opacity: 0.34
+                                }
                             }
                         }
                     }
 
                     Rectangle {
-                        id: notificationsViewport
+                        id: quickActionsSection
 
+                        visible: root.notificationPanelDepth >= 400
                         width: parent.width
-                        height: notificationsPanel.depth - Theme.panelPadding * 2 - 30 - quickActionsHeader.height - actionBar.height - Theme.panelItemGap * 4
-                        color: "transparent"
-                        clip: true
+                        height: visible ? quickActionsContent.implicitHeight + Theme.gap * 4 : 0
+                        radius: Theme.cardRadius
+                        color: Theme.panelSurface
+                        border.width: 1
+                        border.color: Theme.popupBorder
 
-                        Text {
-                            anchors.centerIn: parent
-                            visible: !(root.notificationCenter?.hasNotifications ?? false)
-                            text: "No notifications"
-                            color: Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelMetaSize
-                        }
-
-                        ListView {
-                            id: notificationsList
+                        Column {
+                            id: quickActionsContent
 
                             anchors {
-                                fill: parent
-                                topMargin: 0
-                                bottomMargin: 0
+                                left: parent.left
+                                right: parent.right
+                                top: parent.top
+                                margins: Theme.gap * 2
+                            }
+                            spacing: Theme.panelItemGap
+
+                            Frame.PanelSectionHeader {
+                                width: parent.width
+                                title: "Quick Actions"
+                                detail: "4"
                             }
 
-                            spacing: Theme.gap
-                            clip: true
-                            boundsBehavior: Flickable.StopAtBounds
-                            model: root.notificationCenter?.newestNotifications ?? []
+                            Column {
+                                id: actionBar
 
-                            delegate: NotificationCard {
-                                required property var modelData
+                                width: parent.width
+                                height: implicitHeight
+                                spacing: Theme.gap
 
-                                width: ListView.view.width
-                                notification: modelData
-                                onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
-                                onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
+                                ActionButton {
+                                    width: actionBar.width
+                                    label: "Do Not Disturb"
+                                    icon: "󰂛"
+                                    active: root.notificationCenter?.dndEnabled ?? false
+                                    detailText: active ? "On" : "Off"
+                                    onClicked: {
+                                        if (root.notificationCenter !== null)
+                                            root.notificationCenter.dndEnabled = !root.notificationCenter.dndEnabled;
+                                    }
+                                }
+
+                                ActionButton {
+                                    width: actionBar.width
+                                    label: "Pick Color"
+                                    icon: ""
+                                    onClicked: root.notificationCenter?.pickColor()
+                                }
+
+                                ActionButton {
+                                    width: actionBar.width
+                                    label: "Night Light"
+                                    icon: "󰖔"
+                                    active: root.notificationCenter?.hyprsunsetEnabled ?? false
+                                    enabled: !(root.notificationCenter?.hyprsunsetPending ?? false)
+                                    detailText: (root.notificationCenter?.hyprsunsetEnabled ?? false) ? "On" : "Off"
+                                    onClicked: root.notificationCenter?.toggleHyprsunset()
+                                }
+
+                                ActionButton {
+                                    width: actionBar.width
+                                    label: "Screenshot"
+                                    icon: ""
+                                    onClicked: root.notificationCenter?.takeScreenshot()
+                                }
                             }
-                        }
-
-                        Rectangle {
-                            visible: notificationsList.contentHeight > notificationsList.height
-                            anchors.right: parent.right
-                            anchors.rightMargin: 1
-                            y: notificationsList.contentHeight > notificationsList.height
-                                ? (parent.height - height) * notificationsList.contentY / (notificationsList.contentHeight - notificationsList.height)
-                                : 0
-                            width: 2
-                            height: Math.max(28, parent.height * parent.height / notificationsList.contentHeight)
-                            radius: 1
-                            color: Theme.fg
-                            opacity: 0.34
-                        }
-                    }
-
-                    Frame.PanelDivider {
-                        width: parent.width
-                    }
-
-                    Frame.PanelSectionHeader {
-                        id: quickActionsHeader
-
-                        width: parent.width
-                        title: "Quick Actions"
-                    }
-
-                    Column {
-                        id: actionBar
-
-                        width: parent.width
-                        height: implicitHeight
-                        spacing: Theme.gap
-
-                        ActionButton {
-                            width: actionBar.width
-                            label: "Do Not Disturb"
-                            icon: "󰂛"
-                            active: root.notificationCenter?.dndEnabled ?? false
-                            detailText: active ? "On" : "Off"
-                            onClicked: {
-                                if (root.notificationCenter !== null)
-                                    root.notificationCenter.dndEnabled = !root.notificationCenter.dndEnabled;
-                            }
-                        }
-
-                        ActionButton {
-                            width: actionBar.width
-                            label: "Pick Color"
-                            icon: ""
-                            onClicked: root.notificationCenter?.pickColor()
-                        }
-
-                        ActionButton {
-                            width: actionBar.width
-                            label: "Night Light"
-                            icon: "󰖔"
-                            active: root.notificationCenter?.hyprsunsetEnabled ?? false
-                            enabled: !(root.notificationCenter?.hyprsunsetPending ?? false)
-                            detailText: (root.notificationCenter?.hyprsunsetEnabled ?? false) ? "On" : "Off"
-                            onClicked: root.notificationCenter?.toggleHyprsunset()
-                        }
-
-                        ActionButton {
-                            width: actionBar.width
-                            label: "Screenshot"
-                            icon: ""
-                            onClicked: root.notificationCenter?.takeScreenshot()
                         }
                     }
 
