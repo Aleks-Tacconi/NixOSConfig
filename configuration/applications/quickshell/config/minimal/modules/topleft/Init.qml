@@ -425,7 +425,7 @@ Item {
                             }
                             spacing: Theme.panelItemGap
 
-                            Frame.PanelSectionHeader {
+                            Frame.PanelGroupLabel {
                                 width: parent.width
                                 title: "Quick actions"
                             }

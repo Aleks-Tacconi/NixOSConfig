@@ -32,28 +32,15 @@ Rectangle {
     implicitHeight: Math.max(root.toast ? 74 : 58, cardContent.implicitHeight + root.cardPadding * 2)
     height: implicitHeight
     radius: root.toast ? 0 : Theme.surfaceRadius
-    color: root.toast ? "transparent" : (root.interacting ? Theme.panelSurfaceHover : Theme.panelSurface)
+    color: root.toast ? "transparent" : (root.interacting ? Theme.panelSurfaceHover : "transparent")
     opacity: root.lowPriority ? 0.82 : 1
     clip: true
-    border.width: root.critical && !root.toast ? 1 : 0
-    border.color: Theme.popupInnerEdge
+    border.width: 0
 
     onInteractingChanged: root.interactionChanged(root.interacting)
 
     HoverHandler {
         id: hoverHandler
-    }
-
-    Rectangle {
-        visible: !root.toast
-        anchors {
-            left: parent.left
-            top: parent.top
-            bottom: parent.bottom
-        }
-        width: root.critical ? 4 : 3
-        color: Theme.red
-        opacity: root.critical ? 1 : 0.62
     }
 
     Column {
@@ -63,7 +50,7 @@ Rectangle {
             left: parent.left
             right: parent.right
             top: parent.top
-            leftMargin: root.toast ? root.cardPadding : root.cardPadding + 3
+            leftMargin: root.cardPadding
             rightMargin: root.cardPadding
             topMargin: root.cardPadding
         }

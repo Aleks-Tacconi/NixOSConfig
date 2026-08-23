@@ -275,19 +275,21 @@ Item {
 
                 spacing: Theme.gap
 
-                Frame.PanelSectionHeader {
-                    id: agendaHeader
+                Frame.PanelGroupLabel {
+                    id: selectedDayLabel
 
                     width: parent.width
-                    title: "Agenda"
-                    detail: root.selectedTitle()
+                    title: root.selectedTitle()
+                    detail: root.hasSelection
+                        ? `${root.selectedEvents.length} ${root.selectedEvents.length === 1 ? "event" : "events"}`
+                        : ""
                 }
 
                 Flickable {
                     id: agendaList
 
                     width: parent.width
-                    height: parent.height - agendaHeader.height - parent.spacing
+                    height: parent.height - selectedDayLabel.height - parent.spacing
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     contentWidth: width
