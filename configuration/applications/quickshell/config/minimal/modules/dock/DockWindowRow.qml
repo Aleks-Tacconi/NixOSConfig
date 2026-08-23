@@ -1,144 +1,149 @@
 import QtQuick
 import Quickshell.Wayland
+import Quickshell.Widgets
 import "../../theme"
 
 /**
- * Live window preview with compact title and close controls.
+ * Rounded window preview with compact title and close controls.
  */
-Rectangle {
+ClippingRectangle {
     id: root
 
     required property var dataSource
     required property var toplevel
 
+    property bool previewsActive: false
     property real footerHeight: 36
 
     readonly property string title: root.toplevel?.title || root.toplevel?.appId || "Window"
     readonly property bool active: root.toplevel === root.dataSource.activeToplevel
-    readonly property real previewHeight: Math.round(root.width / 2)
+    readonly property real previewHeight: Math.round(root.width * 9 / 16)
 
     signal activated
 
     implicitHeight: root.previewHeight + root.footerHeight
+    height: implicitHeight
     radius: Theme.cardRadius
     color: Theme.panelSurface
-    border.width: root.active ? 1 : 0
-    border.color: Theme.popupBorder
-    clip: true
 
-    Loader {
-        id: previewLoader
+    Column {
+        anchors.fill: parent
+        spacing: 0
 
-        anchors {
-            top: parent.top
-            left: parent.left
-            right: parent.right
-        }
-        height: root.previewHeight
-        active: root.visible && root.toplevel !== null
+        Item {
+            id: mediaFrame
 
-        sourceComponent: ScreencopyView {
-            captureSource: root.toplevel
-            constraintSize: Qt.size(Math.max(1, Math.round(parent?.width ?? 1)), Math.max(1, Math.round(parent?.height ?? 1)))
-            live: true
-        }
+            width: parent.width
+            height: root.previewHeight
 
-        Rectangle {
-            z: 1
-            anchors.fill: parent
-            color: previewMouse.containsMouse ? "#12000000" : "transparent"
-        }
+            Loader {
+                anchors.fill: parent
+                active: root.previewsActive && width > 1 && height > 1 && root.toplevel !== null
 
-        MouseArea {
-            id: previewMouse
-
-            z: 2
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: mouse => root.handleClick(mouse.button)
-        }
-    }
-
-    Rectangle {
-        anchors {
-            left: parent.left
-            right: parent.right
-            bottom: parent.bottom
-        }
-        height: root.footerHeight
-        color: root.active ? Theme.panelSurfaceHover : Theme.panelSurface
-
-        Rectangle {
-            visible: root.active
-            anchors {
-                left: parent.left
-                top: parent.top
-                bottom: parent.bottom
+                sourceComponent: ScreencopyView {
+                    captureSource: root.toplevel
+                    constraintSize: Qt.size(Math.max(1, Math.round(width)), Math.max(1, Math.round(height)))
+                    live: mediaHover.hovered
+                }
             }
-            width: 3
-            color: Theme.fg
-        }
 
-        Text {
-            anchors {
-                left: parent.left
-                right: closeButton.left
-                verticalCenter: parent.verticalCenter
-                leftMargin: Theme.gap * 3
-                rightMargin: Theme.gap * 2
+            Rectangle {
+                anchors.fill: parent
+                color: mediaHover.hovered ? "#12000000" : "transparent"
             }
-            text: root.title
-            color: Theme.fg
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.panelMetaSize
-            font.bold: root.active
-            elide: Text.ElideRight
-            textFormat: Text.PlainText
-        }
 
-        MouseArea {
-            anchors {
-                left: parent.left
-                right: closeButton.left
-                top: parent.top
-                bottom: parent.bottom
-            }
-            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-            cursorShape: Qt.PointingHandCursor
-            onClicked: mouse => root.handleClick(mouse.button)
-        }
-
-        Rectangle {
-            id: closeButton
-
-            anchors {
-                right: parent.right
-                rightMargin: Theme.gap
-                verticalCenter: parent.verticalCenter
-            }
-            width: 30
-            height: 30
-            radius: Theme.surfaceRadius
-            color: closeMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
-
-            Text {
-                anchors.centerIn: parent
-                text: "×"
-                color: closeMouse.containsMouse ? Theme.fg : Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelBodySize
+            HoverHandler {
+                id: mediaHover
             }
 
             MouseArea {
-                id: closeMouse
-
                 anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                hoverEnabled: true
+                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.closeWindow()
+                onClicked: mouse => root.handleClick(mouse.button)
+            }
+        }
+
+        Rectangle {
+            width: parent.width
+            height: root.footerHeight
+            color: root.active || footerHover.hovered ? Theme.panelSurfaceHover : "transparent"
+
+            Rectangle {
+                visible: root.active
+                anchors {
+                    left: parent.left
+                    verticalCenter: parent.verticalCenter
+                }
+                width: 3
+                height: 18
+                radius: 2
+                color: Theme.fg
+            }
+
+            Text {
+                anchors {
+                    left: parent.left
+                    right: closeButton.left
+                    verticalCenter: parent.verticalCenter
+                    leftMargin: Theme.gap * 3
+                    rightMargin: Theme.gap * 2
+                }
+                text: root.title
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+                font.bold: root.active
+                elide: Text.ElideRight
+                textFormat: Text.PlainText
+            }
+
+            HoverHandler {
+                id: footerHover
+            }
+
+            MouseArea {
+                anchors {
+                    left: parent.left
+                    right: closeButton.left
+                    top: parent.top
+                    bottom: parent.bottom
+                }
+                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                cursorShape: Qt.PointingHandCursor
+                onClicked: mouse => root.handleClick(mouse.button)
+            }
+
+            Rectangle {
+                id: closeButton
+
+                anchors {
+                    right: parent.right
+                    rightMargin: Theme.gap
+                    verticalCenter: parent.verticalCenter
+                }
+                width: 30
+                height: 30
+                radius: Theme.surfaceRadius
+                color: closeMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "×"
+                    color: closeMouse.containsMouse ? Theme.fg : Theme.muted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.panelBodySize
+                }
+
+                MouseArea {
+                    id: closeMouse
+
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.closeWindow()
+                }
             }
         }
     }

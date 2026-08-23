@@ -77,7 +77,7 @@ Rectangle {
                 width: 42
                 height: 42
                 radius: Theme.surfaceRadius
-                color: Theme.panelSurface
+                color: "transparent"
                 clip: true
 
                 Image {

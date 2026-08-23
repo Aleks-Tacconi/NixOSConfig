@@ -18,7 +18,7 @@ Item {
     property real dockGap: Theme.gap
     property real hoverOverflow: Theme.gap
     property real popupWidth: 340
-    property real popupMaxHeight: Math.max(180, Math.min(520, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
+    property real popupMaxHeight: Math.max(0, Math.min(520, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
     property real popupRightMargin: Theme.gap * 2
     property real pulloutPadding: Theme.panelPadding
     property real minPopupHeight: 70
@@ -28,6 +28,8 @@ Item {
     property var hoveredApp: null
     property var hoveredActivator: null
     property var displayedApp: null
+    property var pendingOpenApp: null
+    property var pendingOpenActivator: null
     property bool forcePopupClose: false
 
     readonly property int appCount: dockData.appGroups.length
@@ -95,14 +97,16 @@ Item {
         }
 
         root.forcePopupClose = false;
-        root.hoveredApp = appGroup;
-        root.hoveredActivator = activatorMouseArea;
         root.displayGroup(appGroup);
-        root.syncPopupHeight();
+        root.pendingOpenApp = appGroup;
+        root.pendingOpenActivator = activatorMouseArea;
+        popupHeightSync.restart();
     }
 
     function dismissPopup() {
         root.forcePopupClose = true;
+        root.pendingOpenApp = null;
+        root.pendingOpenActivator = null;
         root.hoveredApp = null;
         root.hoveredActivator = null;
     }
@@ -121,6 +125,12 @@ Item {
         interval: 0
         onTriggered: {
             root.syncPopupHeight();
+            if (root.pendingOpenApp !== null) {
+                root.hoveredApp = root.pendingOpenApp;
+                root.hoveredActivator = root.pendingOpenActivator;
+                root.pendingOpenApp = null;
+                root.pendingOpenActivator = null;
+            }
         }
     }
 
@@ -203,6 +213,7 @@ Item {
                             toplevels: []
                         })
                     dataSource: dockData
+                    previewsActive: pulloutPanel.effectiveOpen && pulloutPanel.progress >= 0.95
                     onImplicitHeightChanged: popupHeightSync.restart()
                     onDismissRequested: root.dismissPopup()
                 }

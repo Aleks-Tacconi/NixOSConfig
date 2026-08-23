@@ -110,6 +110,7 @@ Item {
             title: "Network"
             detail: root.stateText()
             detailColor: root.service.networkState === "connected" ? Theme.fg : Theme.muted
+            showMarker: false
         }
 
         RowLayout {
@@ -165,10 +166,6 @@ Item {
                     font.pixelSize: Theme.panelCaptionSize
                 }
             }
-        }
-
-        Frame.PanelDivider {
-            Layout.fillWidth: true
         }
 
         ColumnLayout {
@@ -271,9 +268,10 @@ Item {
                 wrapMode: Text.Wrap
             }
 
-            Frame.PanelDivider {
+            Frame.PanelSectionHeader {
                 visible: ShellConfig.Config.network.tailscale
                 Layout.fillWidth: true
+                title: "VPN"
             }
 
             Frame.PanelActionRow {

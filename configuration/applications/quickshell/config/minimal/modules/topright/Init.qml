@@ -559,7 +559,7 @@ Item {
                     boundsBehavior: Flickable.StopAtBounds
                     contentWidth: width
                     contentHeight: networkView.implicitHeight
-                    interactive: contentHeight > height
+                    interactive: (networkView.editing || root.networkService.errorText.length > 0) && contentHeight > height
 
                     Network {
                         id: networkView

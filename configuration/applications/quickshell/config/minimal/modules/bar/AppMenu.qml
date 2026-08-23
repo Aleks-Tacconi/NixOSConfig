@@ -22,6 +22,7 @@ Item {
     required property var parentWindow
 
     property real maxWidth: 340
+    property real maxPopupDepth: Math.max(0, Math.min(520, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
     property real popupLeftMargin: Theme.gap * 2
     property int actionGeneration: 0
     property string actionState: "idle"
@@ -837,7 +838,7 @@ Item {
                 autoClose: false
                 dismissOnExit: false
                 length: 280
-                depth: actionsContent.implicitHeight + Theme.panelPadding * 2
+                depth: Math.min(root.maxPopupDepth, actionsContent.implicitHeight + Theme.panelPadding * 2)
                 duration: 0
                 backgroundColor: Theme.panelBg
                 curveRadius: Theme.panelRadius
@@ -866,8 +867,8 @@ Item {
                         }
                     }
 
-                    ColumnLayout {
-                        id: actionsContent
+                    Flickable {
+                        id: actionsScroll
 
                         anchors {
                             fill: parent
@@ -876,15 +877,27 @@ Item {
                             leftMargin: Theme.panelPadding + Theme.gap * 2
                             rightMargin: Theme.panelPadding
                         }
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        contentWidth: width
+                        contentHeight: actionsContent.implicitHeight
+                        interactive: contentHeight > height
+
+                        ColumnLayout {
+                            id: actionsContent
+
+                            width: actionsScroll.width
                         spacing: Theme.panelItemGap
 
                         Frame.PanelSectionHeader {
                             Layout.fillWidth: true
                             title: root.appName
+                            showMarker: false
                         }
 
-                        Frame.PanelDivider {
+                        Frame.PanelSectionHeader {
                             Layout.fillWidth: true
+                            title: "Details"
                         }
 
                         GridLayout {
@@ -922,7 +935,7 @@ Item {
                                 color: Theme.fg
                                 elide: Text.ElideRight
                                 horizontalAlignment: Text.AlignRight
-                                font.family: "monospace"
+                                font.family: Theme.fontFamily
                                 font.pixelSize: Theme.panelMetaSize
                                 text: root.activePid > 0 ? String(root.activePid) : "Unknown"
                             }
@@ -939,7 +952,7 @@ Item {
                                 color: Theme.fg
                                 elide: Text.ElideMiddle
                                 horizontalAlignment: Text.AlignRight
-                                font.family: "monospace"
+                                font.family: Theme.fontFamily
                                 font.pixelSize: Theme.panelMetaSize
                                 text: root.ipcWindow.class?.length > 0 ? root.ipcWindow.class : root.appId
                             }
@@ -956,7 +969,7 @@ Item {
                                 color: Theme.fg
                                 elide: Text.ElideRight
                                 horizontalAlignment: Text.AlignRight
-                                font.family: "monospace"
+                                font.family: Theme.fontFamily
                                 font.pixelSize: Theme.panelMetaSize
                                 text: root.ipcWindow.workspace?.name?.length > 0
                                     ? root.ipcWindow.workspace.name
@@ -966,8 +979,9 @@ Item {
                             }
                         }
 
-                        Frame.PanelDivider {
+                        Frame.PanelSectionHeader {
                             Layout.fillWidth: true
+                            title: "Actions"
                         }
 
                         Repeater {
@@ -978,6 +992,7 @@ Item {
 
                                 Layout.fillWidth: true
                                 label: modelData.title
+                                showTrailing: false
                                 onClicked: {
                                     if (modelData.kind === "desktop") {
                                         modelData.desktopAction.execute();
@@ -1035,6 +1050,7 @@ Item {
                             text: root.actionPresentation?.unavailable
                                 ? "Actions unavailable"
                                 : "No actions available"
+                        }
                         }
                     }
                 }

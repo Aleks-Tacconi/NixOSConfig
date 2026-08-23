@@ -100,6 +100,7 @@ Item {
             detail: `${root.percent}%`
             detailColor: Theme.red
             detailStrong: true
+            showMarker: false
         }
 
         RowLayout {
@@ -131,42 +132,67 @@ Item {
             }
         }
 
-        RowLayout {
+        Frame.PanelSectionHeader {
             Layout.fillWidth: true
-            spacing: Theme.gap * 3
+            title: "Details"
+        }
+
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 2
+            columnSpacing: Theme.panelItemGap
+            rowSpacing: Theme.gap
 
             Text {
-                text: root.stateText()
+                text: "Status"
                 color: Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelMetaSize
             }
 
             Text {
-                text: root.remainingText()
-                color: Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-            }
-
-            Item {
                 Layout.fillWidth: true
+                text: root.stateText()
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+                horizontalAlignment: Text.AlignRight
             }
 
             Text {
+                text: "Remaining"
+                color: Theme.muted
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: root.remainingText()
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+                horizontalAlignment: Text.AlignRight
+            }
+
+            Text {
+                text: "Rate"
+                color: Theme.muted
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+            }
+
+            Text {
+                Layout.fillWidth: true
                 text: root.rateText()
                 color: Theme.fg
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelMetaSize
+                horizontalAlignment: Text.AlignRight
             }
-        }
-
-        RowLayout {
-            visible: !root.usingFallback && (root.device?.healthSupported ?? false)
-            Layout.fillWidth: true
-            spacing: Theme.gap * 3
 
             Text {
+                visible: !root.usingFallback && (root.device?.healthSupported ?? false)
                 text: "Health"
                 color: Theme.muted
                 font.family: Theme.fontFamily
@@ -174,6 +200,7 @@ Item {
             }
 
             Text {
+                visible: !root.usingFallback && (root.device?.healthSupported ?? false)
                 Layout.fillWidth: true
                 text: `${Math.round(root.device?.healthPercentage ?? 0)}% · ${(root.device?.energy ?? 0).toFixed(1)} / ${(root.device?.energyCapacity ?? 0).toFixed(1)} Wh`
                 color: Theme.fg
@@ -183,13 +210,9 @@ Item {
             }
         }
 
-        Frame.PanelDivider {
-            Layout.fillWidth: true
-        }
-
         Frame.PanelSectionHeader {
             Layout.fillWidth: true
-            title: "Power Mode"
+            title: "Power mode"
             detail: root.degradationText()
         }
 

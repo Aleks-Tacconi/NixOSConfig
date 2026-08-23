@@ -87,11 +87,17 @@ Item {
         width: parent.width
         spacing: Theme.panelItemGap
 
+        Frame.PanelSectionHeader {
+            Layout.fillWidth: true
+            title: "Audio"
+            showMarker: false
+        }
+
         Item {
             id: mediaItem
 
             Layout.fillWidth: true
-            implicitHeight: playerLayout.implicitHeight + Theme.gap * 4
+            implicitHeight: playerLayout.implicitHeight
             visible: root.selectedPlayer !== null
 
             readonly property var player: root.selectedPlayer
@@ -112,7 +118,6 @@ Item {
                     left: parent.left
                     right: parent.right
                     top: parent.top
-                    margins: Theme.gap * 2
                 }
 
                 spacing: Theme.gap * 2
@@ -121,37 +126,19 @@ Item {
                     Layout.fillWidth: true
                     spacing: Theme.gap * 2
 
-                    Text {
-                        text: mediaItem.player?.identity || "Media"
-                        color: Theme.red
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelTitleSize
-                        font.bold: true
-                    }
-
-                    Item {
+                    Frame.PanelSectionHeader {
                         Layout.fillWidth: true
+                        title: "Now playing"
+                        detail: root.playerCount > 1
+                            ? `${mediaItem.player?.identity || "Media"} · ${Math.min(root.selectedPlayerIndex + 1, root.playerCount)}/${root.playerCount}`
+                            : (mediaItem.player?.identity || "Media")
                     }
 
-                    Text {
+                    MediaControlButton {
                         visible: root.playerCount > 1
-                        text: `${Math.min(root.selectedPlayerIndex + 1, root.playerCount)}/${root.playerCount}`
-                        color: Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelCaptionSize
-                    }
-
-                    Text {
-                        visible: root.playerCount > 1
-                        text: "󰑓"
-                        color: Theme.red
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 1
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: root.cyclePlayer()
-                        }
+                        controlSize: 32
+                        icon: "󰑓"
+                        onClicked: root.cyclePlayer()
                     }
                 }
 
@@ -311,14 +298,9 @@ Item {
             }
         }
 
-        Frame.PanelDivider {
-            Layout.fillWidth: true
-            visible: root.playerCount > 0
-        }
-
         Frame.PanelSectionHeader {
             Layout.fillWidth: true
-            title: "Audio"
+            title: "Volume"
             detail: root.muted ? "Muted" : `${root.volume}%`
             detailColor: root.muted ? Theme.muted : Theme.fg
         }
@@ -359,52 +341,29 @@ Item {
                 }
             }
 
-            Text {
-                text: "−"
-                color: Theme.red
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize + 2
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.adjustVolume(-5)
-                }
+            MediaControlButton {
+                controlSize: 32
+                icon: "−"
+                onClicked: root.adjustVolume(-5)
             }
 
-            Text {
-                text: "+"
-                color: Theme.red
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize + 2
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.adjustVolume(5)
-                }
+            MediaControlButton {
+                controlSize: 32
+                icon: "+"
+                onClicked: root.adjustVolume(5)
             }
 
-            Text {
-                text: root.muted ? "Unmute" : "Mute"
-                color: Theme.fg
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.toggleMute()
-                }
+            MediaControlButton {
+                controlSize: 32
+                icon: root.muted ? "󰝟" : "󰝞"
+                primary: root.muted
+                onClicked: root.toggleMute()
             }
-        }
-
-        Frame.PanelDivider {
-            Layout.fillWidth: true
         }
 
         Frame.PanelSectionHeader {
             Layout.fillWidth: true
             title: "Output"
-            titleColor: Theme.redTwo
         }
 
         Column {

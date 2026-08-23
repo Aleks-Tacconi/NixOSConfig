@@ -42,10 +42,6 @@ Item {
         return screen.name ?? `${screen.x},${screen.y}:${screen.width}x${screen.height}`;
     }
 
-    function sectionLabel(text) {
-        return text.charAt(0).toUpperCase() + text.slice(1);
-    }
-
     function isFocusedScreen() {
         const monitor = Hyprland.monitorFor(root.popupScreen);
 
@@ -293,13 +289,11 @@ Item {
 
                     spacing: Theme.panelSectionGap
 
-                    Rectangle {
+                    Item {
                         id: notificationSection
 
                         width: parent.width
                         height: Math.max(0, parent.height - quickActionsSection.height - (quickActionsSection.visible ? parent.spacing : 0))
-                        radius: Theme.cardRadius
-                        color: Theme.panelSurface
                         clip: true
 
                         Column {
@@ -324,6 +318,7 @@ Item {
                                     }
                                     title: "Notifications"
                                     detail: String(root.notificationCenter?.notificationCount ?? 0)
+                                    showMarker: false
                                 }
 
                                 Rectangle {
@@ -412,14 +407,12 @@ Item {
                         }
                     }
 
-                    Rectangle {
+                    Item {
                         id: quickActionsSection
 
                         visible: root.notificationPanelDepth >= 400
                         width: parent.width
-                        height: visible ? quickActionsContent.implicitHeight + Theme.gap * 4 : 0
-                        radius: Theme.cardRadius
-                        color: Theme.panelSurface
+                        height: visible ? quickActionsContent.implicitHeight + Theme.gap * 2 : 0
 
                         Column {
                             id: quickActionsContent
@@ -428,14 +421,13 @@ Item {
                                 left: parent.left
                                 right: parent.right
                                 top: parent.top
-                                margins: Theme.gap * 2
+                                margins: Theme.gap
                             }
                             spacing: Theme.panelItemGap
 
                             Frame.PanelSectionHeader {
                                 width: parent.width
-                                title: "Quick Actions"
-                                detail: "4"
+                                title: "Quick actions"
                             }
 
                             Column {
@@ -559,8 +551,9 @@ Item {
 
                     Frame.PanelSectionHeader {
                         width: parent.width
-                        title: root.sectionLabel("google calendar")
+                        title: "Calendar"
                         detail: Qt.formatDateTime(clockTimer.now, "hh:mm")
+                        showMarker: false
                     }
 
                     Rectangle {
@@ -570,10 +563,7 @@ Item {
                         clip: true
 
                         CalendarMonth {
-                            anchors {
-                                fill: parent
-                                margins: Theme.gap
-                            }
+                            anchors.fill: parent
 
                             events: root.notificationCenter?.calendarEvents ?? []
                             onEventOpenRequested: event => root.notificationCenter?.openCalendarEvent(event)

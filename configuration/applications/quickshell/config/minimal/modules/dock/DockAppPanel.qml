@@ -7,13 +7,14 @@ import "../frame" as Frame
 import "../../theme"
 
 /**
- * Compact actions and window list for one dock application.
+ * Organized actions and window previews for one dock application.
  */
 ColumnLayout {
     id: root
 
     required property var appGroup
     required property var dataSource
+    property bool previewsActive: false
 
     readonly property string appId: root.appGroup?.appId ?? ""
     readonly property string appName: root.dataSource.appNameForApp(root.appId)
@@ -43,7 +44,7 @@ ColumnLayout {
             Layout.preferredWidth: 28
             Layout.preferredHeight: 28
             radius: Theme.surfaceRadius
-            color: Theme.panelSurface
+            color: "transparent"
 
             Text {
                 anchors.centerIn: parent
@@ -55,23 +56,23 @@ ColumnLayout {
             }
         }
 
-        Text {
+        Frame.PanelSectionHeader {
             Layout.fillWidth: true
-            text: root.appName
-            color: Theme.fg
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.panelBodySize
-            font.bold: true
-            elide: Text.ElideRight
-            textFormat: Text.PlainText
+            title: root.appName
+            detail: root.windowCount > 0 ? String(root.windowCount) : ""
+            showMarker: false
         }
+    }
 
+    Frame.PanelSectionHeader {
+        Layout.fillWidth: true
+        title: "Actions"
     }
 
     Frame.PanelActionRow {
         visible: root.canLaunch
         Layout.fillWidth: true
-        label: root.windowCount > 0 ? "New Window" : "Open"
+        label: root.windowCount > 0 ? "New window" : "Open"
         icon: "󰐕"
         showTrailing: false
         onClicked: {
@@ -97,6 +98,19 @@ ColumnLayout {
         }
     }
 
+    Frame.PanelActionRow {
+        Layout.fillWidth: true
+        label: root.pinned ? "Unpin from dock" : "Pin to dock"
+        icon: root.pinned ? "󰐃" : "󰐂"
+        active: root.pinned
+        enabled: root.pinned || root.canLaunch
+        showTrailing: false
+        onClicked: {
+            root.dataSource.togglePinned(root.appId);
+            root.dismissRequested();
+        }
+    }
+
     Frame.PanelSectionHeader {
         visible: root.windowCount > 0
         Layout.fillWidth: true
@@ -109,7 +123,7 @@ ColumnLayout {
 
         visible: root.windowCount > 0
         Layout.fillWidth: true
-        spacing: Theme.gap
+        spacing: Theme.panelItemGap
 
         Repeater {
             model: root.appGroup?.toplevels ?? []
@@ -120,21 +134,9 @@ ColumnLayout {
                 width: windowsColumn.width
                 dataSource: root.dataSource
                 toplevel: modelData
+                previewsActive: root.previewsActive
                 onActivated: root.dismissRequested()
             }
-        }
-    }
-
-    Frame.PanelActionRow {
-        Layout.fillWidth: true
-        label: root.pinned ? "Unpin from Dock" : "Pin to Dock"
-        icon: root.pinned ? "󰐃" : "󰐂"
-        active: root.pinned
-        enabled: root.pinned || root.canLaunch
-        showTrailing: false
-        onClicked: {
-            root.dataSource.togglePinned(root.appId);
-            root.dismissRequested();
         }
     }
 }

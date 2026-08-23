@@ -1,5 +1,6 @@
 import QtQuick
 import "../../theme"
+import "../frame" as Frame
 
 Item {
     id: root
@@ -269,52 +270,24 @@ Item {
             width: parent.width
             height: 112
 
-            Rectangle {
-                anchors.top: parent.top
-                width: parent.width
-                height: 1
-                color: Theme.darkRed
-            }
-
             Column {
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    right: parent.right
-                    topMargin: Theme.gap * 2
-                    leftMargin: Theme.gap * 2
-                    rightMargin: Theme.gap * 2
-                }
+                anchors.fill: parent
 
                 spacing: Theme.gap
 
-                Text {
-                    width: parent.width
-                    text: "Agenda"
-                    color: Theme.red
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelTitleSize
-                    font.bold: true
-                    maximumLineCount: 1
-                    elide: Text.ElideRight
-                }
+                Frame.PanelSectionHeader {
+                    id: agendaHeader
 
-                Text {
                     width: parent.width
-                    text: root.selectedTitle()
-                    color: Theme.red
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelMetaSize
-                    font.bold: true
-                    maximumLineCount: 1
-                    elide: Text.ElideRight
+                    title: "Agenda"
+                    detail: root.selectedTitle()
                 }
 
                 Flickable {
                     id: agendaList
 
                     width: parent.width
-                    height: 54
+                    height: parent.height - agendaHeader.height - parent.spacing
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     contentWidth: width
@@ -337,7 +310,7 @@ Item {
 
                         Text {
                             width: parent.width
-                            visible: !root.hasSelection || root.selectedEvents.length === 0
+                            visible: root.hasSelection && root.selectedEvents.length === 0
                             text: "No events"
                             color: Theme.muted
                             font.family: Theme.fontFamily
@@ -353,18 +326,19 @@ Item {
                                 required property var modelData
 
                                 width: parent.width
-                                height: 24
+                                height: Theme.panelRowHeight
                                 radius: Theme.surfaceRadius
-                                color: eventMouse.containsMouse ? Theme.panelSurface : "transparent"
+                                color: eventMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
 
                                 Text {
                                     anchors {
                                         left: parent.left
                                         right: eventArrow.left
                                         verticalCenter: parent.verticalCenter
+                                        leftMargin: Theme.gap * 2
                                         rightMargin: Theme.gap
                                     }
-                                    text: eventRow.modelData.startTime.length > 0 ? `${eventRow.modelData.startTime} // ${eventRow.modelData.title}` : eventRow.modelData.title
+                                    text: eventRow.modelData.startTime.length > 0 ? `${eventRow.modelData.startTime} · ${eventRow.modelData.title}` : eventRow.modelData.title
                                     color: Theme.fg
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.panelMetaSize
@@ -378,6 +352,7 @@ Item {
 
                                     anchors {
                                         right: parent.right
+                                        rightMargin: Theme.gap * 2
                                         verticalCenter: parent.verticalCenter
                                     }
                                     text: "↗"
