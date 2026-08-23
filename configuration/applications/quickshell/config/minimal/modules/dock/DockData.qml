@@ -103,13 +103,41 @@ Scope {
     }
 
     function launchApp(appId) {
-        const desktopEntry = DesktopEntries.byId(appId) ?? DesktopEntries.heuristicLookup(appId)
+        const desktopEntry = root.desktopEntryForApp(appId)
 
         desktopEntry?.execute()
     }
 
+    function desktopEntryForApp(appId) {
+        return DesktopEntries.byId(appId) ?? DesktopEntries.heuristicLookup(appId) ?? null
+    }
+
+    function appNameForApp(appId) {
+        const entry = root.desktopEntryForApp(appId)
+        if (entry?.name?.length > 0)
+            return entry.name
+
+        const shortName = appId.split(".").pop() || "Application"
+        return shortName.replace(/[-_]+/g, " ").replace(/\b\w/g, letter => letter.toUpperCase())
+    }
+
+    function desktopActionsForApp(appId) {
+        const actions = root.desktopEntryForApp(appId)?.actions ?? []
+        const result = []
+
+        for (let index = 0; index < actions.length && result.length < 3; index++) {
+            const action = actions[index]
+            const title = String(action.name ?? "").trim()
+            const normalizedId = String(action.id ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "")
+            if (title.length > 0 && normalizedId !== "newwindow")
+                result.push(action)
+        }
+
+        return result
+    }
+
     function iconSourceForApp(appId) {
-        const desktopEntry = DesktopEntries.byId(appId) ?? DesktopEntries.heuristicLookup(appId)
+        const desktopEntry = root.desktopEntryForApp(appId)
 
         if (desktopEntry?.icon) {
             const desktopIcon = Quickshell.iconPath(desktopEntry.icon, true)

@@ -17,19 +17,17 @@ Item {
     property real buttonSize: 30
     property real dockGap: Theme.gap
     property real hoverOverflow: Theme.gap
-    property real popupWidth: 360
-    property real popupMaxHeight: Math.max(540, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6)
+    property real popupWidth: 300
+    property real popupMaxHeight: Math.max(180, Math.min(520, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
     property real popupRightMargin: Theme.gap * 2
     property real pulloutPadding: Theme.panelPadding
     property real minPopupHeight: 70
     property real currentPopupHeight: minPopupHeight
-    property int revealDuration: 180
+    property int revealDuration: 150
     property int closeDelay: 120
     property var hoveredApp: null
     property var hoveredActivator: null
     property var displayedApp: null
-    property bool contentVisible: false
-    property bool fadeInAfterResize: false
 
     readonly property int appCount: dockData.appGroups.length
     readonly property real fullWidth: Math.max(0, dockRow.implicitWidth + root.hoverOverflow * 2)
@@ -82,29 +80,24 @@ Item {
         root.hoveredApp = null
         root.hoveredActivator = null
         root.displayedApp = null
-        root.contentVisible = false
         popupHeightSync.restart()
-    }
-
-    function queueDisplayedAppRefresh() {
-        dockRefreshAfterClose.restart()
     }
 
     function openForApp(appGroup, activatorMouseArea) {
         const nextAppId = appGroup?.appId ?? "";
         const displayedAppId = root.displayedApp?.appId ?? "";
-        const alreadyOpen = pulloutPanel.progress > 0;
+        const wasRequestedOpen = root.hoveredApp !== null;
+
+        if (nextAppId === displayedAppId && wasRequestedOpen) {
+            root.hoveredApp = null;
+            root.hoveredActivator = null;
+            return;
+        }
 
         root.hoveredApp = appGroup;
         root.hoveredActivator = activatorMouseArea;
-
-        if (nextAppId === displayedAppId && root.contentVisible)
-            return;
-
-        root.fadeInAfterResize = !alreadyOpen;
-        root.contentVisible = alreadyOpen;
         root.displayGroup(appGroup);
-        popupHeightSync.restart();
+        root.syncPopupHeight();
     }
 
     function desiredPopupHeight() {
@@ -121,30 +114,6 @@ Item {
         interval: 0
         onTriggered: {
             root.syncPopupHeight();
-            if (root.fadeInAfterResize) {
-                contentFadeIn.restart();
-                return;
-            }
-
-            root.contentVisible = true;
-        }
-    }
-
-    Timer {
-        id: dockRefreshAfterClose
-
-        interval: 300
-        repeat: false
-        onTriggered: root.refreshDisplayedApp()
-    }
-
-    Timer {
-        id: contentFadeIn
-
-        interval: 20
-        onTriggered: {
-            root.fadeInAfterResize = false;
-            root.contentVisible = true;
         }
     }
 
@@ -196,8 +165,6 @@ Item {
                 root.hoveredApp = null;
                 root.hoveredActivator = null;
                 root.displayedApp = null;
-                root.contentVisible = false;
-                root.fadeInAfterResize = false;
                 root.currentPopupHeight = root.minPopupHeight;
             }
 
@@ -213,19 +180,10 @@ Item {
                 }
 
                 clip: true
-                opacity: root.contentVisible ? 1 : 0
-                visible: opacity > 0
                 boundsBehavior: Flickable.StopAtBounds
                 contentWidth: width
                 contentHeight: appPanel.implicitHeight
                 interactive: contentHeight > height
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.contentVisible ? 110 : 0
-                        easing.type: Easing.OutCubic
-                    }
-                }
 
                 DockAppPanel {
                     id: appPanel
@@ -237,7 +195,10 @@ Item {
                         })
                     dataSource: dockData
                     onImplicitHeightChanged: popupHeightSync.restart()
-                    onWindowCloseRequested: root.queueDisplayedAppRefresh()
+                    onDismissRequested: {
+                        root.hoveredApp = null;
+                        root.hoveredActivator = null;
+                    }
                 }
             }
         }

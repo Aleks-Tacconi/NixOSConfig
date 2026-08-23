@@ -7,134 +7,134 @@ import "../frame" as Frame
 import "../../theme"
 
 /**
- * App action sheet and window previews for the dock pullout.
+ * Compact actions and window list for one dock application.
  */
-Column {
+ColumnLayout {
     id: root
 
     required property var appGroup
     required property var dataSource
 
     readonly property string appId: root.appGroup?.appId ?? ""
+    readonly property string appName: root.dataSource.appNameForApp(root.appId)
     readonly property int windowCount: root.appGroup?.toplevels?.length ?? 0
     readonly property bool pinned: root.dataSource.isPinned(root.appId)
+    readonly property bool canLaunch: root.dataSource.desktopEntryForApp(root.appId) !== null
     readonly property string iconSource: root.dataSource.iconSourceForApp(root.appId)
+    readonly property var desktopActions: root.dataSource.desktopActionsForApp(root.appId)
 
-    signal windowCloseRequested(var toplevel)
+    signal dismissRequested
 
-    spacing: Theme.panelSectionGap
+    spacing: Theme.panelItemGap
 
-    ColumnLayout {
-        width: parent.width
-        height: implicitHeight
-        spacing: Theme.panelItemGap
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Theme.gap * 3
 
-        RowLayout {
+        IconImage {
+            visible: root.iconSource.length > 0
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
+            source: root.iconSource
+        }
+
+        Rectangle {
+            visible: root.iconSource.length === 0
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
+            radius: Theme.surfaceRadius
+            color: Theme.panelSurface
+
+            Text {
+                anchors.centerIn: parent
+                text: root.appName.slice(0, 1).toUpperCase()
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelBodySize
+                font.bold: true
+            }
+        }
+
+        Text {
             Layout.fillWidth: true
-            spacing: Theme.gap * 2
+            text: root.appName
+            color: Theme.fg
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.panelBodySize
+            font.bold: true
+            elide: Text.ElideRight
+            textFormat: Text.PlainText
+        }
 
-            IconImage {
-                visible: root.iconSource.length > 0
-                Layout.preferredWidth: 30
-                Layout.preferredHeight: 30
-                source: root.iconSource
-            }
+    }
 
-            Rectangle {
-                visible: root.iconSource.length === 0
-                Layout.preferredWidth: 30
-                Layout.preferredHeight: 30
-                radius: Theme.surfaceRadius
-                color: "transparent"
+    Frame.PanelActionRow {
+        visible: root.canLaunch
+        Layout.fillWidth: true
+        label: root.windowCount > 0 ? "New Window" : "Open"
+        icon: "󰐕"
+        showTrailing: false
+        onClicked: {
+            root.dataSource.launchApp(root.appId);
+            root.dismissRequested();
+        }
+    }
 
-                Text {
-                    anchors.centerIn: parent
-                    color: Theme.fg
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelBodySize
-                    font.bold: true
-                    text: root.appId[0]?.toUpperCase() ?? "?"
-                }
-            }
+    Repeater {
+        model: root.desktopActions
 
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 1
+        Frame.PanelActionRow {
+            required property var modelData
 
-                Text {
-                    Layout.fillWidth: true
-                    color: Theme.fg
-                    elide: Text.ElideRight
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelBodySize
-                    font.bold: true
-                    text: root.appId.length > 0 ? root.appId : "Unknown App"
-                }
-
-                Text {
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelMetaSize
-                    text: root.windowCount === 1 ? "1 window" : `${root.windowCount} windows`
-                }
-            }
-
-            Rectangle {
-                Layout.preferredWidth: root.pinned ? 30 : pinLabel.implicitWidth + Theme.gap * 4
-                Layout.preferredHeight: 30
-                radius: Theme.surfaceRadius
-                color: pinMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
-
-                Text {
-                    id: pinLabel
-
-                    anchors.centerIn: parent
-                    color: root.pinned ? Theme.red : Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: root.pinned ? Theme.fontSize + 1 : Theme.panelMetaSize
-                    font.bold: true
-                    text: root.pinned ? "󰐃" : "pin"
-                }
-
-                MouseArea {
-                    id: pinMouse
-
-                    anchors.fill: parent
-                    acceptedButtons: Qt.LeftButton
-                    cursorShape: Qt.PointingHandCursor
-                    hoverEnabled: true
-                    onClicked: root.dataSource.togglePinned(root.appId)
-                }
+            Layout.fillWidth: true
+            label: modelData.name
+            icon: "󰘳"
+            showTrailing: false
+            onClicked: {
+                modelData.execute();
+                root.dismissRequested();
             }
         }
     }
 
-    Text {
+    Frame.PanelSectionHeader {
         visible: root.windowCount > 0
-        color: Theme.muted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.panelMetaSize
-        text: "Windows"
+        Layout.fillWidth: true
+        title: "Windows"
+        detail: String(root.windowCount)
     }
 
     Column {
         id: windowsColumn
 
         visible: root.windowCount > 0
-        width: parent.width
-        spacing: Theme.panelItemGap
+        Layout.fillWidth: true
+        spacing: Theme.gap
 
         Repeater {
             model: root.appGroup?.toplevels ?? []
 
-            delegate: DockWindowRow {
+            DockWindowRow {
                 required property var modelData
 
                 width: windowsColumn.width
                 dataSource: root.dataSource
                 toplevel: modelData
-                onCloseRequested: toplevel => root.windowCloseRequested(toplevel)
+                onActivated: root.dismissRequested()
             }
+        }
+    }
+
+    Frame.PanelActionRow {
+        Layout.fillWidth: true
+        label: root.pinned ? "Unpin from Dock" : "Pin to Dock"
+        icon: root.pinned ? "󰐃" : "󰐂"
+        active: root.pinned
+        enabled: root.pinned || root.canLaunch
+        showTrailing: false
+        onClicked: {
+            root.dataSource.togglePinned(root.appId);
+            root.dismissRequested();
         }
     }
 }
