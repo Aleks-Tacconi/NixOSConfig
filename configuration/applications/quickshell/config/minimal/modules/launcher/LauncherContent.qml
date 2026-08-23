@@ -61,8 +61,12 @@ Item {
     signal modeRequested(string mode)
 
     onOpenChanged: {
-        if (!root.open)
+        if (!root.open) {
+            fileSearchTimer.stop();
+            root.fileSearchQueued = false;
+            root.fileSearchLoading = false;
             return;
+        }
 
         searchBox.text = "";
         root.selectedIndex = 0;
@@ -74,9 +78,16 @@ Item {
     }
 
     onModeChanged: {
-        searchBox.text = "";
+        fileSearchTimer.stop();
+        if (root.mode !== "files") {
+            root.fileSearchQueued = false;
+            root.fileSearchLoading = false;
+        }
         root.selectedIndex = 0;
         root.selectedFileDir = root.mode === "files" ? root.initialFileDirectory() : "";
+        if (root.mode === "files")
+            root.fileItems = [];
+        searchBox.text = "";
         root.refreshMode();
         results.resetViewport();
         Qt.callLater(() => searchBox.forceInputFocus());
@@ -138,7 +149,7 @@ Item {
         if (root.open && root.mode === "clipboard")
             root.refreshClipboard();
         if (root.open && root.mode === "files")
-            fileSearchTimer.restart();
+            root.refreshFiles();
     }
 
     function clampSelection() {
@@ -253,6 +264,7 @@ Item {
 
         const request = root.currentFileRequest();
         root.activeFileRequest = request;
+        root.fileSearchLoading = true;
         root.fileSearchError = "";
         fileSearchProcess.exec({
             command: ["bash", "-c", fileSearchCommand.text],
@@ -402,7 +414,7 @@ Item {
     QtObject {
         id: fileSearchCommand
 
-        readonly property string text: "\nquery=$FILE_QUERY\nselected_dir=$FILE_DIR\nwhitelist=$FILE_WHITELIST\nblacklist=$FILE_BLACKLIST\nhome=$HOME\ndirs=()\nexcludes=()\nwhile IFS= read -r line || [ -n \"$line\" ]; do\n  [ -z \"$line\" ] && continue\n  case \"$line\" in\n    /*) dir=$line ;;\n    ~/*) dir=$home/${line#~/} ;;\n    *) dir=$home/$line ;;\n  esac\n  [ -d \"$dir\" ] && dirs+=(\"$dir\")\ndone < \"$whitelist\"\nif [ -z \"$selected_dir\" ]; then\n  [ ${#dirs[@]} -eq 0 ] && exit 0\n  printf 'directory\\t%s\\0' \"${dirs[@]}\" | fzf --read0 --print0 --filter \"$query\"\n  exit 0\nfi\nwhile IFS= read -r line || [ -n \"$line\" ]; do\n  [ -z \"$line\" ] && continue\n  excludes+=(--exclude \"$line\")\ndone < \"$blacklist\"\nfd --type f --color never --absolute-path --print0 \"${excludes[@]}\" . \"$selected_dir\" 2>/dev/null | fzf --read0 --print0 --filter \"$query\" | { count=0; while IFS= read -r -d '' path; do\n  printf 'file\\t%s\\0' \"$path\"\n  count=$((count + 1))\n  [ \"$count\" -ge 80 ] && break\ndone; }\n"
+        readonly property string text: "\nquery=$FILE_QUERY\nselected_dir=$FILE_DIR\nwhitelist=$FILE_WHITELIST\nblacklist=$FILE_BLACKLIST\nhome=$HOME\ndirs=()\nexcludes=()\nwhile IFS= read -r line || [ -n \"$line\" ]; do\n  [ -z \"$line\" ] && continue\n  case \"$line\" in\n    /*) dir=$line ;;\n    ~/*) dir=$home/${line#~/} ;;\n    *) dir=$home/$line ;;\n  esac\n  [ -d \"$dir\" ] && dirs+=(\"$dir\")\ndone < \"$whitelist\"\nif [ -z \"$selected_dir\" ]; then\n  [ ${#dirs[@]} -eq 0 ] && exit 0\n  printf 'directory\\t%s\\0' \"${dirs[@]}\" | fzf --read0 --print0 --filter \"$query\"\n  exit 0\nfi\nwhile IFS= read -r line || [ -n \"$line\" ]; do\n  [ -z \"$line\" ] && continue\n  excludes+=(--exclude \"$line\")\ndone < \"$blacklist\"\nfd --type f --color never --absolute-path --print0 \"${excludes[@]}\" . \"$selected_dir\" 2>/dev/null | fzf --read0 --print0 --filter \"$query\" | { count=0; while IFS= read -r -d '' path; do\n  printf 'file\\t%s\\0' \"$path\"\n  count=$((count + 1))\n  [ \"$count\" -lt 80 ] || break\ndone; }\n"
     }
 
     Process {
@@ -416,7 +428,7 @@ Item {
         }
         onExited: (exitCode, exitStatus) => {
             const request = root.activeFileRequest;
-            const hasQueuedRequest = root.fileSearchQueued;
+            const hasQueuedRequest = root.fileSearchQueued && root.open && root.mode === "files";
             root.activeFileRequest = null;
             root.fileSearchLoading = hasQueuedRequest;
             if (!hasQueuedRequest && request !== null && request.key === root.currentFileRequest().key && root.open && root.mode === "files") {
@@ -427,7 +439,10 @@ Item {
             }
             if (root.fileSearchQueued) {
                 root.fileSearchQueued = false;
-                Qt.callLater(() => root.startFileSearch());
+                if (root.open && root.mode === "files")
+                    Qt.callLater(() => root.startFileSearch());
+                else
+                    root.fileSearchLoading = false;
             }
         }
     }
