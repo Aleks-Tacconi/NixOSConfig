@@ -142,7 +142,7 @@ Item {
                 }
 
                 Rectangle {
-                    visible: root.player?.canSeek && root.player?.positionSupported && root.player?.lengthSupported && root.trackLengthSec > 0
+                    visible: (root.player?.canSeek ?? false) && (root.player?.positionSupported ?? false) && (root.player?.lengthSupported ?? false) && root.trackLengthSec > 0
                     anchors.verticalCenter: parent.verticalCenter
                     x: Math.max(0, Math.min(parent.width - width, parent.width * root.trackPositionSec / root.trackLengthSec - width / 2))
                     width: 10
