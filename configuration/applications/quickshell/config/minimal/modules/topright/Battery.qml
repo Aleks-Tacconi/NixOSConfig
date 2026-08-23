@@ -17,8 +17,21 @@ Item {
     property real fallbackSecondsRemaining: 0
     property real fallbackRateWatts: 0
     readonly property bool usingFallback: root.device === null
-    readonly property int percent: Math.round(root.usingFallback ? root.fallbackPercent : (device?.percentage ?? 0))
+    readonly property int percent: Math.round(root.usingFallback ? root.fallbackPercent : (device?.percentage ?? 0) * 100)
     readonly property real secondsRemaining: root.usingFallback ? root.fallbackSecondsRemaining : upowerSecondsRemaining()
+    readonly property var availableProfiles: [{
+        label: "Saver",
+        icon: "󰌪",
+        profile: PowerProfile.PowerSaver
+    }, {
+        label: "Balanced",
+        icon: "󰾅",
+        profile: PowerProfile.Balanced
+    }].concat(PowerProfiles.hasPerformanceProfile ? [{
+        label: "Performance",
+        icon: "󰓅",
+        profile: PowerProfile.Performance
+    }] : [])
 
     function upowerSecondsRemaining() {
         const timeToEmpty = device?.timeToEmpty ?? 0
@@ -38,7 +51,7 @@ Item {
     }
 
     function remainingText() {
-        if (root.stateText() === "Full")
+        if (["Full", "Fully Charged"].includes(root.stateText()))
             return "fully charged"
 
         if (root.secondsRemaining <= 0)
@@ -58,7 +71,7 @@ Item {
             const rate = root.fallbackRateWatts
 
             if (rate < 0.1)
-                return root.stateText() === "Full" ? "charged" : "idle"
+                return ["Full", "Fully Charged"].includes(root.stateText()) ? "charged" : "idle"
 
             return `${rate.toFixed(1)} W ${root.stateText() === "Charging" ? "in" : "out"}`
         }
@@ -69,6 +82,10 @@ Item {
             return "idle"
 
         return `${Math.abs(rate).toFixed(1)} W ${rate > 0 ? "in" : "out"}`
+    }
+
+    function degradationText() {
+        return PowerProfiles.degradationReason === 0 ? "" : "Performance limited"
     }
 
     ColumnLayout {
@@ -143,5 +160,57 @@ Item {
                 font.pixelSize: Theme.panelMetaSize
             }
         }
+
+        RowLayout {
+            visible: !root.usingFallback && (root.device?.healthSupported ?? false)
+            Layout.fillWidth: true
+            spacing: Theme.gap * 3
+
+            Text {
+                text: "Health"
+                color: Theme.muted
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: `${Math.round(root.device?.healthPercentage ?? 0)}% · ${(root.device?.energy ?? 0).toFixed(1)} / ${(root.device?.energyCapacity ?? 0).toFixed(1)} Wh`
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelMetaSize
+                horizontalAlignment: Text.AlignRight
+            }
+        }
+
+        Frame.PanelDivider {
+            Layout.fillWidth: true
+        }
+
+        Frame.PanelSectionHeader {
+            Layout.fillWidth: true
+            title: "Power Mode"
+            detail: root.degradationText()
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Theme.gap
+
+            Repeater {
+                model: root.availableProfiles
+
+                PowerProfileButton {
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    label: modelData.label
+                    icon: modelData.icon
+                    active: PowerProfiles.profile === modelData.profile
+                    onClicked: PowerProfiles.profile = modelData.profile
+                }
+            }
+        }
+
     }
 }

@@ -33,8 +33,8 @@ Item {
     readonly property string networkIcon: iconForNetwork()
     readonly property var laptopBattery: laptopBatteryDevice()
     readonly property bool hasBattery: laptopBattery !== null || sysfsBatteryPresent
-    readonly property int batteryPercent: Math.round(laptopBattery?.percentage ?? sysfsBatteryPercentValue)
-    readonly property real audioPanelHeight: Math.min(520, Math.max(220, audioContent.implicitHeight + Theme.panelPadding * 2))
+    readonly property int batteryPercent: Math.round(laptopBattery !== null ? laptopBattery.percentage * 100 : sysfsBatteryPercentValue)
+    readonly property real audioPanelHeight: Math.min(560, Math.max(220, audioView.implicitHeight + Theme.panelPadding * 2))
     readonly property real networkPanelHeight: 510
     readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
 
@@ -464,7 +464,7 @@ Item {
                     right: parent.right
                 }
 
-                Column {
+                Flickable {
                     id: audioContent
 
                     anchors {
@@ -474,10 +474,15 @@ Item {
                         rightMargin: Theme.panelPadding
                         bottomMargin: Theme.panelPadding
                     }
-
-                    spacing: Theme.panelSectionGap
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    contentWidth: width
+                    contentHeight: audioView.implicitHeight
+                    interactive: contentHeight > height
 
                     Media {
+                        id: audioView
+
                         width: parent.width
                     }
                 }

@@ -105,13 +105,13 @@ in
     gtkActions
     qtMenu
     networkControl
+    pkgs.xdg-utils
   ]
   ++ lib.optionals cfg.launcher.clipboard [ pkgs.cliphist ]
   ++ lib.optionals cfg.launcher.files [
     pkgs.fd
     pkgs.fzf
   ]
-  ++ lib.optionals (cfg.launcher.clipboard || cfg.launcher.files) [ pkgs.xdg-utils ]
   ++ lib.optionals (cfg.launcher.clipboard || cfg.launcher.files || cfg.launcher.emoji) [
     pkgs.wl-clipboard
   ];

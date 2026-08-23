@@ -203,7 +203,7 @@ Scope {
         const start = Qt.formatDateTime(new Date(now.getFullYear(), now.getMonth() - 6, 1), "yyyy-MM-dd");
         const end = Qt.formatDateTime(new Date(now.getFullYear(), now.getMonth() + 13, 1), "yyyy-MM-dd");
 
-        calendarProcess.exec(["gcalcli", "--nocolor", "agenda", "--nodeclined", "--military", "--tsv", start, end]);
+        calendarProcess.exec(["gcalcli", "--nocolor", "agenda", "--nodeclined", "--military", "--tsv", "--details", "url", start, end]);
     }
 
     function parseEventDate(dateText, timeText, fallbackTime) {
@@ -225,7 +225,7 @@ Scope {
     function applyAgenda(output) {
         const events = output.trim().split("\n").filter(line => line.length > 0 && !line.startsWith("start_date\t")).map(line => {
             const parts = line.split("\t");
-            const title = (parts[4] ?? parts.slice(2).join(" ")).trim();
+            const title = (parts[6] ?? parts[4] ?? parts.slice(2).join(" ")).trim();
             const startDate = parts[0] ?? "";
             const startTime = parts[1] ?? "";
             const endDate = parts[2] ?? "";
@@ -241,6 +241,7 @@ Scope {
                 time: parts.length >= 5 ? `${startDate} ${startTime}`.trim() : parts.slice(0, 2).join(" ").trim(),
                 startAt: startAt,
                 endAt: endAt,
+                url: parts.length >= 7 ? parts[4] : "",
                 title: title.length > 0 ? title : line.trim()
             };
         });
@@ -259,6 +260,14 @@ Scope {
 
     function takeScreenshot() {
         screenshotProcess.exec(["hyprshot", "--silent", "-m", "region", "--clipboard"]);
+    }
+
+    function openCalendarEvent(event) {
+        if (!event || calendarOpenProcess.running)
+            return;
+        const dayPath = event.date.replace(/-/g, "/");
+        const url = event.url?.length > 0 ? event.url : `https://calendar.google.com/calendar/r/day/${dayPath}`;
+        calendarOpenProcess.exec(["xdg-open", url]);
     }
 
     function toggleHyprsunset() {
@@ -375,6 +384,10 @@ Scope {
 
     Process {
         id: screenshotProcess
+    }
+
+    Process {
+        id: calendarOpenProcess
     }
 
     Connections {

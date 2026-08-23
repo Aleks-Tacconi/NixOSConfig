@@ -8,6 +8,8 @@ Item {
     property date visibleMonth: new Date()
     property string selectedKey: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
 
+    signal eventOpenRequested(var event)
+
     readonly property int year: visibleMonth.getFullYear()
     readonly property int month: visibleMonth.getMonth()
     readonly property var dayLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -345,17 +347,53 @@ Item {
                         Repeater {
                             model: root.hasSelection ? root.selectedEvents : []
 
-                            Text {
+                            Rectangle {
+                                id: eventRow
+
                                 required property var modelData
 
                                 width: parent.width
-                                text: modelData.startTime.length > 0 ? `${modelData.startTime} // ${modelData.title}` : modelData.title
-                                color: Theme.fg
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.panelMetaSize
-                                maximumLineCount: 1
-                                elide: Text.ElideRight
-                                textFormat: Text.PlainText
+                                height: 24
+                                radius: Theme.surfaceRadius
+                                color: eventMouse.containsMouse ? Theme.panelSurface : "transparent"
+
+                                Text {
+                                    anchors {
+                                        left: parent.left
+                                        right: eventArrow.left
+                                        verticalCenter: parent.verticalCenter
+                                        rightMargin: Theme.gap
+                                    }
+                                    text: eventRow.modelData.startTime.length > 0 ? `${eventRow.modelData.startTime} // ${eventRow.modelData.title}` : eventRow.modelData.title
+                                    color: Theme.fg
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.panelMetaSize
+                                    maximumLineCount: 1
+                                    elide: Text.ElideRight
+                                    textFormat: Text.PlainText
+                                }
+
+                                Text {
+                                    id: eventArrow
+
+                                    anchors {
+                                        right: parent.right
+                                        verticalCenter: parent.verticalCenter
+                                    }
+                                    text: "↗"
+                                    color: eventMouse.containsMouse ? Theme.fg : Theme.muted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.panelMetaSize
+                                }
+
+                                MouseArea {
+                                    id: eventMouse
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.eventOpenRequested(eventRow.modelData)
+                                }
                             }
                         }
                     }

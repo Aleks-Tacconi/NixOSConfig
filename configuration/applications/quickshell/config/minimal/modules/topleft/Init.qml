@@ -547,6 +547,7 @@ Item {
                             }
 
                             events: root.notificationCenter?.calendarEvents ?? []
+                            onEventOpenRequested: event => root.notificationCenter?.openCalendarEvent(event)
                         }
                     }
                 }

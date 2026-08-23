@@ -95,7 +95,7 @@ Item {
             visible: root.selectedPlayer !== null
 
             readonly property var player: root.selectedPlayer
-            readonly property real trackLengthSec: player?.length ?? 0
+            readonly property real trackLengthSec: player?.lengthSupported ? player.length : 0
             readonly property real trackPositionSec: player?.position ?? 0
 
             Timer {
@@ -155,27 +155,60 @@ Item {
                     }
                 }
 
-                ColumnLayout {
+                RowLayout {
                     Layout.fillWidth: true
-                    spacing: Theme.gap
+                    spacing: Theme.gap * 3
 
-                    Text {
-                        Layout.fillWidth: true
-                        text: mediaItem.player?.trackTitle || "No track"
-                        color: Theme.fg
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelBodySize
-                        font.bold: true
-                        elide: Text.ElideRight
+                    Rectangle {
+                        Layout.preferredWidth: 56
+                        Layout.preferredHeight: 56
+                        radius: Theme.surfaceRadius
+                        color: Theme.panelSurface
+                        clip: true
+
+                        Image {
+                            id: artwork
+
+                            anchors.fill: parent
+                            source: mediaItem.player?.trackArtUrl ?? ""
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: artwork.status !== Image.Ready
+                            text: "󰝚"
+                            color: Theme.muted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize + 5
+                        }
                     }
 
-                    Text {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        text: mediaItem.player?.trackArtist || "Unknown artist"
-                        color: Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelMetaSize
-                        elide: Text.ElideRight
+                        spacing: Theme.gap
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: mediaItem.player?.trackTitle || "No track"
+                            color: Theme.fg
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.panelBodySize
+                            font.bold: true
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: mediaItem.player?.trackArtist || "Unknown artist"
+                            color: Theme.muted
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.panelMetaSize
+                            elide: Text.ElideRight
+                            textFormat: Text.PlainText
+                        }
                     }
                 }
 
@@ -192,8 +225,8 @@ Item {
 
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 4
-                        radius: 2
+                        height: 8
+                        radius: 4
                         color: Theme.bg2
 
                         Rectangle {
@@ -203,6 +236,36 @@ Item {
                             height: parent.height
                             radius: parent.radius
                             color: Theme.red
+                        }
+
+                        Rectangle {
+                            visible: mediaItem.player?.canSeek && mediaItem.player?.positionSupported && mediaItem.player?.lengthSupported && mediaItem.trackLengthSec > 0
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: Math.max(0, Math.min(parent.width - width, parent.width * mediaItem.trackPositionSec / mediaItem.trackLengthSec - width / 2))
+                            width: 10
+                            height: 10
+                            radius: 5
+                            color: Theme.fg
+                        }
+
+                        MouseArea {
+                            anchors {
+                                fill: parent
+                                topMargin: -8
+                                bottomMargin: -8
+                            }
+                            enabled: mediaItem.player?.canSeek ?? false
+                            hoverEnabled: true
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: mouse => {
+                                if (mediaItem.player.positionSupported && mediaItem.player.lengthSupported && mediaItem.trackLengthSec > 0)
+                                    mediaItem.player.position = mouse.x / width * mediaItem.trackLengthSec;
+                            }
+                            onPositionChanged: mouse => {
+                                if (pressed && mediaItem.player.positionSupported && mediaItem.player.lengthSupported && mediaItem.trackLengthSec > 0)
+                                    mediaItem.player.position = Math.max(0, Math.min(mediaItem.trackLengthSec, mouse.x / width * mediaItem.trackLengthSec))
+                            }
+                            onWheel: wheel => mediaItem.player.seek(wheel.angleDelta.y > 0 ? 5 : -5)
                         }
                     }
 
@@ -222,51 +285,23 @@ Item {
                         Layout.fillWidth: true
                     }
 
-                    Text {
-                        text: "󰒮"
-                        color: mediaItem.player?.canGoPrevious ? Theme.fg : Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 2
-
-                        MouseArea {
-                            anchors.fill: parent
-                            enabled: mediaItem.player?.canGoPrevious ?? false
-                            onClicked: mediaItem.player.previous()
-                        }
+                    MediaControlButton {
+                        icon: "󰒮"
+                        enabled: mediaItem.player?.canGoPrevious ?? false
+                        onClicked: mediaItem.player.previous()
                     }
 
-                    Rectangle {
-                        width: 36
-                        height: 36
-                        radius: Theme.radius * 2
-                        color: Theme.bg2
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: mediaItem.player?.isPlaying ? "󰏤" : "󰐊"
-                            color: mediaItem.player?.canTogglePlaying ? Theme.red : Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize + 2
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            enabled: mediaItem.player?.canTogglePlaying ?? false
-                            onClicked: mediaItem.player.togglePlaying()
-                        }
+                    MediaControlButton {
+                        icon: mediaItem.player?.isPlaying ? "󰏤" : "󰐊"
+                        primary: true
+                        enabled: mediaItem.player?.canTogglePlaying ?? false
+                        onClicked: mediaItem.player.togglePlaying()
                     }
 
-                    Text {
-                        text: "󰒭"
-                        color: mediaItem.player?.canGoNext ? Theme.fg : Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 2
-
-                        MouseArea {
-                            anchors.fill: parent
-                            enabled: mediaItem.player?.canGoNext ?? false
-                            onClicked: mediaItem.player.next()
-                        }
+                    MediaControlButton {
+                        icon: "󰒭"
+                        enabled: mediaItem.player?.canGoNext ?? false
+                        onClicked: mediaItem.player.next()
                     }
 
                     Item {
