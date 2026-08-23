@@ -33,9 +33,9 @@ Rectangle {
             icon: ""
         }
     ].filter(item => root.enabledModes.includes(item.key))
-    height: 36
+    height: 40
     radius: Theme.surfaceRadius
-    color: "transparent"
+    color: Theme.panelSurface
     border.width: 0
 
     signal modeRequested(string mode)
@@ -43,10 +43,10 @@ Rectangle {
     Row {
         anchors {
             fill: parent
-            margins: 0
+            margins: 3
         }
 
-        spacing: Theme.gap
+        spacing: 2
 
         Repeater {
             model: root.modes
@@ -59,15 +59,14 @@ Rectangle {
                 readonly property bool active: modelData.key === root.mode
                 readonly property bool hovered: mouseArea.containsMouse
 
-                width: (parent.width - Theme.gap * Math.max(0, root.modes.length - 1)) / root.modes.length
+                width: (parent.width - parent.spacing * Math.max(0, root.modes.length - 1)) / root.modes.length
                 height: parent.height
 
                 Rectangle {
                     anchors.fill: parent
                     radius: Theme.surfaceRadius
-                    color: parent.active ? Theme.panelSurfaceHover : (parent.hovered ? Theme.panelSurface : "transparent")
-                    border.width: parent.active ? 1 : 0
-                    border.color: Theme.popupInnerEdge
+                    color: parent.active ? Theme.panelSurfaceHover : (parent.hovered ? Theme.glassHighlight : "transparent")
+                    border.width: 0
 
                     Behavior on color {
                         ColorAnimation {
@@ -76,27 +75,12 @@ Rectangle {
                     }
                 }
 
-                Rectangle {
-                    visible: tabRoot.active
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        bottom: parent.bottom
-                        leftMargin: Theme.gap * 3
-                        rightMargin: Theme.gap * 3
-                    }
-                    height: 2
-                    radius: 1
-                    color: Theme.fg
-                    opacity: 0.82
-                }
-
                 Row {
                     anchors.centerIn: parent
                     spacing: Theme.gap * 2
 
                     Text {
-                        color: tabRoot.active ? Theme.red : Theme.muted
+                        color: tabRoot.active ? Theme.fg : Theme.muted
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.panelBodySize
                         text: tabRoot.modelData.icon

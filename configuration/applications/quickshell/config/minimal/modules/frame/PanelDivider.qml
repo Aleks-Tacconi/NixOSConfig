@@ -2,12 +2,21 @@ import QtQuick
 import "../../theme"
 
 /**
- * Shared low-contrast divider for popup content sections.
+ * Shared short separator between popup content sections.
  */
-Rectangle {
-    implicitWidth: 1
+Item {
+    id: root
+
+    implicitWidth: 72
     implicitHeight: 1
     width: parent?.width ?? implicitWidth
     height: 1
-    color: Theme.panelDivider
+
+    Rectangle {
+        anchors.centerIn: parent
+        width: Math.min(72, root.width * 0.25)
+        height: 1
+        radius: 1
+        color: Theme.panelDivider
+    }
 }

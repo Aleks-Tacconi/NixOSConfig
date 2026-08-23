@@ -300,8 +300,6 @@ Item {
                         height: Math.max(0, parent.height - quickActionsSection.height - (quickActionsSection.visible ? parent.spacing : 0))
                         radius: Theme.cardRadius
                         color: Theme.panelSurface
-                        border.width: 1
-                        border.color: Theme.popupBorder
                         clip: true
 
                         Column {
@@ -422,8 +420,6 @@ Item {
                         height: visible ? quickActionsContent.implicitHeight + Theme.gap * 4 : 0
                         radius: Theme.cardRadius
                         color: Theme.panelSurface
-                        border.width: 1
-                        border.color: Theme.popupBorder
 
                         Column {
                             id: quickActionsContent
