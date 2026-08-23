@@ -28,6 +28,7 @@ Item {
     property var hoveredApp: null
     property var hoveredActivator: null
     property var displayedApp: null
+    property bool forcePopupClose: false
 
     readonly property int appCount: dockData.appGroups.length
     readonly property real fullWidth: Math.max(0, dockRow.implicitWidth + root.hoverOverflow * 2)
@@ -89,15 +90,21 @@ Item {
         const wasRequestedOpen = root.hoveredApp !== null;
 
         if (nextAppId === displayedAppId && wasRequestedOpen) {
-            root.hoveredApp = null;
-            root.hoveredActivator = null;
+            root.dismissPopup();
             return;
         }
 
+        root.forcePopupClose = false;
         root.hoveredApp = appGroup;
         root.hoveredActivator = activatorMouseArea;
         root.displayGroup(appGroup);
         root.syncPopupHeight();
+    }
+
+    function dismissPopup() {
+        root.forcePopupClose = true;
+        root.hoveredApp = null;
+        root.hoveredActivator = null;
     }
 
     function desiredPopupHeight() {
@@ -148,6 +155,7 @@ Item {
 
             corner: "topRight"
             requestedOpen: root.hoveredApp !== null
+            forceClose: root.forcePopupClose
             activatorMouseArea: root.hoveredActivator
             autoClose: true
             closeDelay: root.closeDelay
@@ -166,6 +174,7 @@ Item {
                 root.hoveredActivator = null;
                 root.displayedApp = null;
                 root.currentPopupHeight = root.minPopupHeight;
+                root.forcePopupClose = false;
             }
 
             anchors {
@@ -195,10 +204,7 @@ Item {
                         })
                     dataSource: dockData
                     onImplicitHeightChanged: popupHeightSync.restart()
-                    onDismissRequested: {
-                        root.hoveredApp = null;
-                        root.hoveredActivator = null;
-                    }
+                    onDismissRequested: root.dismissPopup()
                 }
             }
         }
