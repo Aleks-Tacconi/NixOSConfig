@@ -30,6 +30,7 @@ Scope {
     readonly property int notificationExitDuration: 180
     readonly property var notifications: root.notificationServer?.trackedNotifications ?? null
     readonly property var notificationValues: root.notifications?.values ?? []
+    readonly property var newestNotifications: root.notificationValues.slice().reverse()
     readonly property bool hasNotifications: root.notificationValues.length > 0
     readonly property int notificationCount: root.notificationValues.length
     readonly property bool menuOpen: openMenuCount > 0
@@ -105,6 +106,21 @@ Scope {
         notificationDwellTimer.restart();
     }
 
+    function pauseActiveNotification() {
+        if (root.activeNotification === null || !root.notificationPopupOpen || !notificationDwellTimer.running)
+            return;
+
+        root.activeNotificationRemaining = Math.max(1, root.activeNotificationDeadline - Date.now());
+        notificationDwellTimer.stop();
+    }
+
+    function setActiveNotificationHovered(hovered) {
+        if (hovered)
+            root.pauseActiveNotification();
+        else if (root.notificationPopupOpen && !notificationDwellTimer.running)
+            root.resumeActiveNotification();
+    }
+
     function hideActiveNotification(discard) {
         const wasVisible = root.notificationPopupOpen;
         notificationDwellTimer.stop();
@@ -148,10 +164,24 @@ Scope {
     }
 
     function dismissActiveNotification(notification) {
-        if (root.activeNotification === null || (notification !== undefined && notification !== root.activeNotification))
-            return;
+        if (root.activeNotification !== null && (notification === undefined || notification === root.activeNotification))
+            root.hideActiveNotification(true);
+    }
 
-        root.hideActiveNotification(true);
+    function dismissNotification(notification) {
+        if (!notification)
+            return;
+        if (notification === root.activeNotification)
+            root.hideActiveNotification(true);
+        notification.dismiss();
+    }
+
+    function invokeNotificationAction(notification, action) {
+        if (!notification || !action)
+            return;
+        if (notification === root.activeNotification)
+            root.hideActiveNotification(true);
+        action.invoke();
     }
 
     function suppressNotificationPopups() {
@@ -279,6 +309,7 @@ Scope {
 
         bodySupported: true
         bodyMarkupSupported: false
+        actionsSupported: true
         imageSupported: true
         persistenceSupported: true
         keepOnReload: true
