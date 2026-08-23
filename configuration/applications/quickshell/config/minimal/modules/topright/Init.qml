@@ -35,7 +35,7 @@ Item {
     readonly property bool hasBattery: laptopBattery !== null || sysfsBatteryPresent
     readonly property int batteryPercent: Math.round(laptopBattery !== null ? laptopBattery.percentage * 100 : sysfsBatteryPercentValue)
     readonly property real audioPanelHeight: Math.min(560, Math.max(220, audioView.implicitHeight + Theme.panelPadding * 2))
-    readonly property real networkPanelHeight: 540
+    readonly property real networkPanelHeight: 560
     readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
 
     onNetworkOpenChanged: {

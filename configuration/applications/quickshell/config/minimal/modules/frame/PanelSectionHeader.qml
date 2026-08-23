@@ -15,18 +15,19 @@ Item {
     property color detailColor: Theme.muted
     property bool detailStrong: false
     property bool primary: false
-    property real verticalPadding: root.primary ? Theme.gap / 2 : Theme.gap
+    property real topPadding: root.primary ? Theme.gap / 2 : Theme.gap * 3
+    property real bottomPadding: root.primary ? Theme.gap / 2 : Theme.gap
 
     implicitWidth: headerRow.implicitWidth
-    implicitHeight: headerRow.implicitHeight + root.verticalPadding * 2
+    implicitHeight: headerRow.implicitHeight + root.topPadding + root.bottomPadding
 
     RowLayout {
         id: headerRow
 
         anchors {
             fill: parent
-            topMargin: root.verticalPadding
-            bottomMargin: root.verticalPadding
+            topMargin: root.topPadding
+            bottomMargin: root.bottomPadding
         }
         spacing: Theme.gap * 2
 
