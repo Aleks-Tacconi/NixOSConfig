@@ -33,7 +33,7 @@ Rectangle {
             icon: ""
         }
     ].filter(item => root.enabledModes.includes(item.key))
-    height: 42
+    height: 36
     radius: Theme.surfaceRadius
     color: "transparent"
     border.width: 0

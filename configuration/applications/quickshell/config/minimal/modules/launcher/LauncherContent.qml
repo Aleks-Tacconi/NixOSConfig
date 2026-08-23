@@ -17,8 +17,8 @@ Item {
     required property var enabledModes
 
     property int selectedIndex: 0
-    property int rowHeight: 64
-    property int maxVisibleRows: 6
+    property int rowHeight: 56
+    property int maxVisibleRows: 5
     property var clipboardItems: []
     property var fileItems: []
     property string selectedFileDir: ""
@@ -53,10 +53,7 @@ Item {
         })
     readonly property var sourceItems: root.enabledModes.includes(root.mode) ? root.sourceItemsByMode[root.mode] : []
     readonly property var filteredItems: root.filterItems()
-    readonly property int resultsHeight: root.maxVisibleRows * root.rowHeight + Math.max(0, root.maxVisibleRows - 1) * Theme.gap
-    readonly property bool previewMode: root.mode === "files" || root.mode === "clipboard"
-    readonly property var selectedPreviewItem: root.previewMode && root.selectedItem()?.kind !== "directory" ? root.selectedItem() : null
-    readonly property bool hasPreviewItem: root.selectedPreviewItem !== null && root.selectedPreviewItem !== undefined
+    readonly property int resultsHeight: root.maxVisibleRows * root.rowHeight + Math.max(0, root.maxVisibleRows - 1) * Theme.panelItemGap
     readonly property string placeholder: root.mode === "applications" ? "Launch an application" : (root.mode === "emoji" ? "Search emoji" : (root.mode === "files" ? "Search files" : "Search copied text"))
 
     signal requestClose
@@ -441,6 +438,20 @@ Item {
         anchors.fill: parent
         spacing: Theme.panelItemGap
 
+        LauncherSearchBox {
+            id: searchBox
+
+            width: parent.width
+            open: root.open
+            placeholder: root.placeholder
+            onTextChanged: {
+                root.selectedIndex = 0;
+                results.resetViewport();
+                root.refreshFiles();
+            }
+            onKeyPressed: event => root.handleKey(event)
+        }
+
         LauncherModeTabs {
             width: parent.width
             mode: root.mode
@@ -480,18 +491,5 @@ Item {
             }
         }
 
-        LauncherSearchBox {
-            id: searchBox
-
-            width: parent.width
-            open: root.open
-            placeholder: root.placeholder
-            onTextChanged: {
-                root.selectedIndex = 0;
-                results.resetViewport();
-                root.refreshFiles();
-            }
-            onKeyPressed: event => root.handleKey(event)
-        }
     }
 }
