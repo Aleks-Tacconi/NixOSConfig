@@ -19,7 +19,7 @@ Rectangle {
         },
         {
             key: "files",
-            label: "Downloads",
+            label: "Files",
             icon: "󰈔"
         },
         {
@@ -33,7 +33,7 @@ Rectangle {
             icon: ""
         }
     ].filter(item => root.enabledModes.includes(item.key))
-    height: 36
+    height: 42
     radius: Theme.surfaceRadius
     color: "transparent"
     border.width: 0
@@ -66,13 +66,29 @@ Rectangle {
                     anchors.fill: parent
                     radius: Theme.surfaceRadius
                     color: parent.active ? Theme.panelSurfaceHover : (parent.hovered ? Theme.panelSurface : "transparent")
-                    border.width: 0
+                    border.width: parent.active ? 1 : 0
+                    border.color: Theme.popupInnerEdge
 
                     Behavior on color {
                         ColorAnimation {
                             duration: 120
                         }
                     }
+                }
+
+                Rectangle {
+                    visible: tabRoot.active
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        bottom: parent.bottom
+                        leftMargin: Theme.gap * 3
+                        rightMargin: Theme.gap * 3
+                    }
+                    height: 2
+                    radius: 1
+                    color: Theme.fg
+                    opacity: 0.82
                 }
 
                 Row {

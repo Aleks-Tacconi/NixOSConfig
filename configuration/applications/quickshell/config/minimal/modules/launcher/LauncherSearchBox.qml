@@ -12,6 +12,7 @@ Rectangle {
     required property bool open
     required property string placeholder
     property alias text: searchInput.text
+    readonly property bool hasSelection: searchInput.selectedText.length > 0
 
     signal keyPressed(var event)
 
@@ -22,8 +23,9 @@ Rectangle {
     width: parent?.width ?? 0
     height: 44
     radius: Theme.surfaceRadius
-    color: searchInput.activeFocus ? Theme.panelSurfaceHover : "transparent"
-    border.width: 0
+    color: searchInput.activeFocus ? Theme.panelSurfaceHover : Theme.panelSurface
+    border.width: searchInput.activeFocus ? 1 : 0
+    border.color: Theme.popupInnerEdge
 
     Text {
         anchors {
@@ -42,6 +44,8 @@ Rectangle {
         anchors {
             left: parent.left
             leftMargin: 48
+            right: clearButton.left
+            rightMargin: Theme.gap
             verticalCenter: parent.verticalCenter
         }
 
@@ -58,7 +62,7 @@ Rectangle {
         anchors {
             fill: parent
             leftMargin: 48
-            rightMargin: Theme.gap * 2
+            rightMargin: searchInput.text.length > 0 ? 44 : Theme.gap * 3
         }
 
         color: Theme.fg
@@ -71,5 +75,40 @@ Rectangle {
         focus: root.open
 
         Keys.onPressed: event => root.keyPressed(event)
+    }
+
+    Rectangle {
+        id: clearButton
+
+        visible: searchInput.text.length > 0
+        anchors {
+            right: parent.right
+            rightMargin: Theme.gap
+            verticalCenter: parent.verticalCenter
+        }
+        width: 34
+        height: 34
+        radius: Theme.surfaceRadius
+        color: clearMouse.containsMouse ? Theme.panelSurface : "transparent"
+
+        Text {
+            anchors.centerIn: parent
+            text: "×"
+            color: clearMouse.containsMouse ? Theme.fg : Theme.muted
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.panelBodySize
+        }
+
+        MouseArea {
+            id: clearMouse
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                searchInput.text = "";
+                searchInput.forceActiveFocus();
+            }
+        }
     }
 }

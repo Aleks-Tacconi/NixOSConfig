@@ -16,7 +16,12 @@ Item {
     property int rowHeight: 56
 
     signal activated(int index, var item)
+    signal copyRequested(int index, var item)
     signal highlighted(int index)
+
+    function resetViewport() {
+        resultList.contentY = 0;
+    }
 
     function ensureIndexVisible(index) {
         const rowTop = index * (root.rowHeight + resultsColumn.spacing);
@@ -56,6 +61,7 @@ Item {
                     item: modelData
                     selected: index === root.selectedIndex
                     onActivated: root.activated(index, modelData)
+                    onCopyRequested: root.copyRequested(index, modelData)
                     onHoveredRequested: root.highlighted(index)
                 }
             }

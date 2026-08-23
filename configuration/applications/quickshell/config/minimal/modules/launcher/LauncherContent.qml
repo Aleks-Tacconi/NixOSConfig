@@ -52,7 +52,7 @@ Item {
     readonly property string placeholder: root.mode === "applications" ? "Launch an application" : (root.mode === "emoji" ? "Search emoji" : (root.mode === "files" ? "Search downloads" : "Search copied text"))
 
     signal requestClose
-    signal requestModeCycle
+    signal requestModeCycle(int direction)
     signal modeRequested(string mode)
 
     onOpenChanged: {
@@ -64,7 +64,8 @@ Item {
         root.selectedFileDir = root.mode === "files" ? root.downloadsDir : "";
         root.refreshMode();
         root.forceActiveFocus();
-        searchBox.forceInputFocus();
+        results.resetViewport();
+        Qt.callLater(() => searchBox.forceInputFocus());
     }
 
     onModeChanged: {
@@ -72,7 +73,8 @@ Item {
         root.selectedIndex = 0;
         root.selectedFileDir = root.mode === "files" ? root.downloadsDir : "";
         root.refreshMode();
-        searchBox.forceInputFocus();
+        results.resetViewport();
+        Qt.callLater(() => searchBox.forceInputFocus());
     }
 
     onFilteredItemsChanged: root.clampSelection()
@@ -223,7 +225,10 @@ Item {
     }
 
     function copySelectedItem() {
-        const item = root.selectedItem();
+        return root.copyItem(root.selectedItem());
+    }
+
+    function copyItem(item) {
 
         if (!item || !["file", "emoji", "clipboard"].includes(item.kind))
             return false;
@@ -257,13 +262,13 @@ Item {
         } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_K) {
             root.moveSelection(-1);
             event.accepted = true;
-        } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_C && root.copySelectedItem()) {
+        } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_C && !searchBox.hasSelection && root.copySelectedItem()) {
             event.accepted = true;
         } else if (event.key === Qt.Key_Escape) {
             root.requestClose();
             event.accepted = true;
-        } else if (event.key === Qt.Key_Tab) {
-            root.requestModeCycle();
+        } else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+            root.requestModeCycle(event.key === Qt.Key_Backtab || (event.modifiers & Qt.ShiftModifier) ? -1 : 1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Down) {
             root.moveSelection(1);
@@ -353,6 +358,10 @@ Item {
                     root.selectedIndex = index;
                     root.selectItem(item);
                 }
+                onCopyRequested: (index, item) => {
+                    root.selectedIndex = index;
+                    root.copyItem(item);
+                }
                 onHighlighted: index => root.selectedIndex = index
             }
         }
@@ -365,6 +374,7 @@ Item {
             placeholder: root.placeholder
             onTextChanged: {
                 root.selectedIndex = 0;
+                results.resetViewport();
                 root.refreshFiles();
             }
             onKeyPressed: event => root.handleKey(event)

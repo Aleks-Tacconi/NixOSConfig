@@ -14,6 +14,7 @@ Rectangle {
     property bool selected: false
 
     signal activated
+    signal copyRequested
     signal hoveredRequested
 
     readonly property bool hovered: mouseArea.containsMouse
@@ -21,8 +22,9 @@ Rectangle {
     readonly property string actionIcon: root.item.kind === "application" || root.item.kind === "file" ? "" : (root.item.kind === "directory" ? "" : "")
 
     radius: Theme.surfaceRadius
-    color: root.selected || root.hovered ? Theme.panelSurfaceHover : "transparent"
-    border.width: 0
+    color: root.selected ? Theme.panelSurfaceHover : (root.hovered ? Theme.panelSurface : "transparent")
+    border.width: root.selected ? 1 : 0
+    border.color: Theme.popupInnerEdge
 
     Behavior on color {
         ColorAnimation {
@@ -30,7 +32,21 @@ Rectangle {
         }
     }
 
+    Rectangle {
+        visible: root.selected
+        anchors {
+            left: parent.left
+            top: parent.top
+            bottom: parent.bottom
+        }
+        width: 3
+        radius: 2
+        color: Theme.fg
+    }
+
     Row {
+        z: 1
+
         anchors {
             fill: parent
             leftMargin: Theme.panelPadding - 4
@@ -79,6 +95,7 @@ Rectangle {
                 font.pixelSize: Theme.panelBodySize
                 font.bold: true
                 text: root.item.title
+                textFormat: Text.PlainText
             }
 
             Text {
@@ -89,17 +106,20 @@ Rectangle {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelCaptionSize
                 text: root.item.subtitle
+                textFormat: Text.PlainText
             }
         }
 
         Rectangle {
             id: actionPill
 
-            width: root.copyable ? 52 : Theme.fontSize + 14
-            height: parent.height
+            width: root.copyable ? 68 : Theme.fontSize + 14
+            height: root.copyable ? 34 : parent.height
             anchors.verticalCenter: parent.verticalCenter
-            color: "transparent"
-            border.width: 0
+            radius: Theme.surfaceRadius
+            color: copyMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
+            border.width: root.copyable && root.selected ? 1 : 0
+            border.color: Theme.popupInnerEdge
 
             Text {
                 id: actionLabel
@@ -110,7 +130,18 @@ Rectangle {
                 font.family: Theme.fontFamily
                 font.pixelSize: root.copyable ? Theme.panelCaptionSize : Theme.panelBodySize
                 font.bold: root.copyable
-                text: root.copyable ? "Ctrl+C" : root.actionIcon
+                text: root.copyable ? "  Copy" : root.actionIcon
+            }
+
+            MouseArea {
+                id: copyMouse
+
+                anchors.fill: parent
+                enabled: root.copyable
+                acceptedButtons: Qt.LeftButton
+                hoverEnabled: true
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.copyRequested()
             }
         }
     }
