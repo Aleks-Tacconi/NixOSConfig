@@ -15,7 +15,7 @@ Rectangle {
     property color accentColor: Theme.red
     property string detailText: ""
     property string trailingText: "›"
-    property bool showTrailing: trailingText.length > 0
+    property bool showTrailing: false
     property real horizontalPadding: Theme.gap * 2
 
     readonly property bool hovered: mouseArea.containsMouse

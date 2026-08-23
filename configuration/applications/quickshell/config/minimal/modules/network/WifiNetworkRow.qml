@@ -38,6 +38,16 @@ Rectangle {
         return root.network.security;
     }
 
+    function actionIndicator() {
+        if (root.network.active)
+            return "";
+        if (!root.network.supported)
+            return "↗";
+        if (root.network.requiresPassword && root.network.savedUuid.length === 0)
+            return "›";
+        return "";
+    }
+
     implicitHeight: 42
     radius: Theme.surfaceRadius
     color: root.network.active ? Theme.panelSurface : (root.hovered && root.interactive ? Theme.panelSurfaceHover : "transparent")
@@ -92,6 +102,14 @@ Rectangle {
             visible: root.network.requiresPassword
             text: "󰌾"
             color: Theme.muted
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.panelMetaSize
+        }
+
+        Text {
+            visible: root.actionIndicator().length > 0
+            text: root.actionIndicator()
+            color: root.hovered ? Theme.fg : Theme.muted
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelMetaSize
         }

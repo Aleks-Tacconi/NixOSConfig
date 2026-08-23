@@ -211,7 +211,7 @@ Item {
                                 }
 
                                 Text {
-                                    visible: trayRow.modelData.hasMenu
+                                    visible: trayRow.modelData.hasMenu && trayRow.modelData.onlyMenu
                                     color: Theme.muted
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSize

@@ -19,7 +19,8 @@ Rectangle {
 
     readonly property bool hovered: mouseArea.containsMouse
     readonly property bool copyable: ["file", "emoji", "clipboard"].includes(root.item.kind)
-    readonly property string actionIcon: root.item.kind === "application" || root.item.kind === "file" ? "" : (root.item.kind === "directory" ? "" : "")
+    readonly property bool externalOpen: root.item.kind === "file"
+    readonly property bool navigationItem: root.item.kind === "directory"
 
     radius: Theme.surfaceRadius
     color: root.selected ? Theme.panelSurfaceHover : (root.hovered ? Theme.panelSurface : "transparent")
@@ -84,7 +85,11 @@ Rectangle {
 
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 42 - actionPill.width - parent.spacing * 2
+            width: parent.width
+                - 42
+                - (externalIndicator.visible ? externalIndicator.width : 0)
+                - (actionPill.visible ? actionPill.width : 0)
+                - parent.spacing * (1 + (externalIndicator.visible ? 1 : 0) + (actionPill.visible ? 1 : 0))
             spacing: 2
 
             Text {
@@ -110,9 +115,23 @@ Rectangle {
             }
         }
 
+        Text {
+            id: externalIndicator
+
+            visible: root.externalOpen
+            width: visible ? Theme.fontSize + 4 : 0
+            anchors.verticalCenter: parent.verticalCenter
+            text: "↗"
+            color: root.selected ? Theme.fg : Theme.muted
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.panelMetaSize
+            horizontalAlignment: Text.AlignHCenter
+        }
+
         Rectangle {
             id: actionPill
 
+            visible: root.copyable || root.navigationItem
             width: root.copyable ? 68 : Theme.fontSize + 14
             height: root.copyable ? 34 : parent.height
             anchors.verticalCenter: parent.verticalCenter
@@ -130,7 +149,7 @@ Rectangle {
                 font.family: Theme.fontFamily
                 font.pixelSize: root.copyable ? Theme.panelCaptionSize : Theme.panelBodySize
                 font.bold: root.copyable
-                text: root.copyable ? "  Copy" : root.actionIcon
+                text: root.copyable ? "  Copy" : "›"
             }
 
             MouseArea {

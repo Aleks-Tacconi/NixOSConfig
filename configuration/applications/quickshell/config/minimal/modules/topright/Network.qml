@@ -180,7 +180,7 @@ Item {
                 active: root.service.wifiEnabled
                 enabled: !root.service.actionPending && root.service.wifiInterface.length > 0
                 detailText: root.service.wifiEnabled ? "On" : "Off"
-                trailingText: ""
+                showTrailing: false
                 onClicked: root.service.setWifiEnabled(!root.service.wifiEnabled)
             }
 
@@ -245,7 +245,7 @@ Item {
                 label: "Scan again"
                 icon: "󰑐"
                 enabled: !root.service.scanPending && !root.service.actionPending
-                trailingText: ""
+                showTrailing: false
                 onClicked: root.service.requestScan(true)
             }
 
@@ -255,6 +255,7 @@ Item {
                 label: "Join hidden network"
                 icon: "󰖩"
                 enabled: !root.service.actionPending
+                showTrailing: true
                 onClicked: root.showHidden()
             }
 
@@ -282,6 +283,7 @@ Item {
                 active: root.service.tailscaleConnected
                 enabled: !root.service.tailscalePending
                 detailText: root.service.tailscalePending ? "Working" : (root.service.tailscaleConnected ? "On" : "Off")
+                showTrailing: false
                 onClicked: root.service.toggleTailscale()
             }
         }
