@@ -60,7 +60,7 @@ ColumnLayout {
             Layout.fillWidth: true
             title: root.appName
             detail: root.windowCount > 0 ? String(root.windowCount) : ""
-            showMarker: false
+            primary: true
         }
     }
 

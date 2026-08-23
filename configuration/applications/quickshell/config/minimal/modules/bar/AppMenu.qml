@@ -892,7 +892,7 @@ Item {
                         Frame.PanelSectionHeader {
                             Layout.fillWidth: true
                             title: root.appName
-                            showMarker: false
+                            primary: true
                         }
 
                         Frame.PanelSectionHeader {

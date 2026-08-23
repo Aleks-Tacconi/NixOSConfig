@@ -318,7 +318,7 @@ Item {
                                     }
                                     title: "Notifications"
                                     detail: String(root.notificationCenter?.notificationCount ?? 0)
-                                    showMarker: false
+                                    primary: true
                                 }
 
                                 Rectangle {
@@ -553,7 +553,7 @@ Item {
                         width: parent.width
                         title: "Calendar"
                         detail: Qt.formatDateTime(clockTimer.now, "hh:mm")
-                        showMarker: false
+                        primary: true
                     }
 
                     Rectangle {

@@ -90,7 +90,7 @@ Item {
         Frame.PanelSectionHeader {
             Layout.fillWidth: true
             title: "Audio"
-            showMarker: false
+            primary: true
         }
 
         Item {

@@ -100,7 +100,7 @@ Item {
             detail: `${root.percent}%`
             detailColor: Theme.red
             detailStrong: true
-            showMarker: false
+            primary: true
         }
 
         RowLayout {
