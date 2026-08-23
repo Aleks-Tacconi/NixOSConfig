@@ -112,7 +112,7 @@ Scope {
                 exclusionMode: ExclusionMode.Ignore
                 visible: screenRoot.wantsOpen || launcherPanel.progress > 0
                 mask: Region {
-                    item: launcherHost
+                    item: screenRoot.wantsOpen ? launcherHost : launcherPanel
                 }
 
                 WlrLayershell.namespace: "quickshell:appLauncher"

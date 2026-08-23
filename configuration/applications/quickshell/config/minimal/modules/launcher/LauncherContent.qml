@@ -269,6 +269,11 @@ Item {
     }
 
     function refreshClipboard() {
+        if (!root.open || root.mode !== "clipboard") {
+            root.clipboardQueued = false;
+            root.clipboardLoading = false;
+            return;
+        }
         if (clipboardListProcess.running) {
             root.clipboardQueued = true;
             return;
@@ -374,7 +379,10 @@ Item {
             }
             if (root.clipboardQueued) {
                 root.clipboardQueued = false;
-                Qt.callLater(() => root.refreshClipboard());
+                if (root.open && root.mode === "clipboard")
+                    Qt.callLater(() => root.refreshClipboard());
+                else
+                    root.clipboardLoading = false;
             }
         }
     }

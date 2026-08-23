@@ -255,18 +255,20 @@ Item {
             }
 
             Flickable {
+                id: previewFlick
+
                 anchors.fill: parent
                 anchors.margins: Theme.gap * 2
                 visible: !root.imagePreview && !root.loading && root.errorText.length === 0
                 clip: true
-                contentWidth: previewTextItem.width
+                contentWidth: width
                 contentHeight: previewTextItem.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
 
                 Text {
                     id: previewTextItem
 
-                    width: parent.width
+                    width: previewFlick.width
                     color: Theme.fg
                     font.family: "monospace"
                     font.pixelSize: Theme.panelCaptionSize
