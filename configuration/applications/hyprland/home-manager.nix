@@ -14,16 +14,7 @@ let
     exec ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all "$@"
   '';
   appLauncher = pkgs.writeShellScriptBin "app-launcher" ''
-    monitor="$(${hyprlandPkg}/bin/hyprctl -j monitors | ${pkgs.jq}/bin/jq -r 'first(.[] | select(.focused)) | "\(.x) \(.y) \(.width) \(.height)"')"
-    read -r x y width height <<EOF
-    $monitor
-    EOF
-
-    center_x=$((x + width / 2))
-    center_y=$((y + height / 2))
-
-    ${hyprlandPkg}/bin/hyprctl dispatch movecursor "$center_x" "$center_y"
-    qs ipc --any-display call appLauncher open
+    exec qs ipc --any-display call appLauncher toggle
   '';
   lua = lib.generators.mkLuaInline;
   mkBind = keys: dispatcher: {
