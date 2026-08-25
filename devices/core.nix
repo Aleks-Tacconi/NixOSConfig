@@ -88,7 +88,6 @@
     ../configuration/applications/spotify/configuration.nix
     ../configuration/applications/syncthing/configuration.nix
     ../configuration/applications/tmux/configuration.nix
-    ../configuration/applications/wlogout/configuration.nix
   ];
 
   nix.settings.experimental-features = [

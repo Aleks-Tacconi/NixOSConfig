@@ -121,21 +121,6 @@ Scope {
         return shortName.replace(/[-_]+/g, " ").replace(/\b\w/g, letter => letter.toUpperCase())
     }
 
-    function desktopActionsForApp(appId) {
-        const actions = root.desktopEntryForApp(appId)?.actions ?? []
-        const result = []
-
-        for (let index = 0; index < actions.length && result.length < 3; index++) {
-            const action = actions[index]
-            const title = String(action.name ?? "").trim()
-            const normalizedId = String(action.id ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "")
-            if (title.length > 0 && normalizedId !== "newwindow")
-                result.push(action)
-        }
-
-        return result
-    }
-
     function iconSourceForApp(appId) {
         const desktopEntry = root.desktopEntryForApp(appId)
 

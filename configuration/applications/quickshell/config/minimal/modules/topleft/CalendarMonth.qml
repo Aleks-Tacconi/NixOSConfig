@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import "../../theme"
 import "../frame" as Frame
 
@@ -71,21 +72,26 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        Row {
+        RowLayout {
             id: monthHeader
 
             width: parent.width
-            height: 24
-            spacing: Theme.gap * 3
+            height: 30
+            spacing: Theme.gap * 2
 
-            Text {
-                width: 52
-                anchors.verticalCenter: parent.verticalCenter
-                text: "‹ Prev"
-                color: previousMonth.containsMouse ? Theme.red : Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-                font.bold: true
+            Rectangle {
+                Layout.preferredWidth: 30
+                Layout.preferredHeight: 30
+                radius: Theme.surfaceRadius
+                color: previousMonth.containsMouse ? Theme.panelSurfaceHover : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "‹"
+                    color: previousMonth.containsMouse ? Theme.fg : Theme.muted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize + 3
+                }
 
                 MouseArea {
                     id: previousMonth
@@ -99,25 +105,30 @@ Item {
             }
 
             Text {
-                width: parent.width - 52 - 56 - 52 - parent.spacing * 3
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.fillWidth: true
                 text: Qt.formatDateTime(root.visibleMonth, "MMMM yyyy")
-                color: Theme.red
+                color: Theme.fg
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelBodySize
+                font.pixelSize: Theme.panelBodySize + 1
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
-            Text {
-                width: 56
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Today"
-                color: todayButton.containsMouse ? Theme.red : Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-                font.bold: true
-                horizontalAlignment: Text.AlignHCenter
+            Rectangle {
+                Layout.preferredWidth: 54
+                Layout.preferredHeight: 28
+                radius: Theme.surfaceRadius
+                color: todayButton.containsMouse ? Theme.panelSurfaceHover : Theme.panelSurface
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "Today"
+                    color: Theme.fg
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.panelCaptionSize
+                    font.bold: true
+                }
 
                 MouseArea {
                     id: todayButton
@@ -130,15 +141,19 @@ Item {
                 }
             }
 
-            Text {
-                width: 52
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Next ›"
-                color: nextMonth.containsMouse ? Theme.red : Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-                font.bold: true
-                horizontalAlignment: Text.AlignRight
+            Rectangle {
+                Layout.preferredWidth: 30
+                Layout.preferredHeight: 30
+                radius: Theme.surfaceRadius
+                color: nextMonth.containsMouse ? Theme.panelSurfaceHover : "transparent"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "›"
+                    color: nextMonth.containsMouse ? Theme.fg : Theme.muted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize + 3
+                }
 
                 MouseArea {
                     id: nextMonth
@@ -211,43 +226,43 @@ Item {
                     width: (calendarGrid.width - calendarGrid.columnSpacing * 6) / 7
                     height: (calendarGrid.height - calendarGrid.rowSpacing * 5) / 6
                     clip: true
-                    color: selected || dayMouse.containsMouse ? Theme.panelSurfaceHover : (today ? Theme.panelSurface : "transparent")
-                    border.width: 0
-                    radius: selected || today || dayMouse.containsMouse ? Theme.surfaceRadius : 0
+                    color: selected ? Theme.panelSurfaceHover : (dayMouse.containsMouse ? Theme.panelSurface : "transparent")
+                    border.width: today && !selected ? 1 : 0
+                    border.color: Theme.popupBorder
+                    radius: Theme.cardRadius
                     opacity: currentMonthDay ? 1 : 0.22
 
                     Text {
                         id: dayNumber
 
-                        anchors {
-                            top: parent.top
-                            left: parent.left
-                        topMargin: 5
-                        leftMargin: 5
-                    }
-
-                        text: parent.currentMonthDay ? String(parent.day).padStart(2, "0") : ""
-                        color: parent.today || parent.eventDay || parent.selected ? Theme.red : Theme.muted
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: parent.eventDay ? -3 : 0
+                        text: parent.currentMonthDay ? String(parent.day) : ""
+                        color: parent.selected || parent.today ? Theme.fg : Theme.muted
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelCaptionSize
+                        font.pixelSize: Theme.panelMetaSize
                         font.bold: parent.today || parent.selected
                     }
 
-                    Text {
+                    Row {
                         anchors {
-                            left: parent.left
-                            top: dayNumber.bottom
-                            leftMargin: 5
-                            topMargin: 1
+                            horizontalCenter: parent.horizontalCenter
+                            bottom: parent.bottom
+                            bottomMargin: 5
                         }
-
                         visible: parent.eventDay
-                        text: "󰃭 x" + parent.eventCount
-                        color: Theme.fg
-                        opacity: 0.82
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelCaptionSize
-                        font.bold: true
+                        spacing: 3
+
+                        Repeater {
+                            model: Math.min(parent.parent.eventCount, 3)
+
+                            Rectangle {
+                                width: 3
+                                height: 3
+                                radius: 2
+                                color: parent.parent.selected ? Theme.fg : Theme.redTwo
+                            }
+                        }
                     }
 
                     MouseArea {
@@ -268,10 +283,13 @@ Item {
             id: selectedStrip
 
             width: parent.width
-            height: 112
+            height: 168
 
             Column {
-                anchors.fill: parent
+                anchors {
+                    fill: parent
+                    topMargin: Theme.gap * 3
+                }
 
                 spacing: Theme.gap
 
@@ -288,7 +306,7 @@ Item {
                 Flickable {
                     id: agendaList
 
-                    width: parent.width
+                    width: parent.width - Theme.gap * 2
                     height: parent.height - selectedDayLabel.height - parent.spacing
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
@@ -312,11 +330,14 @@ Item {
 
                         Text {
                             width: parent.width
+                            height: 48
                             visible: root.hasSelection && root.selectedEvents.length === 0
-                            text: "No events"
+                            text: "No events scheduled"
                             color: Theme.muted
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.panelMetaSize
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
                         }
 
                         Repeater {
@@ -328,22 +349,54 @@ Item {
                                 required property var modelData
 
                                 width: parent.width
-                                height: Theme.panelRowHeight
+                                height: 48
                                 radius: Theme.surfaceRadius
-                                color: eventMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
+                                color: eventMouse.containsMouse ? Theme.panelSurfaceHover : Theme.panelSurface
+
+                                Column {
+                                    id: eventTime
+
+                                    anchors {
+                                        left: parent.left
+                                        leftMargin: Theme.gap * 3
+                                        verticalCenter: parent.verticalCenter
+                                    }
+                                    width: 54
+                                    spacing: 1
+
+                                    Text {
+                                        width: parent.width
+                                        text: eventRow.modelData.startTime.length > 0 ? eventRow.modelData.startTime : "All day"
+                                        color: Theme.redTwo
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.panelCaptionSize
+                                        font.bold: true
+                                    }
+
+                                    Text {
+                                        width: parent.width
+                                        visible: eventRow.modelData.endTime.length > 0
+                                        text: eventRow.modelData.endTime
+                                        color: Theme.muted
+                                        opacity: 0.7
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.panelCaptionSize
+                                    }
+                                }
 
                                 Text {
                                     anchors {
-                                        left: parent.left
+                                        left: eventTime.right
                                         right: eventArrow.left
                                         verticalCenter: parent.verticalCenter
                                         leftMargin: Theme.gap * 2
-                                        rightMargin: Theme.gap
+                                        rightMargin: Theme.gap * 2
                                     }
-                                    text: eventRow.modelData.startTime.length > 0 ? `${eventRow.modelData.startTime} · ${eventRow.modelData.title}` : eventRow.modelData.title
+                                    text: eventRow.modelData.title
                                     color: Theme.fg
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.panelMetaSize
+                                    font.weight: Font.Medium
                                     maximumLineCount: 1
                                     elide: Text.ElideRight
                                     textFormat: Text.PlainText
@@ -374,6 +427,16 @@ Item {
                             }
                         }
                     }
+                }
+
+                Frame.PanelScrollIndicator {
+                    anchors {
+                        top: agendaList.top
+                        right: parent.right
+                        bottom: agendaList.bottom
+                        rightMargin: 1
+                    }
+                    flickable: agendaList
                 }
             }
         }

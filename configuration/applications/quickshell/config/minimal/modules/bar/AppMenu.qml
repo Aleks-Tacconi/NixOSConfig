@@ -72,6 +72,7 @@ Item {
         ?? root.actionRequest?.desktopEntry
         ?? root.lookupDesktopEntry(root.appId)
     readonly property var actionItems: root.actionPresentation?.actionItems ?? []
+    readonly property bool hasActionRows: root.actionItems.length > 0 || root.hasNativeMenu
     readonly property bool actionInteractionHovered: identityMouse.containsMouse
         || triggerBridgeHover.hovered
         || actionsPanel.panelHovered
@@ -254,6 +255,50 @@ Item {
     function actionKeys(title, actionId) {
         const shortId = String(actionId ?? "").split(".").pop();
         return [root.actionKey(title), root.actionKey(shortId)].filter(key => key.length > 0);
+    }
+
+    function actionGlyph(title) {
+        const key = root.actionKey(title);
+        if (key.includes("incognito") || key.includes("private"))
+            return "";
+        if (key.includes("new") || key === "open")
+            return "󰐕";
+        if (key.includes("search") || key.includes("find"))
+            return "";
+        if (key.includes("copy"))
+            return "";
+        if (key.includes("paste"))
+            return "";
+        if (key.includes("cut"))
+            return "";
+        if (key.includes("save"))
+            return "";
+        if (key.includes("print"))
+            return "";
+        if (key.includes("settings") || key.includes("preferences"))
+            return "";
+        if (key.includes("refresh") || key.includes("reload"))
+            return "󰑐";
+        if (key.includes("edit"))
+            return "";
+        if (key.includes("view"))
+            return "";
+        if (key.includes("help") || key.includes("about"))
+            return "";
+        if (key.includes("quit") || key.includes("exit") || key.includes("logout"))
+            return "󰍃";
+
+        return "";
+    }
+
+    function actionIconSource(actionIcon, resolveIconName) {
+        const icon = String(actionIcon ?? "");
+        if (icon.length > 0) {
+            const source = resolveIconName ? Quickshell.iconPath(icon, true) : icon;
+            if (source.length > 0)
+                return source;
+        }
+        return "";
     }
 
     function combineActions(desktopActions, gtkActions) {
@@ -838,7 +883,11 @@ Item {
                 autoClose: false
                 dismissOnExit: false
                 length: 280
-                depth: Math.min(root.maxPopupDepth, actionsContent.implicitHeight + Theme.panelPadding * 2)
+                depth: Math.min(root.maxPopupDepth,
+                    actionsContent.implicitHeight
+                        + detailsContent.implicitHeight
+                        + Theme.panelPadding * 2
+                        + (root.hasActionRows ? Theme.panelItemGap : 0))
                 duration: 0
                 backgroundColor: Theme.panelBg
                 curveRadius: Theme.panelRadius
@@ -871,12 +920,16 @@ Item {
                         id: actionsScroll
 
                         anchors {
-                            fill: parent
+                            top: parent.top
+                            left: parent.left
+                            right: parent.right
+                            bottom: detailsSection.top
                             topMargin: Theme.panelPadding
-                            bottomMargin: Theme.panelPadding
-                            leftMargin: Theme.panelPadding + Theme.gap * 2
+                            leftMargin: Theme.panelPadding
                             rightMargin: Theme.panelPadding
+                            bottomMargin: root.hasActionRows ? Theme.panelItemGap : 0
                         }
+                        visible: root.hasActionRows
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
                         contentWidth: width
@@ -887,102 +940,115 @@ Item {
                             id: actionsContent
 
                             width: actionsScroll.width
-                        spacing: Theme.panelItemGap
+                            spacing: Theme.panelItemGap
 
-                        Frame.PanelSectionHeader {
-                            Layout.fillWidth: true
-                            title: root.appName
-                        }
+                            Repeater {
+                                model: root.actionItems
 
-                        Repeater {
-                            model: root.actionItems
+                                Frame.PanelActionRow {
+                                    required property var modelData
 
-                            Frame.PanelActionRow {
-                                required property var modelData
-
-                                Layout.fillWidth: true
-                                label: modelData.title
-                                showTrailing: false
-                                onClicked: {
-                                    if (modelData.kind === "desktop") {
-                                        modelData.desktopAction.execute();
-                                        root.closePresentation();
-                                    } else {
-                                        root.activateGtkAction(modelData.gtkAction);
+                                    Layout.fillWidth: true
+                                    icon: root.actionGlyph(modelData.title)
+                                    iconSource: root.actionIconSource(modelData.desktopAction?.icon, true)
+                                    label: modelData.title
+                                    showTrailing: false
+                                    onClicked: {
+                                        if (modelData.kind === "desktop") {
+                                            modelData.desktopAction.execute();
+                                            root.closePresentation();
+                                        } else {
+                                            root.activateGtkAction(modelData.gtkAction);
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        Repeater {
-                            model: root.hasNativeMenu ? nativeRoot.children : null
+                            Repeater {
+                                model: root.hasNativeMenu ? nativeRoot.children : null
 
-                            Frame.PanelActionRow {
-                                id: nativeActionRow
+                                Frame.PanelActionRow {
+                                    id: nativeActionRow
 
-                                required property var modelData
+                                    required property var modelData
 
-                                Layout.fillWidth: true
-                                visible: !modelData.isSeparator && modelData.text.length > 0
-                                enabled: modelData.enabled
-                                label: modelData.text
-                                showTrailing: modelData.hasChildren
-                                onClicked: {
-                                    const point = mapToItem(null, width, 0);
-                                    root.nativeMenuOpen = true;
-                                    modelData.display(actionsWindow, point.x, point.y);
-                                }
-
-                                Connections {
-                                    target: nativeActionRow.modelData
-                                    ignoreUnknownSignals: true
-
-                                    function onOpened() {
+                                    Layout.fillWidth: true
+                                    visible: !modelData.isSeparator && modelData.text.length > 0
+                                    enabled: modelData.enabled
+                                    icon: root.actionGlyph(modelData.text)
+                                    iconSource: root.actionIconSource(modelData.icon, false)
+                                    label: modelData.text
+                                    showTrailing: modelData.hasChildren
+                                    onClicked: {
+                                        const point = mapToItem(null, width, 0);
                                         root.nativeMenuOpen = true;
+                                        modelData.display(actionsWindow, point.x, point.y);
                                     }
 
-                                    function onClosed() {
-                                        root.nativeMenuOpen = false;
+                                    Connections {
+                                        target: nativeActionRow.modelData
+                                        ignoreUnknownSignals: true
+
+                                        function onOpened() {
+                                            root.nativeMenuOpen = true;
+                                        }
+
+                                        function onClosed() {
+                                            root.nativeMenuOpen = false;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        Text {
-                            Layout.fillWidth: true
-                            visible: !root.hasNativeMenu
-                                && root.actionPresentation !== null
-                                && (root.actionPresentation.unavailable || root.actionItems.length === 0)
-                            color: Theme.muted
-                            horizontalAlignment: Text.AlignHCenter
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelMetaSize
-                            text: root.actionPresentation?.unavailable
-                                ? "Actions unavailable"
-                                : "No actions available"
                         }
+                    }
 
-                        Item {
-                            Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
-                        }
+                    Item {
+                        id: detailsSection
 
-                        Frame.PanelGroupLabel {
-                            Layout.fillWidth: true
-                            title: "Window details"
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            bottom: parent.bottom
+                            leftMargin: Theme.panelPadding
+                            rightMargin: Theme.panelPadding
+                            bottomMargin: Theme.panelPadding
                         }
+                        height: detailsContent.implicitHeight
 
-                        WindowDetails {
-                            Layout.fillWidth: true
-                            windowTitle: root.actionPresentation?.title ?? root.appName
-                            pid: root.activePid > 0 ? String(root.activePid) : "Unknown"
-                            className: root.ipcWindow.class?.length > 0 ? root.ipcWindow.class : root.appId
-                            workspace: root.ipcWindow.workspace?.name?.length > 0
-                                ? root.ipcWindow.workspace.name
-                                : root.ipcWindow.workspace?.id > 0
-                                    ? String(root.ipcWindow.workspace.id)
-                                    : "Unknown"
+                        ColumnLayout {
+                            id: detailsContent
+
+                            width: parent.width
+                            spacing: Theme.gap
+
+                            Item {
+                                visible: root.hasActionRows
+                                Layout.preferredHeight: visible ? Theme.gap * 2 : 0
+                            }
+
+                            WindowDetails {
+                                Layout.fillWidth: true
+                                windowTitle: root.actionPresentation?.title ?? root.appName
+                                pid: root.activePid > 0 ? String(root.activePid) : "Unknown"
+                                className: root.ipcWindow.class?.length > 0 ? root.ipcWindow.class : root.appId
+                                workspace: root.ipcWindow.workspace?.name?.length > 0
+                                    ? root.ipcWindow.workspace.name
+                                    : root.ipcWindow.workspace?.id > 0
+                                        ? String(root.ipcWindow.workspace.id)
+                                        : "Unknown"
+                            }
                         }
+                    }
+
+                    Frame.PanelScrollIndicator {
+                        anchors {
+                            top: actionsScroll.top
+                            right: parent.right
+                            bottom: actionsScroll.bottom
+                            rightMargin: Theme.gap
                         }
+                        flickable: actionsScroll
                     }
                 }
             }

@@ -18,6 +18,7 @@ Item {
     property var popupScreen: null
     property real popupRightMargin: Theme.gap * 2
     property bool menuOpen: false
+    property bool nativeMenuOpen: false
     property real menuProgress: 0
 
     readonly property var trayItems: SystemTray.items.values
@@ -52,7 +53,7 @@ Item {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize + 1
             font.bold: true
-            text: "󰀻"
+            text: "󰍜"
         }
 
         Text {
@@ -117,7 +118,7 @@ Item {
 
                 requestedOpen: root.menuOpen
                 activatorMouseArea: trayMouse
-                dismissOnExit: true
+                dismissOnExit: !root.nativeMenuOpen
                 closeDelay: 200
                 hoverLeaseDuration: 1200
                 duration: 180
@@ -166,6 +167,25 @@ Item {
                             id: trayRow
 
                             required property SystemTrayItem modelData
+
+                            QsMenuAnchor {
+                                id: trayMenuAnchor
+
+                                menu: trayRow.modelData.menu
+                                anchor.item: trayRow
+                                anchor.edges: Edges.Top | Edges.Right
+                                anchor.gravity: Edges.Bottom | Edges.Right
+                                anchor.adjustment: PopupAdjustment.All
+
+                                onOpened: root.nativeMenuOpen = true
+                                onClosed: {
+                                    root.nativeMenuOpen = false;
+                                    Qt.callLater(() => {
+                                        if (!trayPanel.panelHovered && !trayMouse.containsMouse)
+                                            root.menuOpen = false;
+                                    });
+                                }
+                            }
 
                             Layout.fillWidth: true
                             Layout.preferredHeight: 38
@@ -232,9 +252,10 @@ Item {
                                         return;
                                     }
 
-                                    if (mouse.button === Qt.RightButton || trayRow.modelData.onlyMenu) {
-                                        const point = trayRow.mapToItem(null, trayRow.width, 0);
-                                        trayRow.modelData.display(trayWindow, point.x, point.y);
+                                    if ((mouse.button === Qt.RightButton || trayRow.modelData.onlyMenu)
+                                            && trayRow.modelData.hasMenu) {
+                                        root.nativeMenuOpen = true;
+                                        trayMenuAnchor.open();
                                         return;
                                     }
 

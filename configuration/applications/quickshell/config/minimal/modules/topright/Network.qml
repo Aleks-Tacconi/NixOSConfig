@@ -170,7 +170,12 @@ Item {
                 Layout.preferredHeight: visible ? (root.service.errorText.length > 0 ? 132 : 184) : 0
 
                 Flickable {
-                    anchors.fill: parent
+                    id: networksScroll
+
+                    anchors {
+                        fill: parent
+                        rightMargin: Theme.gap * 2
+                    }
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     contentWidth: width
@@ -209,6 +214,16 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
                     }
+                }
+
+                Frame.PanelScrollIndicator {
+                    anchors {
+                        top: parent.top
+                        right: parent.right
+                        bottom: parent.bottom
+                        rightMargin: 1
+                    }
+                    flickable: networksScroll
                 }
             }
 

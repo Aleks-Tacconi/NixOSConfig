@@ -25,6 +25,8 @@ Item {
     property real sysfsBatteryRateWattsValue: 0
     property real popupRightMargin: Theme.gap * 2
     property string openPopup: ""
+    readonly property real audioPopupHeight: audioView.playerCount > 0 ? 480 : 280
+    readonly property real networkPopupHeight: 500
     readonly property bool audioOpen: root.openPopup === "audio"
     readonly property bool networkOpen: root.openPopup === "network"
     readonly property bool batteryOpen: root.openPopup === "battery"
@@ -34,8 +36,6 @@ Item {
     readonly property var laptopBattery: laptopBatteryDevice()
     readonly property bool hasBattery: laptopBattery !== null || sysfsBatteryPresent
     readonly property int batteryPercent: Math.round(laptopBattery !== null ? laptopBattery.percentage * 100 : sysfsBatteryPercentValue)
-    readonly property real audioPanelHeight: Math.min(560, Math.max(220, audioView.implicitHeight + Theme.panelPadding * 2))
-    readonly property real networkPanelHeight: Math.min(500, Math.max(260, networkView.implicitHeight + Theme.panelPadding * 2))
     readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
 
     onNetworkOpenChanged: {
@@ -453,7 +453,7 @@ Item {
                 onDismissRequested: root.closePopup("audio")
 
                 length: 340
-                depth: root.audioPanelHeight
+                depth: root.audioPopupHeight
                 duration: 180
 
                 backgroundColor: Theme.panelBg
@@ -464,9 +464,7 @@ Item {
                     right: parent.right
                 }
 
-                Flickable {
-                    id: audioContent
-
+                Item {
                     anchors {
                         fill: parent
                         topMargin: Theme.panelPadding
@@ -475,15 +473,15 @@ Item {
                         bottomMargin: Theme.panelPadding
                     }
                     clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    contentWidth: width
-                    contentHeight: audioView.implicitHeight
-                    interactive: contentHeight > height
 
                     Media {
                         id: audioView
 
-                        width: parent.width
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            right: parent.right
+                        }
                     }
                 }
             }
@@ -534,7 +532,7 @@ Item {
                 onDismissRequested: root.closePopup("network")
 
                 length: 360
-                depth: root.networkPanelHeight
+                depth: root.networkPopupHeight
                 duration: 150
 
                 backgroundColor: Theme.panelBg
@@ -545,9 +543,7 @@ Item {
                     right: parent.right
                 }
 
-                Flickable {
-                    id: networkContent
-
+                Item {
                     anchors {
                         fill: parent
                         topMargin: Theme.panelPadding
@@ -556,15 +552,11 @@ Item {
                         bottomMargin: Theme.panelPadding
                     }
                     clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    contentWidth: width
-                    contentHeight: networkView.implicitHeight
-                    interactive: networkView.editing && contentHeight > height
 
                     Network {
                         id: networkView
 
-                        width: parent.width
+                        anchors.fill: parent
                         open: root.networkOpen
                         service: root.networkService
                     }

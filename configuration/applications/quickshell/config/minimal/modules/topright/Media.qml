@@ -147,66 +147,95 @@ Item {
             title: "Output device"
         }
 
-        Column {
-            id: deviceList
-
+        Item {
             Layout.fillWidth: true
-            spacing: Theme.gap
+            Layout.preferredHeight: Math.min(104, Math.max(Theme.panelRowHeight, deviceList.implicitHeight))
 
-            Repeater {
-                model: root.outputDevices
+            Flickable {
+                id: deviceScroll
 
-                Rectangle {
-                    required property var modelData
+                anchors {
+                    fill: parent
+                    rightMargin: Theme.gap * 2
+                }
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                contentWidth: width
+                contentHeight: deviceList.implicitHeight
+                interactive: contentHeight > height
 
-                    width: deviceList.width
-                    height: Theme.panelRowHeight
-                    radius: Theme.surfaceRadius
-                    color: modelData === root.defaultSink ? Theme.panelSurfaceHover : (deviceMouse.containsMouse ? Theme.panelSurface : "transparent")
+                Column {
+                    id: deviceList
 
-                    RowLayout {
-                        anchors {
-                            fill: parent
-                            leftMargin: Theme.gap * 2
-                            rightMargin: Theme.gap * 2
-                        }
-                        spacing: Theme.gap * 2
+                    width: deviceScroll.width
+                    spacing: Theme.gap
 
-                        Text {
-                            Layout.fillWidth: true
-                            text: root.deviceName(modelData)
-                            elide: Text.ElideRight
-                            color: Theme.fg
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelMetaSize
-                        }
+                    Repeater {
+                        model: root.outputDevices
 
-                        Text {
-                            visible: modelData === root.defaultSink
-                            text: "Current"
-                            color: Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelCaptionSize
+                        Rectangle {
+                            required property var modelData
+
+                            width: deviceList.width
+                            height: Theme.panelRowHeight
+                            radius: Theme.surfaceRadius
+                            color: modelData === root.defaultSink ? Theme.panelSurfaceHover : (deviceMouse.containsMouse ? Theme.panelSurface : "transparent")
+
+                            RowLayout {
+                                anchors {
+                                    fill: parent
+                                    leftMargin: Theme.gap * 2
+                                    rightMargin: Theme.gap * 2
+                                }
+                                spacing: Theme.gap * 2
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: root.deviceName(modelData)
+                                    elide: Text.ElideRight
+                                    color: Theme.fg
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.panelMetaSize
+                                }
+
+                                Text {
+                                    visible: modelData === root.defaultSink
+                                    text: "Current"
+                                    color: Theme.muted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.panelCaptionSize
+                                }
+                            }
+
+                            MouseArea {
+                                id: deviceMouse
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                            }
                         }
                     }
 
-                    MouseArea {
-                        id: deviceMouse
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                    Text {
+                        visible: root.outputDevices.length === 0
+                        text: "No output devices"
+                        color: Theme.muted
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.panelMetaSize
                     }
                 }
             }
 
-            Text {
-                visible: root.outputDevices.length === 0
-                text: "No output devices"
-                color: Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
+            Frame.PanelScrollIndicator {
+                anchors {
+                    top: parent.top
+                    right: parent.right
+                    bottom: parent.bottom
+                    rightMargin: 1
+                }
+                flickable: deviceScroll
             }
         }
 

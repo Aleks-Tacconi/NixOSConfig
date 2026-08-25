@@ -48,8 +48,8 @@ Item {
                 Layout.fillWidth: true
                 title: "Now playing"
                 detail: root.playerCount > 1
-                    ? `${root.player?.identity || "Media"} · ${Math.min(root.selectedPlayerIndex + 1, root.playerCount)}/${root.playerCount}`
-                    : (root.player?.identity || "Media")
+                    ? `${root.player?.isPlaying ? "Playing" : "Paused"} · ${Math.min(root.selectedPlayerIndex + 1, root.playerCount)}/${root.playerCount}`
+                    : (root.player?.isPlaying ? "Playing" : "Paused")
             }
 
             MediaControlButton {
@@ -60,78 +60,94 @@ Item {
             }
         }
 
-        RowLayout {
+        Rectangle {
             Layout.fillWidth: true
-            spacing: Theme.gap * 3
+            Layout.preferredHeight: 88
+            radius: Theme.cardRadius
+            color: Theme.panelSurface
+            border.width: 1
+            border.color: Theme.popupInnerEdge
 
-            Rectangle {
-                Layout.preferredWidth: 56
-                Layout.preferredHeight: 56
-                radius: Theme.surfaceRadius
-                color: Theme.panelSurface
-                clip: true
+            RowLayout {
+                anchors {
+                    fill: parent
+                    margins: Theme.gap * 2
+                }
+                spacing: Theme.gap * 3
 
-                Image {
-                    id: artwork
+                Rectangle {
+                    Layout.preferredWidth: 72
+                    Layout.preferredHeight: 72
+                    radius: Theme.cardRadius
+                    color: Theme.bg2
+                    clip: true
 
-                    anchors.fill: parent
-                    source: root.player?.trackArtUrl ?? ""
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
+                    Image {
+                        id: artwork
+
+                        anchors.fill: parent
+                        source: root.player?.trackArtUrl ?? ""
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        visible: artwork.status !== Image.Ready
+                        text: "󰝚"
+                        color: Theme.muted
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize + 8
+                    }
                 }
 
-                Text {
-                    anchors.centerIn: parent
-                    visible: artwork.status !== Image.Ready
-                    text: "󰝚"
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize + 5
-                }
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: Theme.gap
-
-                Text {
+                ColumnLayout {
                     Layout.fillWidth: true
-                    text: root.player?.trackTitle || "No track"
-                    color: Theme.fg
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelBodySize
-                    font.bold: true
-                    elide: Text.ElideRight
-                    textFormat: Text.PlainText
-                }
+                    spacing: 2
 
-                Text {
-                    Layout.fillWidth: true
-                    text: root.player?.trackArtist || "Unknown artist"
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelMetaSize
-                    elide: Text.ElideRight
-                    textFormat: Text.PlainText
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.player?.trackTitle || "No track"
+                        color: Theme.fg
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.panelBodySize + 1
+                        font.bold: true
+                        elide: Text.ElideRight
+                        textFormat: Text.PlainText
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.player?.trackArtist || "Unknown artist"
+                        color: Theme.redTwo
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.panelMetaSize
+                        elide: Text.ElideRight
+                        textFormat: Text.PlainText
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        visible: text.length > 0
+                        text: root.player?.trackAlbum ?? ""
+                        color: Theme.muted
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.panelCaptionSize
+                        elide: Text.ElideRight
+                        textFormat: Text.PlainText
+                    }
                 }
             }
         }
 
-        RowLayout {
+        ColumnLayout {
             Layout.fillWidth: true
-            spacing: Theme.gap * 2
-
-            Text {
-                text: root.formatTime(root.trackPositionSec)
-                color: Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelCaptionSize
-            }
+            spacing: Theme.gap
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 8
-                radius: 4
+                Layout.preferredHeight: 4
+                radius: 2
                 color: Theme.bg2
 
                 Rectangle {
@@ -145,9 +161,9 @@ Item {
                     visible: (root.player?.canSeek ?? false) && (root.player?.positionSupported ?? false) && (root.player?.lengthSupported ?? false) && root.trackLengthSec > 0
                     anchors.verticalCenter: parent.verticalCenter
                     x: Math.max(0, Math.min(parent.width - width, parent.width * root.trackPositionSec / root.trackLengthSec - width / 2))
-                    width: 10
-                    height: 10
-                    radius: 5
+                    width: 8
+                    height: 8
+                    radius: 4
                     color: Theme.fg
                 }
 
@@ -172,11 +188,26 @@ Item {
                 }
             }
 
-            Text {
-                text: root.formatTime(root.trackLengthSec)
-                color: Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelCaptionSize
+            RowLayout {
+                Layout.fillWidth: true
+
+                Text {
+                    text: root.formatTime(root.trackPositionSec)
+                    color: Theme.muted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.panelCaptionSize
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                Text {
+                    text: root.formatTime(root.trackLengthSec)
+                    color: Theme.muted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.panelCaptionSize
+                }
             }
         }
 
@@ -189,12 +220,14 @@ Item {
             }
 
             MediaControlButton {
+                controlSize: 36
                 icon: "󰒮"
                 enabled: root.player?.canGoPrevious ?? false
                 onClicked: root.player.previous()
             }
 
             MediaControlButton {
+                controlSize: 44
                 icon: root.player?.isPlaying ? "󰏤" : "󰐊"
                 primary: true
                 enabled: root.player?.canTogglePlaying ?? false
@@ -202,6 +235,7 @@ Item {
             }
 
             MediaControlButton {
+                controlSize: 36
                 icon: "󰒭"
                 enabled: root.player?.canGoNext ?? false
                 onClicked: root.player.next()

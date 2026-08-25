@@ -15,6 +15,7 @@ ColumnLayout {
     required property var appGroup
     required property var dataSource
     property bool previewsActive: false
+    property real maxPreviewHeight: 280
 
     readonly property string appId: root.appGroup?.appId ?? ""
     readonly property string appName: root.dataSource.appNameForApp(root.appId)
@@ -22,7 +23,6 @@ ColumnLayout {
     readonly property bool pinned: root.dataSource.isPinned(root.appId)
     readonly property bool canLaunch: root.dataSource.desktopEntryForApp(root.appId) !== null
     readonly property string iconSource: root.dataSource.iconSourceForApp(root.appId)
-    readonly property var desktopActions: root.dataSource.desktopActionsForApp(root.appId)
 
     signal dismissRequested
 
@@ -66,6 +66,7 @@ ColumnLayout {
     Frame.PanelActionRow {
         visible: root.canLaunch
         Layout.fillWidth: true
+        backgroundEnabled: false
         label: root.windowCount > 0 ? "New window" : "Open"
         icon: "󰐕"
         showTrailing: false
@@ -75,28 +76,11 @@ ColumnLayout {
         }
     }
 
-    Repeater {
-        model: root.desktopActions
-
-        Frame.PanelActionRow {
-            required property var modelData
-
-            Layout.fillWidth: true
-            label: modelData.name
-            icon: "󰘳"
-            showTrailing: false
-            onClicked: {
-                modelData.execute();
-                root.dismissRequested();
-            }
-        }
-    }
-
     Frame.PanelActionRow {
         Layout.fillWidth: true
+        backgroundEnabled: false
         label: root.pinned ? "Unpin from dock" : "Pin to dock"
         icon: root.pinned ? "󰐃" : "󰐂"
-        active: root.pinned
         enabled: root.pinned || root.canLaunch
         showTrailing: false
         onClicked: {
@@ -117,25 +101,54 @@ ColumnLayout {
         detail: String(root.windowCount)
     }
 
-    Column {
-        id: windowsColumn
-
+    Item {
         visible: root.windowCount > 0
         Layout.fillWidth: true
-        spacing: Theme.panelItemGap
+        Layout.preferredHeight: visible ? Math.min(root.maxPreviewHeight, windowsColumn.implicitHeight) : 0
 
-        Repeater {
-            model: root.appGroup?.toplevels ?? []
+        Flickable {
+            id: previewScroll
 
-            DockWindowRow {
-                required property var modelData
-
-                width: windowsColumn.width
-                dataSource: root.dataSource
-                toplevel: modelData
-                previewsActive: root.previewsActive
-                onActivated: root.dismissRequested()
+            anchors {
+                fill: parent
+                rightMargin: Theme.gap * 2
             }
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            contentWidth: width
+            contentHeight: windowsColumn.implicitHeight
+            interactive: contentHeight > height
+
+            Column {
+                id: windowsColumn
+
+                width: previewScroll.width
+                spacing: Theme.panelItemGap
+
+                Repeater {
+                    model: root.appGroup?.toplevels ?? []
+
+                    DockWindowRow {
+                        required property var modelData
+
+                        width: windowsColumn.width
+                        dataSource: root.dataSource
+                        toplevel: modelData
+                        previewsActive: root.previewsActive
+                        onActivated: root.dismissRequested()
+                    }
+                }
+            }
+        }
+
+        Frame.PanelScrollIndicator {
+            anchors {
+                top: parent.top
+                right: parent.right
+                bottom: parent.bottom
+                rightMargin: 1
+            }
+            flickable: previewScroll
         }
     }
 }

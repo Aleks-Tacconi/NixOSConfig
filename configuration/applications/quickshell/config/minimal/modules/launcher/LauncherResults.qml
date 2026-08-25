@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import "../frame" as Frame
 import "../../theme"
 
 /**
@@ -36,7 +37,10 @@ Item {
     Flickable {
         id: resultList
 
-        anchors.fill: parent
+        anchors {
+            fill: parent
+            rightMargin: Theme.gap * 2
+        }
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         contentWidth: width
@@ -96,5 +100,15 @@ Item {
                 }
             }
         }
+    }
+
+    Frame.PanelScrollIndicator {
+        anchors {
+            top: parent.top
+            right: parent.right
+            bottom: parent.bottom
+            rightMargin: 1
+        }
+        flickable: resultList
     }
 }

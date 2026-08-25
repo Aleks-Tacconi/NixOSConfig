@@ -192,22 +192,21 @@ Item {
                 right: parent.right
             }
 
-            Flickable {
+            Item {
                 anchors {
                     fill: parent
                     margins: root.pulloutPadding
                 }
-
                 clip: true
-                boundsBehavior: Flickable.StopAtBounds
-                contentWidth: width
-                contentHeight: appPanel.implicitHeight
-                interactive: contentHeight > height
 
                 DockAppPanel {
                     id: appPanel
 
-                    width: parent.width
+                    anchors {
+                        top: parent.top
+                        left: parent.left
+                        right: parent.right
+                    }
                     appGroup: root.displayedApp ?? ({
                             appId: "",
                             toplevels: []

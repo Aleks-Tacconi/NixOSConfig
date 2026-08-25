@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Widgets
 import "../../theme"
 
 /**
@@ -11,7 +12,9 @@ Rectangle {
     required property string label
 
     property string icon: ""
+    property string iconSource: ""
     property bool active: false
+    property bool backgroundEnabled: true
     property color accentColor: Theme.red
     property string detailText: ""
     property string trailingText: "›"
@@ -25,7 +28,9 @@ Rectangle {
     implicitHeight: Theme.panelRowHeight
     height: implicitHeight
     radius: Theme.surfaceRadius
-    color: root.hovered && root.enabled ? Theme.panelSurfaceHover : (root.active && root.enabled ? Theme.panelSurface : "transparent")
+    color: root.backgroundEnabled
+        ? (root.hovered && root.enabled ? Theme.panelSurfaceHover : (root.active && root.enabled ? Theme.panelSurface : "transparent"))
+        : "transparent"
     opacity: root.enabled ? 1 : 0.45
 
     Behavior on color {
@@ -43,9 +48,16 @@ Rectangle {
 
         spacing: Theme.gap * 2
 
+        IconImage {
+            visible: root.iconSource.length > 0
+            Layout.preferredWidth: Theme.fontSize + 10
+            Layout.preferredHeight: Theme.fontSize + 10
+            source: root.iconSource
+        }
+
         Text {
             Layout.preferredWidth: Theme.fontSize + 10
-            visible: root.icon.length > 0
+            visible: root.iconSource.length === 0 && root.icon.length > 0
             horizontalAlignment: Text.AlignHCenter
             color: !root.enabled ? Theme.muted : (root.active || root.hovered ? root.accentColor : Theme.muted)
             font.family: Theme.fontFamily
@@ -58,6 +70,7 @@ Rectangle {
             color: !root.enabled ? Theme.muted : (root.active || root.hovered ? Theme.fg : Theme.muted)
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelMetaSize
+            horizontalAlignment: Text.AlignLeft
             elide: Text.ElideRight
             text: root.label
         }

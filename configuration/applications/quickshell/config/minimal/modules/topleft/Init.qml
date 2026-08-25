@@ -373,7 +373,10 @@ Item {
                                 ListView {
                                     id: notificationsList
 
-                                    anchors.fill: parent
+                                    anchors {
+                                        fill: parent
+                                        rightMargin: Theme.gap * 2
+                                    }
                                     spacing: Theme.gap
                                     clip: true
                                     boundsBehavior: Flickable.StopAtBounds
@@ -389,18 +392,14 @@ Item {
                                     }
                                 }
 
-                                Rectangle {
-                                    visible: notificationsList.contentHeight > notificationsList.height
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 1
-                                    y: notificationsList.contentHeight > notificationsList.height
-                                        ? (parent.height - height) * notificationsList.contentY / (notificationsList.contentHeight - notificationsList.height)
-                                        : 0
-                                    width: 2
-                                    height: Math.max(28, parent.height * parent.height / notificationsList.contentHeight)
-                                    radius: 1
-                                    color: Theme.fg
-                                    opacity: 0.34
+                                Frame.PanelScrollIndicator {
+                                    anchors {
+                                        top: parent.top
+                                        right: parent.right
+                                        bottom: parent.bottom
+                                        rightMargin: 1
+                                    }
+                                    flickable: notificationsList
                                 }
                             }
                         }
@@ -556,7 +555,7 @@ Item {
 
                     Rectangle {
                         width: parent.width
-                        height: 430
+                        height: 500
                         color: "transparent"
                         clip: true
 
