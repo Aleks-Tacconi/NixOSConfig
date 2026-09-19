@@ -15,6 +15,7 @@ Rectangle {
     property string iconSource: ""
     property bool active: false
     property bool backgroundEnabled: true
+    property bool busy: false
     property color accentColor: Theme.red
     property string detailText: ""
     property string trailingText: "›"
@@ -76,7 +77,7 @@ Rectangle {
         }
 
         Text {
-            visible: root.detailText.length > 0
+            visible: !root.busy && root.detailText.length > 0
             color: root.active && root.enabled ? root.accentColor : Theme.muted
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelMetaSize
@@ -84,8 +85,15 @@ Rectangle {
             text: root.detailText
         }
 
+        PanelSpinner {
+            visible: root.busy
+            Layout.preferredWidth: 14
+            Layout.preferredHeight: 14
+            spinnerSize: 14
+        }
+
         Text {
-            visible: root.showTrailing
+            visible: !root.busy && root.showTrailing
             color: root.hovered && root.enabled ? root.accentColor : Theme.muted
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSize

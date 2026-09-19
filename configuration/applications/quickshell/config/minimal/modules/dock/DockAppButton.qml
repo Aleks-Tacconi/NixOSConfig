@@ -62,7 +62,6 @@ Item {
         height: 24
         anchors {
             centerIn: parent
-            verticalCenterOffset: -2
         }
 
         IconImage {

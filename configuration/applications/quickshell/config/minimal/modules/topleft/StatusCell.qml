@@ -82,7 +82,7 @@ Item {
             Layout.preferredWidth: root.labelOverflowing ? root.labelMaxWidth : labelText.implicitWidth
             Layout.preferredHeight: labelText.implicitHeight
             Layout.alignment: Qt.AlignVCenter
-            clip: root.labelOverflowing
+            clip: true
 
             Text {
                 id: labelText
@@ -98,6 +98,7 @@ Item {
                 SequentialAnimation on x {
                     running: root.labelOverflowing
                     loops: Animation.Infinite
+                    onStopped: labelText.x = 0
 
                     PauseAnimation {
                         duration: 900

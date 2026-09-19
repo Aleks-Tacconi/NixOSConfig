@@ -15,6 +15,7 @@ Item {
     id: root
 
     property var popupScreen: null
+    property real popupRightMargin: Theme.gap * 4
     property real indicatorSize: 24
     property real menuPadding: Theme.panelPadding
     property real actionButtonWidth: 220
@@ -128,7 +129,7 @@ Item {
 
         margins {
             top: Theme.barHeight + Theme.popupGap
-            right: Theme.gap * 4
+            right: root.popupRightMargin
         }
 
         Item {

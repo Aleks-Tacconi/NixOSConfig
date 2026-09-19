@@ -33,6 +33,9 @@ in
   # Home Manager maps qtct to qt5ct, but KDE Connect uses Qt 6.
   home.sessionVariables.QT_QPA_PLATFORMTHEME = lib.mkForce "qt6ct";
 
+  home.file.".config/kdeglobals".source =
+    "${pkgs.kdePackages.breeze}/share/color-schemes/BreezeDark.colors";
+
   home.pointerCursor = {
     gtk.enable = true;
     package = pkgs.bibata-cursors;
@@ -91,11 +94,6 @@ in
         standard_dialogs = "xdgdesktopportal";
         style = "kvantum";
       };
-    };
-    kde.settings.kdeglobals = {
-      General.ColorScheme = "BreezeDark";
-      Icons.Theme = iconThemeName;
-      KDE.widgetStyle = "kvantum";
     };
   };
 

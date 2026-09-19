@@ -33,7 +33,6 @@ Item {
     property var deferredGtkResult: null
     property var pendingActivationRequest: null
     property int pendingNativeProbePid: 0
-    property bool nativeMenuOpen: false
     property bool actionOpenRequested: false
     property bool presentationReusable: false
 
@@ -76,7 +75,6 @@ Item {
     readonly property bool actionInteractionHovered: identityMouse.containsMouse
         || triggerBridgeHover.hovered
         || actionsPanel.panelHovered
-        || root.nativeMenuOpen
     readonly property string appName: root.actionPresentation?.appName
         ?? root.actionRequest?.appName
         ?? root.entryName(root.desktopEntry, root.appId)
@@ -97,6 +95,8 @@ Item {
 
     onActionStateChanged: {
         actionHoverClose.stop();
+        if (root.actionsOpen)
+            nativeMenuView.reset();
         if (root.actionsOpen && !root.actionInteractionHovered)
             actionHoverClose.restart();
     }
@@ -127,8 +127,7 @@ Item {
 
         function onActiveToplevelChanged() {
             const active = ToplevelManager.activeToplevel;
-            if (!root.nativeMenuOpen
-                    && active !== null && root.actionTarget !== null && active !== root.actionTarget)
+            if (active !== null && root.actionTarget !== null && active !== root.actionTarget)
                 root.invalidateActionTarget();
 
             Qt.callLater(() => root.prefetchActions());
@@ -137,7 +136,7 @@ Item {
 
     function prefetchActions() {
         const active = ToplevelManager.activeToplevel;
-        if (root.nativeMenuOpen || active === null || root.actionsOpen || root.actionState === "closing")
+        if (active === null || root.actionsOpen || root.actionState === "closing")
             return;
         if (root.actionTarget === active && (root.actionResolving || root.actionState === "ready"))
             return;
@@ -756,12 +755,6 @@ Item {
         }
     }
 
-    QsMenuOpener {
-        id: nativeRoot
-
-        menu: root.nativeMenu
-    }
-
     Row {
         id: menuRow
 
@@ -949,6 +942,7 @@ Item {
                                     required property var modelData
 
                                     Layout.fillWidth: true
+                                    visible: nativeMenuView.atRoot
                                     icon: root.actionGlyph(modelData.title)
                                     iconSource: root.actionIconSource(modelData.desktopAction?.icon, true)
                                     label: modelData.title
@@ -964,40 +958,14 @@ Item {
                                 }
                             }
 
-                            Repeater {
-                                model: root.hasNativeMenu ? nativeRoot.children : null
+                            Frame.PanelMenuView {
+                                id: nativeMenuView
 
-                                Frame.PanelActionRow {
-                                    id: nativeActionRow
-
-                                    required property var modelData
-
-                                    Layout.fillWidth: true
-                                    visible: !modelData.isSeparator && modelData.text.length > 0
-                                    enabled: modelData.enabled
-                                    icon: root.actionGlyph(modelData.text)
-                                    iconSource: root.actionIconSource(modelData.icon, false)
-                                    label: modelData.text
-                                    showTrailing: modelData.hasChildren
-                                    onClicked: {
-                                        const point = mapToItem(null, width, 0);
-                                        root.nativeMenuOpen = true;
-                                        modelData.display(actionsWindow, point.x, point.y);
-                                    }
-
-                                    Connections {
-                                        target: nativeActionRow.modelData
-                                        ignoreUnknownSignals: true
-
-                                        function onOpened() {
-                                            root.nativeMenuOpen = true;
-                                        }
-
-                                        function onClosed() {
-                                            root.nativeMenuOpen = false;
-                                        }
-                                    }
-                                }
+                                visible: root.hasNativeMenu
+                                Layout.fillWidth: true
+                                menu: root.nativeMenu
+                                fallbackIcon: ""
+                                onActivated: root.closePresentation()
                             }
 
                         }

@@ -6,8 +6,22 @@
   ...
 }:
 
+let
+  androidSdk = pkgs.androidenv.composeAndroidPackages {
+    platformVersions = [ "36" ];
+    buildToolsVersions = [ "36.0.0" ];
+
+    includeEmulator = true;
+
+    includeSystemImages = true;
+    systemImageTypes = [ "google_apis" ];
+    abiVersions = [ "x86_64" ];
+  };
+in
 {
   virtualisation.docker.enable = true;
+
+  nixpkgs.config.android_sdk.accept_license = true;
 
   services.tailscale = {
     enable = true;
@@ -23,6 +37,7 @@
   users.users.aleks.extraGroups = [
     "docker"
     "wireshark"
+    "kvm"
   ];
 
   hardware.enableAllFirmware = true;
@@ -41,6 +56,7 @@
   environment.systemPackages = with pkgs; [
     xdg-desktop-portal
     xdg-desktop-portal-gtk
+    androidSdk.androidsdk
     antigravity-cli
   ];
 
@@ -64,11 +80,13 @@
     ../configuration/nixconfig/users.nix
 
     # applications
+    # ../configuration/applications/jellyfin/configuration.nix
+    # ../configuration/applications/emulator/configuration.nix
+    ../configuration/applications/obsstudio/configuration.nix
     ../configuration/applications/opencode/configuration.nix
     ../configuration/applications/chrome/configuration.nix
     ../configuration/applications/gdrive/configuration.nix
     ../configuration/applications/firefox/configuration.nix
-    ../configuration/applications/jellyfin/configuration.nix
     ../configuration/applications/discord/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix
@@ -83,7 +101,6 @@
     ../configuration/applications/mediaplayer/configuration.nix
     ../configuration/applications/nvim/configuration.nix
     ../configuration/applications/obsidian/configuration.nix
-    ../configuration/applications/obsstudio/configuration.nix
     ../configuration/applications/qbittorrent/configuration.nix
     ../configuration/applications/spotify/configuration.nix
     ../configuration/applications/syncthing/configuration.nix

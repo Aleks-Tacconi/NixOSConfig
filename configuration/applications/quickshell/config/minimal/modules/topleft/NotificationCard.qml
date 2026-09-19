@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import "../../theme"
@@ -56,13 +57,15 @@ Rectangle {
         }
         spacing: Theme.gap * 2
 
-        Row {
+        RowLayout {
             width: parent.width
             spacing: Theme.gap * 2
 
             Rectangle {
-                width: 42
-                height: 42
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+                Layout.alignment: Qt.AlignTop
+                Layout.topMargin: 2
                 radius: Theme.surfaceRadius
                 color: "transparent"
                 clip: true
@@ -79,8 +82,8 @@ Rectangle {
 
                 IconImage {
                     anchors.centerIn: parent
-                    width: 26
-                    height: 26
+                    width: 24
+                    height: 24
                     source: root.appIconSource
                     visible: notificationImage.status !== Image.Ready && root.appIconSource.length > 0
                 }
@@ -96,12 +99,14 @@ Rectangle {
                 }
             }
 
-            Column {
-                width: parent.width - 42 - closeButton.width - parent.spacing * 2
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.alignment: Qt.AlignTop
                 spacing: Theme.gap * 0.6
 
                 Text {
-                    width: parent.width
+                    Layout.fillWidth: true
                     text: root.critical ? `${root.notification?.appName || "App"} · Critical` : (root.notification?.appName || "App")
                     color: root.critical ? Theme.fg : Theme.muted
                     font.family: Theme.fontFamily
@@ -113,7 +118,7 @@ Rectangle {
                 }
 
                 Text {
-                    width: parent.width
+                    Layout.fillWidth: true
                     text: root.notification?.summary || "Notification"
                     color: Theme.fg
                     font.family: Theme.fontFamily
@@ -126,7 +131,7 @@ Rectangle {
                 }
 
                 Text {
-                    width: parent.width
+                    Layout.fillWidth: true
                     visible: (root.notification?.body || "").length > 0
                     text: root.notification?.body || ""
                     color: Theme.fg
@@ -143,8 +148,9 @@ Rectangle {
             Rectangle {
                 id: closeButton
 
-                width: 32
-                height: 32
+                Layout.preferredWidth: 28
+                Layout.preferredHeight: 28
+                Layout.alignment: Qt.AlignTop
                 radius: Theme.surfaceRadius
                 color: closeMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
 

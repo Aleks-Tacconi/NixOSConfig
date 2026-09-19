@@ -137,6 +137,7 @@ ColumnLayout {
 
                 Text {
                     anchors.centerIn: parent
+                    visible: !(root.busy && modelData.submit)
                     text: modelData.label
                     color: root.secured === modelData.secured ? Theme.fg : Theme.muted
                     font.family: Theme.fontFamily
@@ -264,6 +265,12 @@ ColumnLayout {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelMetaSize
                     font.bold: modelData.submit
+                }
+
+                Frame.PanelSpinner {
+                    visible: root.busy && modelData.submit
+                    anchors.centerIn: parent
+                    spinnerSize: 15
                 }
 
                 MouseArea {

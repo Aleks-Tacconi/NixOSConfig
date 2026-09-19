@@ -33,6 +33,19 @@ let
   };
   modKey = key: lua ''mod .. " + ${key}"'';
   quickshellCfg = osConfig.desktop.quickshell;
+  workspaceRules = builtins.genList (
+    i:
+    let
+      workspace = i + 1;
+      monitorIndex = if workspace <= 5 then 1 else 0;
+      monitor = builtins.elemAt config.wayland.windowManager.hyprland.settings.monitor monitorIndex;
+    in
+    {
+      workspace = toString workspace;
+      monitor = monitor.output;
+    }
+    // lib.optionalAttrs (workspace == 1 || workspace == 6) { default = true; }
+  ) 10;
 in
 {
   home.packages = with pkgs; [
@@ -114,7 +127,7 @@ in
             (mkBind (modKey "code:1${toString i}") "hl.dsp.focus({ workspace = ${toString ws} })")
             (mkBind (modKey "SHIFT + code:1${toString i}") "hl.dsp.window.move({ workspace = ${toString ws} })")
           ]
-        ) 9
+        ) 10
       ))
       ++ [
         (mkMouseBind (modKey "mouse:272") "hl.dsp.window.drag()")
@@ -294,59 +307,20 @@ in
 
       monitor = [
         {
-          output = "HDMI-A-2";
-          mode = "2560x1440@60";
-          position = "auto";
+          output = "eDP-1";
+          mode = "1920x1200@60";
+          position = "0x0";
           scale = 1;
         }
         {
-          output = "eDP-1";
-          mode = "1920x1200@60";
-          position = "auto";
+          output = "DP-2";
+          mode = "1920x1080@60";
+          position = "-1920x0";
           scale = 1;
         }
       ];
 
-      workspace_rule = [
-        {
-          workspace = "1";
-          monitor = "eDP-1";
-          default = true;
-        }
-        {
-          workspace = "2";
-          monitor = "eDP-1";
-        }
-        {
-          workspace = "3";
-          monitor = "eDP-1";
-        }
-        {
-          workspace = "4";
-          monitor = "eDP-1";
-        }
-        {
-          workspace = "5";
-          monitor = "eDP-1";
-        }
-        {
-          workspace = "6";
-          monitor = "eDP-1";
-        }
-        {
-          workspace = "7";
-          monitor = "HDMI-A-2";
-          default = true;
-        }
-        {
-          workspace = "8";
-          monitor = "HDMI-A-2";
-        }
-        {
-          workspace = "9";
-          monitor = "HDMI-A-2";
-        }
-      ];
+      workspace_rule = workspaceRules;
 
       config = {
         animations.enabled = true;

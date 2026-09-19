@@ -213,6 +213,7 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
+            Layout.topMargin: -Theme.gap
             spacing: Theme.gap * 2
 
             Item {

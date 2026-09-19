@@ -10,6 +10,7 @@ Item {
 
     required property string title
     property string detail: ""
+    property bool busy: false
 
     implicitWidth: labelRow.implicitWidth
     implicitHeight: labelRow.implicitHeight + Theme.gap
@@ -37,8 +38,15 @@ Item {
             maximumLineCount: 1
         }
 
+        PanelSpinner {
+            visible: root.busy
+            Layout.preferredWidth: 13
+            Layout.preferredHeight: 13
+            spinnerSize: 13
+        }
+
         Text {
-            visible: root.detail.length > 0
+            visible: !root.busy && root.detail.length > 0
             Layout.maximumWidth: root.width * 0.5
             text: root.detail
             color: Theme.muted

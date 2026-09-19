@@ -13,8 +13,8 @@ Rectangle {
 
     signal clicked
 
-    width: root.controlSize
-    height: root.controlSize
+    implicitWidth: root.controlSize
+    implicitHeight: root.controlSize
     radius: Theme.surfaceRadius
     color: root.primary ? Theme.panelSurfaceHover : (controlMouse.containsMouse && root.enabled ? Theme.panelSurface : "transparent")
     opacity: root.enabled ? 1 : 0.38

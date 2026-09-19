@@ -36,6 +36,10 @@ in
     kubectl
     kubernetes-helm
 
+    # kotlin
+    kotlin-language-server
+    ktlint
+
     # nvim stuff
     vscode-extensions.ms-vscode.cpptools-extension-pack
     vscode-extensions.ms-vscode.cpptools

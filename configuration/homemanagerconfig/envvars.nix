@@ -3,7 +3,7 @@ let
   editor = "nvim.desktop";
   office = "onlyoffice-desktopeditors.desktop";
 in
-{ pkgs, ... }:
+_:
 
 {
   home.sessionVariables = {
@@ -32,9 +32,6 @@ in
     ADW_DISABLE_PORTAL = "1";
 
     HYPRSHOT_DIR = "/home/aleks/Photos";
-
-    # Add gcc libraries to LD_LIBRARY_PATH for Python packages with C extensions
-    LD_LIBRARY_PATH = "${pkgs.gcc.cc.lib}/lib:${pkgs.stdenv.cc.cc.lib}/lib";
   };
 
   xdg.mimeApps = {

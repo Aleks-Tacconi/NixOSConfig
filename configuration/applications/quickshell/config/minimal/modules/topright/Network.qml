@@ -159,8 +159,9 @@ Item {
             Frame.PanelGroupLabel {
                 Layout.fillWidth: true
                 title: "Available networks"
+                busy: root.service.wifiEnabled && root.service.scanPending
                 detail: root.service.wifiEnabled
-                    ? (root.service.scanPending ? "Scanning" : `${root.service.networks.length}`)
+                    ? `${root.service.networks.length}`
                     : "Wi-Fi off"
             }
 
@@ -202,16 +203,29 @@ Item {
                             }
                         }
 
-                        Text {
+                        Item {
                             visible: root.service.networks.length === 0
                             width: parent.width
                             height: 54
-                            text: root.service.scanPending ? "Scanning for networks..." : "No visible networks"
-                            color: Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.panelMetaSize
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: Theme.gap * 2
+
+                                Frame.PanelSpinner {
+                                    visible: root.service.scanPending
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spinnerSize: 14
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: root.service.scanPending ? "Scanning" : "No visible networks"
+                                    color: Theme.muted
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.panelMetaSize
+                                }
+                            }
                         }
                     }
                 }
@@ -252,6 +266,7 @@ Item {
                     label: "Wi-Fi"
                     icon: root.service.wifiEnabled ? "󰤨" : "󰤭"
                     active: root.service.wifiEnabled
+                    busy: root.service.actionPending
                     enabled: !root.service.actionPending && root.service.wifiInterface.length > 0
                     detailText: root.service.wifiEnabled ? "On" : "Off"
                     showTrailing: false
@@ -262,8 +277,8 @@ Item {
                     width: networkActions.width
                     label: "Scan networks"
                     icon: "󰑐"
+                    busy: root.service.scanPending
                     enabled: root.service.wifiEnabled && !root.service.scanPending && !root.service.actionPending
-                    detailText: root.service.scanPending ? "Scanning" : ""
                     showTrailing: false
                     onClicked: root.service.requestScan(true)
                 }
@@ -283,8 +298,9 @@ Item {
                     label: "Tailscale VPN"
                     icon: "󰒍"
                     active: root.service.tailscaleConnected
+                    busy: root.service.tailscalePending
                     enabled: !root.service.tailscalePending
-                    detailText: root.service.tailscalePending ? "Working" : (root.service.tailscaleConnected ? "On" : "Off")
+                    detailText: root.service.tailscaleConnected ? "On" : "Off"
                     showTrailing: false
                     onClicked: root.service.toggleTailscale()
                 }

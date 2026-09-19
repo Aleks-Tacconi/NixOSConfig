@@ -108,6 +108,10 @@ Scope {
 
                     readonly property real outerMargin: Theme.gap * 4
 
+                    function trailingWidth(item) {
+                        return rightCluster.width - item.x - item.width;
+                    }
+
                     anchors {
                         right: parent.right
                         rightMargin: rightCluster.outerMargin
@@ -117,22 +121,20 @@ Scope {
                     spacing: Theme.gap * 5 + 2
 
                     Dock.Init {
+                        id: dock
+
                         popupScreen: bar.modelData
                         maxWidth: Math.max(96, Math.min(300, bar.width * 0.24))
-                        popupRightMargin: rightCluster.outerMargin + statusPowerCluster.width + tray.width + rightCluster.spacing * 2
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Tray {
-                        id: tray
-
-                        popupScreen: bar.modelData
-                        popupRightMargin: rightCluster.outerMargin + statusPowerCluster.width + rightCluster.spacing
+                        popupRightMargin: rightCluster.outerMargin + rightCluster.trailingWidth(dock)
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
                     Row {
-                        id: statusPowerCluster
+                        id: systemCluster
+
+                        function trailingWidth(item) {
+                            return systemCluster.width - item.x - item.width;
+                        }
 
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: Theme.gap * 2 + 2
@@ -141,8 +143,16 @@ Scope {
                             id: topRightStatus
 
                             popupScreen: bar.modelData
-                            popupRightMargin: rightCluster.outerMargin + powerButton.width + statusPowerCluster.spacing
+                            popupRightMargin: rightCluster.outerMargin + systemCluster.trailingWidth(topRightStatus)
                             networkService: root.networkService
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Tray {
+                            id: tray
+
+                            popupScreen: bar.modelData
+                            popupRightMargin: rightCluster.outerMargin + systemCluster.trailingWidth(tray)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -150,6 +160,7 @@ Scope {
                             id: powerButton
 
                             popupScreen: bar.modelData
+                            popupRightMargin: rightCluster.outerMargin + systemCluster.trailingWidth(powerButton)
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../frame" as Frame
 import "../../theme"
 
 /**
@@ -27,8 +28,6 @@ Rectangle {
     }
 
     function detail() {
-        if (root.pending)
-            return "Working";
         if (root.network.active)
             return "Connected";
         if (!root.network.supported)
@@ -106,8 +105,15 @@ Rectangle {
             font.pixelSize: Theme.panelMetaSize
         }
 
+        Frame.PanelSpinner {
+            visible: root.pending
+            Layout.preferredWidth: 14
+            Layout.preferredHeight: 14
+            spinnerSize: 14
+        }
+
         Text {
-            visible: root.actionIndicator().length > 0
+            visible: !root.pending && root.actionIndicator().length > 0
             text: root.actionIndicator()
             color: root.hovered ? Theme.fg : Theme.muted
             font.family: Theme.fontFamily
