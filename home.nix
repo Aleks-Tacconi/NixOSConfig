@@ -40,7 +40,4 @@
     };
   '';
 
-  home.file.".vale.ini".source =
-    config.lib.file.mkOutOfStoreSymlink ./configuration/homemanagerconfig/vale.ini;
-
 }

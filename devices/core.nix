@@ -102,7 +102,6 @@ in
     ../configuration/applications/nvim/configuration.nix
     ../configuration/applications/obsidian/configuration.nix
     ../configuration/applications/qbittorrent/configuration.nix
-    ../configuration/applications/spotify/configuration.nix
     ../configuration/applications/syncthing/configuration.nix
     ../configuration/applications/tmux/configuration.nix
   ];

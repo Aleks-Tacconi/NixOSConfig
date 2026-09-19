@@ -44,10 +44,8 @@ in
     vscode-extensions.ms-vscode.cpptools-extension-pack
     vscode-extensions.ms-vscode.cpptools
 
-    espeak
     orca
     gdb
-    vale
     lazygit
 
     kdePackages.qtdeclarative
