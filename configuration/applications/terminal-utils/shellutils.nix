@@ -216,4 +216,23 @@ in
     # fakeroot
     # rpm
   ];
+
+  home.file.".local/share/jupyter/runtime/.keep".text = "";
+
+  home.file.".pylintrc".text = ''
+    [MESSAGES CONTROL]
+    disable=C0111,C0103
+  '';
+
+  home.file.".stylelint.config.js".text = ''
+    module.exports = {
+      extends: "stylelint-config-standard",
+      plugins: ["stylelint-scss"],
+      rules: {
+        "at-rule-no-unknown": null,
+        "scss/at-rule-no-unknown": true,
+        "no-descending-specificity": null,
+      },
+    };
+  '';
 }

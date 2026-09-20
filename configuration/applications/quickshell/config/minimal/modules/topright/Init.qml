@@ -26,7 +26,7 @@ Item {
     property real popupRightMargin: Theme.gap * 2
     property string openPopup: ""
     readonly property real audioPopupHeight: audioView.playerCount > 0 ? 480 : 280
-    readonly property real networkPopupHeight: 500
+    readonly property real networkPopupHeight: Math.max(200, networkView.implicitHeight + Theme.panelPadding * 2)
     readonly property bool audioOpen: root.openPopup === "audio"
     readonly property bool networkOpen: root.openPopup === "network"
     readonly property bool batteryOpen: root.openPopup === "battery"

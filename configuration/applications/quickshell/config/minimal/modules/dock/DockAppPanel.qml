@@ -80,7 +80,7 @@ ColumnLayout {
         Layout.fillWidth: true
         backgroundEnabled: false
         label: root.pinned ? "Unpin from dock" : "Pin to dock"
-        icon: root.pinned ? "󰐃" : "󰐂"
+        icon: "󰐃"
         enabled: root.pinned || root.canLaunch
         showTrailing: false
         onClicked: {

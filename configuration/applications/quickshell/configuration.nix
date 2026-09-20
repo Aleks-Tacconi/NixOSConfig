@@ -44,7 +44,7 @@ in
       fileSearch = {
         paths = mkOption {
           type = types.listOf types.str;
-          default = [ ];
+          default = [ "Downloads" ];
           description = "Home-relative or absolute paths available in launcher file search.";
         };
 

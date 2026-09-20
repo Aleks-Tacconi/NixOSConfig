@@ -6,35 +6,7 @@
   ...
 }:
 
-let
-  androidSdk = pkgs.androidenv.composeAndroidPackages {
-    platformVersions = [ "36" ];
-    buildToolsVersions = [ "36.0.0" ];
-
-    includeEmulator = true;
-
-    includeSystemImages = true;
-    systemImageTypes = [ "google_apis" ];
-    abiVersions = [ "x86_64" ];
-  };
-in
 {
-  virtualisation.docker.enable = true;
-
-  nixpkgs.config.android_sdk.accept_license = true;
-
-  services.tailscale = {
-    enable = true;
-    extraSetFlags = [ "--operator=aleks" ];
-  };
-  desktop.quickshell.launcher.fileSearch.paths = [
-    "Downloads"
-  ];
-  users.users.aleks.extraGroups = [
-    "docker"
-    "kvm"
-  ];
-
   hardware.enableAllFirmware = true;
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
@@ -45,11 +17,6 @@ in
       imports = [ ../home.nix ];
     };
   };
-
-  environment.systemPackages = with pkgs; [
-    androidSdk.androidsdk
-    antigravity-cli
-  ];
 
   programs.xwayland.enable = true;
 
@@ -75,6 +42,9 @@ in
     # ../configuration/applications/emulator/configuration.nix
     ../configuration/applications/obsstudio/configuration.nix
     ../configuration/applications/agents/configuration.nix
+    ../configuration/applications/android/configuration.nix
+    ../configuration/applications/docker/configuration.nix
+    ../configuration/applications/tailscale/configuration.nix
     ../configuration/applications/chrome/configuration.nix
     ../configuration/applications/gdrive/configuration.nix
     ../configuration/applications/firefox/configuration.nix

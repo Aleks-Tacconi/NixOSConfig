@@ -6,6 +6,10 @@
     package = pkgs.opencode;
   };
 
+  home.packages = with pkgs; [
+    rtk
+  ];
+
   # OpenCode configuration
   xdg.configFile = {
     "opencode/AGENTS.md".source = ../../../agents/AGENTS.md;

@@ -226,7 +226,7 @@ Item {
             Item {
                 visible: root.service.wifiEnabled
                 Layout.fillWidth: true
-                Layout.preferredHeight: visible ? (root.service.errorText.length > 0 ? 132 : 184) : 0
+                Layout.preferredHeight: visible ? Math.min(root.service.errorText.length > 0 ? 132 : 184, Math.max(54, networkColumn.implicitHeight)) : 0
 
                 Flickable {
                     id: networksScroll
