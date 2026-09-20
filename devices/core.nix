@@ -51,11 +51,7 @@ in
     };
   };
 
-  nixpkgs.config.allowUnfree = true;
-
   environment.systemPackages = with pkgs; [
-    xdg-desktop-portal
-    xdg-desktop-portal-gtk
     androidSdk.androidsdk
     antigravity-cli
   ];

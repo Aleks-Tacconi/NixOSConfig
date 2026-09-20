@@ -39,7 +39,6 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./devices/laptop.nix
-          ./configuration/nixconfig/power_profiles.nix
         ];
       };
     };
