@@ -226,7 +226,8 @@ Item {
             Item {
                 visible: root.service.wifiEnabled
                 Layout.fillWidth: true
-                Layout.preferredHeight: visible ? Math.min(root.service.errorText.length > 0 ? 132 : 184, Math.max(54, networkColumn.implicitHeight)) : 0
+                Layout.preferredHeight: visible ? 184 : 0
+                implicitHeight: Layout.preferredHeight
 
                 Flickable {
                     id: networksScroll
@@ -264,7 +265,7 @@ Item {
                         Item {
                             visible: root.service.networks.length === 0
                             width: parent.width
-                            height: 54
+                            height: 184
 
                             Row {
                                 anchors.centerIn: parent
