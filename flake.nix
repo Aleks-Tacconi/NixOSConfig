@@ -26,8 +26,6 @@
       pkgs = import nixpkgs { inherit system; };
     in
     {
-      devShells.${system}.opencode = import ./opencodeconfig/shell.nix { inherit pkgs; };
-
       nixosConfigurations."pc" = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
         modules = [

@@ -74,7 +74,7 @@ in
     # ../configuration/applications/jellyfin/configuration.nix
     # ../configuration/applications/emulator/configuration.nix
     ../configuration/applications/obsstudio/configuration.nix
-    ../configuration/applications/opencode/configuration.nix
+    ../configuration/applications/agents/configuration.nix
     ../configuration/applications/chrome/configuration.nix
     ../configuration/applications/gdrive/configuration.nix
     ../configuration/applications/firefox/configuration.nix
@@ -94,6 +94,7 @@ in
     ../configuration/applications/qbittorrent/configuration.nix
     ../configuration/applications/syncthing/configuration.nix
     ../configuration/applications/tmux/configuration.nix
+    ../configuration/applications/bottles/configuration.nix
   ];
 
   nix.settings.experimental-features = [

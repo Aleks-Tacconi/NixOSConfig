@@ -105,11 +105,69 @@ Item {
         width: parent.width
         spacing: Theme.panelItemGap
 
-        Frame.PanelSectionHeader {
+        RowLayout {
             Layout.fillWidth: true
-            title: "Network"
-            detail: root.stateText()
-            detailColor: root.service.networkState === "connected" ? Theme.fg : Theme.muted
+            spacing: Theme.gap
+
+            Frame.PanelSectionHeader {
+                Layout.fillWidth: true
+                title: "Network"
+                detail: root.stateText()
+                detailColor: root.service.networkState === "connected" ? Theme.fg : Theme.muted
+            }
+
+            Rectangle {
+                id: scanButton
+
+                visible: !root.editing && root.service.wifiInterface.length > 0
+                Layout.preferredWidth: 24
+                Layout.preferredHeight: 24
+                Layout.alignment: Qt.AlignVCenter
+                radius: Theme.surfaceRadius
+                color: scanMouse.containsMouse && enabled ? Theme.panelSurfaceHover : "transparent"
+                enabled: root.service.wifiEnabled && !root.service.scanPending && !root.service.actionPending
+                opacity: enabled || root.service.scanPending ? 1 : 0.45
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+                }
+
+                Text {
+                    id: scanIcon
+
+                    anchors.centerIn: parent
+                    text: "󰑐"
+                    color: (root.service.scanPending || (scanMouse.containsMouse && scanButton.enabled)) ? Theme.fg : Theme.muted
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                }
+
+                RotationAnimation {
+                    target: scanIcon
+                    property: "rotation"
+                    from: 0
+                    to: 360
+                    duration: 850
+                    loops: Animation.Infinite
+                    running: root.service.scanPending && root.visible
+                    onRunningChanged: {
+                        if (!running)
+                            scanIcon.rotation = 0;
+                    }
+                }
+
+                MouseArea {
+                    id: scanMouse
+
+                    anchors.fill: parent
+                    enabled: scanButton.enabled
+                    hoverEnabled: true
+                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    onClicked: root.service.requestScan(true)
+                }
+            }
         }
 
         RowLayout {
@@ -271,16 +329,6 @@ Item {
                     detailText: root.service.wifiEnabled ? "On" : "Off"
                     showTrailing: false
                     onClicked: root.service.setWifiEnabled(!root.service.wifiEnabled)
-                }
-
-                Frame.PanelActionRow {
-                    width: networkActions.width
-                    label: "Scan networks"
-                    icon: "󰑐"
-                    busy: root.service.scanPending
-                    enabled: root.service.wifiEnabled && !root.service.scanPending && !root.service.actionPending
-                    showTrailing: false
-                    onClicked: root.service.requestScan(true)
                 }
 
                 Frame.PanelActionRow {

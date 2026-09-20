@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ai-nvim": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/home/aleks/ai-nvim",
+        "run",
+        "python",
+        "/home/aleks/ai-nvim/mcp_server.py"
+      ]
+    }
+  }
+}

@@ -24,10 +24,9 @@ Quickshell's static configuration is deployed from
 `~/.config/quickshell/minimal`; mutable dock pins live at
 `~/.local/state/quickshell/minimal/dock-pins.json`.
 
-OpenCode's `AGENTS.md`, `opencode.jsonc`, sandbox shell, and RTK plugin are
-immutable Home Manager links from `opencodeconfig/`. The surrounding config and
-plugin directories stay writable for notifier state, dependencies, and Herdr's
-generated integration.
+Agent configurations for OpenCode, Antigravity (agy), Claude, and Cursor are
+managed under `agents/` with a root `AGENTS.md` and shared skills directory
+bootstrapped across application environments via Home Manager.
 
 ## Google Drive
 
@@ -138,7 +137,7 @@ journalctl -u syncthing.service -f
 
 | Path | Purpose |
 | --- | --- |
-| `flake.nix` | Flake inputs, both NixOS hosts, and the OpenCode development shell |
+| `flake.nix` | Flake inputs and both NixOS hosts |
 | `devices/core.nix` | Shared system and application imports |
 | `devices/laptop.nix` | Laptop hardware and host-specific settings |
 | `devices/pc.nix` | PC hardware and host-specific settings |
@@ -146,7 +145,7 @@ journalctl -u syncthing.service -f
 | `configuration/applications/` | Application-specific system and Home Manager modules |
 | `configuration/homemanagerconfig/` | Shared user environment, theme, and desktop configuration |
 | `home.nix` | Home Manager root for `aleks` |
-| `opencodeconfig/` | Declarative OpenCode configuration |
+| `agents/` | Declarative agent configurations (OpenCode, agy, shared skills, and rules) |
 
 ## Keybindings
 
@@ -193,7 +192,6 @@ Use `#pc` instead for the desktop host.
 | `make clean` | Remove old user/system profile history and run system and user garbage collection |
 | `make git MSG="message"` | Stage, commit, and push to `origin/main` |
 | `make all MSG="message"` | Update, commit, push, and rebuild the laptop |
-| `nix develop .#opencode` | Enter the isolated OpenCode/Ollama development shell |
 
 `make git` and `make all` push changes; `make clean` removes old generations.
 Review their recipes before use. Run `RootMakefile` utilities with
