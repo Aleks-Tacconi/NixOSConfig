@@ -205,16 +205,8 @@ in
     ncdu
     xrandr
     libxcvt
-    libdrm
-    pulseaudioFull
-    curl
     pandoc
-    (texliveFull.withPackages (
-      ps: with ps; [
-        framed
-      ]
-    ))
-    docker
+    texliveFull
     bun
     # arduino
     gh

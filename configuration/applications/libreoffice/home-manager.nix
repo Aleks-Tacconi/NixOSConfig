@@ -8,11 +8,7 @@
 
 {
   home.packages = with pkgs; [
-    caladea
-    carlito
-    corefonts
     onlyoffice-desktopeditors
-    vista-fonts
   ];
 
   home.activation.onlyofficeDarkTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

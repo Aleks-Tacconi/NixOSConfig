@@ -22,12 +22,8 @@ let
 in
 {
   home.packages = with pkgs; [
-    papirus-icon-theme
-    gtkTheme
     kvantumTheme
     kdePackages.breeze
-    libsForQt5.qtstyleplugin-kvantum
-    kdePackages.qtstyleplugin-kvantum
   ];
 
   # Home Manager maps qtct to qt5ct, but KDE Connect uses Qt 6.

@@ -19,14 +19,11 @@
     };
 
     firewall = {
+      allowedTCPPorts = [ 6543 ];
       allowedTCPPortRanges = [
         {
           from = 1714;
           to = 1764;
-        }
-        {
-          from = 6543;
-          to = 6543;
         }
       ];
       allowedUDPPortRanges = [

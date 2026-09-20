@@ -264,27 +264,21 @@ in
 
       window_rule = [
         {
-          match.class = "showmethekey-gtk";
+          match.title = ".*Bitwarden.*";
           float = true;
         }
         {
-          match.class = "showmethekey-gtk";
-          pin = true;
+          match.title = ".*Bitwarden.*";
+          center = true;
         }
         {
-          match.class = "showmethekey-gtk";
-          border_size = 0;
-        }
-        {
-          match.class = "showmethekey-gtk";
-          no_initial_focus = true;
-        }
-        {
-          match.title = "^Extension: (Bitwarden Password Manager).*";
+          # bitwarden chrome extension popup
+          match.title = "^_crx_nngceckbapebfimnlniiiahkandclblb$";
           float = true;
         }
         {
-          match.title = "^Extension: (Bitwarden Password Manager).*";
+          # bitwarden chrome extension popup
+          match.title = "^_crx_nngceckbapebfimnlniiiahkandclblb$";
           center = true;
         }
         {

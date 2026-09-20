@@ -18,7 +18,6 @@
       "input"
       "plugdev"
       "media"
-      "jellyfin"
     ];
     shell = pkgs.zsh;
   };
