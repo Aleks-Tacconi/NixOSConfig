@@ -24,7 +24,7 @@ Before implementing:
 - State the intended approach for non-trivial changes.
 - Name assumptions and tradeoffs.
 - Define what success looks like.
-- Ask instead of filling gaps with plausible code.
+- Ask using the ask tool instead of filling gaps with plausible code.
 
 ### 3. Make Surgical Changes
 
