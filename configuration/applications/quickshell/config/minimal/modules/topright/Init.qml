@@ -25,8 +25,8 @@ Item {
     property real sysfsBatteryRateWattsValue: 0
     property real popupRightMargin: Theme.gap * 2
     property string openPopup: ""
-    readonly property real audioPopupHeight: audioView.playerCount > 0 ? 480 : 280
-    readonly property real networkPopupHeight: Math.max(200, networkView.implicitHeight + Theme.panelPadding * 2)
+    readonly property real audioPopupHeight: audioView.playerCount > 0 ? 540 : 360
+    readonly property real networkPopupHeight: 440
     readonly property bool audioOpen: root.openPopup === "audio"
     readonly property bool networkOpen: root.openPopup === "network"
     readonly property bool batteryOpen: root.openPopup === "battery"
@@ -452,7 +452,7 @@ Item {
                 dismissOnExit: true
                 onDismissRequested: root.closePopup("audio")
 
-                length: 340
+                length: 360
                 depth: root.audioPopupHeight
                 duration: 180
 

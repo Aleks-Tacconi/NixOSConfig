@@ -59,7 +59,6 @@ ColumnLayout {
         Frame.PanelSectionHeader {
             Layout.fillWidth: true
             title: root.appName
-            detail: root.windowCount > 0 ? String(root.windowCount) : ""
         }
     }
 

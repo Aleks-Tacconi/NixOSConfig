@@ -150,7 +150,7 @@ Item {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: Math.min(104, Math.max(Theme.panelRowHeight, deviceList.implicitHeight))
+            Layout.preferredHeight: Math.min(184, Math.max(Theme.panelRowHeight, deviceList.implicitHeight))
 
             Flickable {
                 id: deviceScroll

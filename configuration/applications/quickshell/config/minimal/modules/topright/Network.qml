@@ -217,7 +217,6 @@ Item {
             Frame.PanelGroupLabel {
                 Layout.fillWidth: true
                 title: "Available networks"
-                busy: root.service.wifiEnabled && root.service.scanPending
                 detail: root.service.wifiEnabled
                     ? `${root.service.networks.length}`
                     : "Wi-Fi off"
@@ -267,23 +266,12 @@ Item {
                             width: parent.width
                             height: 184
 
-                            Row {
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: Theme.gap * 2
-
-                                Frame.PanelSpinner {
-                                    visible: root.service.scanPending
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spinnerSize: 14
-                                }
-
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: root.service.scanPending ? "Scanning" : "No visible networks"
-                                    color: Theme.muted
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.panelMetaSize
-                                }
+                                text: root.service.scanPending ? "Scanning..." : "No visible networks"
+                                color: Theme.muted
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.panelMetaSize
                             }
                         }
                     }

@@ -33,6 +33,7 @@ in
     "${pkgs.kdePackages.breeze}/share/color-schemes/BreezeDark.colors";
 
   home.pointerCursor = {
+    enable = true;
     gtk.enable = true;
     package = pkgs.bibata-cursors;
     name = "Bibata-Modern-Classic";

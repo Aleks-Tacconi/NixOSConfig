@@ -19,19 +19,13 @@ Rectangle {
 
     readonly property bool hovered: mouseArea.containsMouse
     readonly property bool copyable: ["file", "emoji", "clipboard"].includes(root.item.kind)
-    readonly property bool externalOpen: root.item.kind === "file"
+    readonly property bool externalOpen: ["file", "application"].includes(root.item.kind)
     readonly property bool navigationItem: root.item.kind === "directory"
 
     radius: Theme.surfaceRadius
     color: root.selected ? Theme.panelSurfaceHover : (root.hovered ? Theme.panelSurface : "transparent")
     border.width: root.selected ? 1 : 0
     border.color: Theme.popupInnerEdge
-
-    Behavior on color {
-        ColorAnimation {
-            duration: 110
-        }
-    }
 
     Rectangle {
         visible: root.selected
@@ -137,8 +131,6 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             radius: Theme.surfaceRadius
             color: copyMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
-            border.width: root.copyable && root.selected ? 1 : 0
-            border.color: Theme.popupInnerEdge
 
             Text {
                 id: actionLabel
