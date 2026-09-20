@@ -30,13 +30,8 @@ in
   desktop.quickshell.launcher.fileSearch.paths = [
     "Downloads"
   ];
-  programs.wireshark = {
-    enable = true;
-    package = pkgs.wireshark;
-  };
   users.users.aleks.extraGroups = [
     "docker"
-    "wireshark"
     "kvm"
   ];
 
@@ -83,7 +78,6 @@ in
     ../configuration/applications/chrome/configuration.nix
     ../configuration/applications/gdrive/configuration.nix
     ../configuration/applications/firefox/configuration.nix
-    ../configuration/applications/discord/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix
     ../configuration/applications/filemanager/configuration.nix
