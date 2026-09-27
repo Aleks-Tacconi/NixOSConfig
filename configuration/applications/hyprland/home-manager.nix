@@ -353,7 +353,7 @@ in
           border_size = 2;
           col = {
             active_border = "rgba(f2f2f266)";
-            inactive_border = "rgba(00000080)";
+            inactive_border = "rgba(f2f2f233)";
           };
           layout = "dwindle";
           allow_tearing = false;
