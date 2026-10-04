@@ -1,12 +1,17 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import QtQuick
 import "../../theme"
 import "../dock" as Dock
 import "../power" as Power
 import "../topleft/" as TopLeft
 import "../topright/" as TopRight
 
+/**
+ * Top bar shell coordinator for every screen.
+ */
 Scope {
     id: root
 

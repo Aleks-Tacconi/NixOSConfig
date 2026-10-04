@@ -18,9 +18,11 @@ Rectangle {
 
     signal dismissRequested(var notification)
     signal actionRequested(var notification, var action)
+    signal activated(var notification)
     signal interactionChanged(bool interacting)
 
     readonly property var actions: root.notification?.actions ?? []
+    readonly property bool hasDefaultAction: Array.from(root.actions).some(action => action.identifier === "default")
     readonly property bool critical: (root.notification?.urgency ?? 1) === 2
     readonly property bool lowPriority: (root.notification?.urgency ?? 1) === 0
     readonly property string appIconSource: {
@@ -42,6 +44,19 @@ Rectangle {
 
     HoverHandler {
         id: hoverHandler
+    }
+
+    // Declared before the content so the close and action buttons stay on top.
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        cursorShape: root.toast || root.hasDefaultAction ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: mouse => {
+            if (mouse.button === Qt.RightButton)
+                root.dismissRequested(root.notification);
+            else
+                root.activated(root.notification);
+        }
     }
 
     Column {

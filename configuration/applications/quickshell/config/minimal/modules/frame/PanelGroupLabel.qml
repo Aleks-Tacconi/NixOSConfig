@@ -14,6 +14,7 @@ Item {
 
     implicitWidth: labelRow.implicitWidth
     implicitHeight: labelRow.implicitHeight + Theme.gap
+    height: implicitHeight
 
     RowLayout {
         id: labelRow

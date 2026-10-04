@@ -7,6 +7,8 @@ import "../../theme"
 Item {
     id: root
 
+    property bool fullWidth: false
+
     implicitWidth: 72
     implicitHeight: 1
     width: parent?.width ?? implicitWidth
@@ -14,7 +16,7 @@ Item {
 
     Rectangle {
         anchors.centerIn: parent
-        width: Math.min(72, root.width * 0.25)
+        width: root.fullWidth ? root.width : Math.min(72, root.width * 0.25)
         height: 1
         radius: 1
         color: Theme.panelDivider

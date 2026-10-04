@@ -80,9 +80,32 @@ Item {
         radius: Theme.radius
     }
 
+    Timer {
+        id: pendingActionTimer
+
+        property var pendingCommand: null
+
+        interval: 250
+        repeat: false
+        onTriggered: {
+            if (pendingCommand !== null) {
+                actionRunner.command = pendingCommand;
+                actionRunner.running = true;
+                pendingCommand = null;
+            }
+        }
+    }
+
     function runAction(command) {
-        actionRunner.command = command;
-        actionRunner.running = true;
+        root.menuOpen = false;
+
+        if (command && command.includes("suspend")) {
+            pendingActionTimer.pendingCommand = command;
+            pendingActionTimer.restart();
+        } else {
+            actionRunner.command = command;
+            actionRunner.running = true;
+        }
     }
 
     Text {
@@ -204,6 +227,7 @@ Item {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: root.actionButtonHeight
                                 horizontalPadding: 0
+                                enabled: !pendingActionTimer.running && !actionRunner.running
                                 icon: modelData.icon
                                 label: modelData.label
                                 showTrailing: false

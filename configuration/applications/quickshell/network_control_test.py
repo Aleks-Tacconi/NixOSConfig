@@ -32,12 +32,39 @@ class NetworkControlTest(unittest.TestCase):
         run_nmcli.side_effect = [
             "wlan0:wifi:disconnected:\n"
             "wlan1:wifi:connected:Office\n"
-            "enp1s0:ethernet:connected:Wired\n",
+            "enp1s0:ethernet:disconnected:\n",
             "enabled\n",
         ]
         status = device_status()
         self.assertEqual(status["interfaceName"], "wlan1")
         self.assertEqual(status["wifiInterface"], "wlan1")
+
+    @patch("network_control.run_nmcli")
+    def test_status_prioritizes_connected_ethernet(self, run_nmcli) -> None:
+        """Prefer active Ethernet over Wi-Fi when both are connected."""
+        run_nmcli.side_effect = [
+            "wlan0:wifi:connected:Office\n"
+            "enp1s0:ethernet:connected:Wired\n",
+            "enabled\n",
+        ]
+        status = device_status()
+        self.assertEqual(status["interfaceName"], "enp1s0")
+        self.assertEqual(status["type"], "ethernet")
+        self.assertEqual(status["state"], "connected")
+        self.assertEqual(status["wifiInterface"], "wlan0")
+
+    @patch("network_control.run_nmcli")
+    def test_status_recognizes_external_ethernet(self, run_nmcli) -> None:
+        """Recognize connected (externally) states for Ethernet."""
+        run_nmcli.side_effect = [
+            "wlan0:wifi:disconnected:\n"
+            "enp1s0:ethernet:connected (externally):Wired\n",
+            "enabled\n",
+        ]
+        status = device_status()
+        self.assertEqual(status["interfaceName"], "enp1s0")
+        self.assertEqual(status["type"], "ethernet")
+        self.assertEqual(status["state"], "connected")
 
     @patch("network_control.run_nmcli")
     def test_saved_connection_lets_nmcli_choose_compatible_profile(self, run_nmcli) -> None:

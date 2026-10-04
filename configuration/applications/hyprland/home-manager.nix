@@ -455,6 +455,8 @@ in
         ''}
         hl.exec_cmd("hyprctl setcursor Bibata-Modern-Ice 24")
         hl.exec_cmd("clean-run blueman-applet")
+        hl.exec_cmd("[workspace 1] clean-run ghostty")
+        hl.exec_cmd("[workspace 2 silent] clean-run google-chrome-stable")
         hl.exec_cmd("hyprlock")
       end)
     '';

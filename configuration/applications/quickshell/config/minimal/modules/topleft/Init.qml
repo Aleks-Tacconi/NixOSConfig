@@ -18,10 +18,7 @@ Item {
 
     property var popupScreen: null
     property var notificationCenter: null
-    property bool hasNotifications: false
-    property bool dndEnabled: false
     property string openPopup: ""
-    property string nextCalendarItem: "No events"
     readonly property bool calendarOpen: root.openPopup === "calendar"
     readonly property bool notificationsOpen: root.openPopup === "notifications"
     readonly property string currentScreenKey: screenKey(root.popupScreen)
@@ -30,6 +27,7 @@ Item {
     readonly property bool ownsNotificationPopup: root.notificationCenter !== null && root.notificationCenter.notificationPopupScreenKey === root.currentScreenKey
     readonly property var activeNotification: root.notificationCenter?.activeNotification ?? null
     readonly property real notificationPanelDepth: Math.max(0, Math.min(560, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
+    readonly property real calendarPanelDepth: Math.max(0, Math.min(600, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
 
     function notificationIcon() {
         return root.notificationCenter?.dndEnabled ? "󰂛" : "󰂚";
@@ -55,11 +53,16 @@ Item {
 
     Component.onDestruction: {
         root.notificationCenter?.setMenuOpen(root.currentScreenKey, false);
+        root.notificationCenter?.setCenterOpen(root.currentScreenKey, false);
         root.notificationCenter?.clearNotificationPopupScreen(root.currentScreenKey);
     }
 
     onMenuOpenChanged: {
         root.notificationCenter?.setMenuOpen(root.currentScreenKey, root.menuOpen);
+    }
+
+    onNotificationsOpenChanged: {
+        root.notificationCenter?.setCenterOpen(root.currentScreenKey, root.notificationsOpen);
     }
 
     onColorPickerActiveChanged: {
@@ -150,7 +153,7 @@ Item {
 
                     StatusCell {
                         icon: "󰃭"
-                        label: root.notificationCenter?.calendarPreview ?? root.nextCalendarItem
+                        label: root.notificationCenter?.calendarPreview ?? "No events"
                         scrollLabel: true
                         labelMaxWidth: 220
                     }
@@ -380,7 +383,17 @@ Item {
                                     spacing: Theme.gap
                                     clip: true
                                     boundsBehavior: Flickable.StopAtBounds
-                                    model: root.notificationCenter?.newestNotifications ?? []
+                                    model: ScriptModel {
+                                        values: root.notificationCenter?.newestNotifications ?? []
+                                    }
+
+                                    displaced: Transition {
+                                        NumberAnimation {
+                                            property: "y"
+                                            duration: 150
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
 
                                     delegate: NotificationCard {
                                         required property var modelData
@@ -389,6 +402,10 @@ Item {
                                         notification: modelData
                                         onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
                                         onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
+                                        onActivated: notification => {
+                                            if (root.notificationCenter?.activateNotification(notification))
+                                                root.closePopup("notifications");
+                                        }
                                     }
                                 }
 
@@ -523,7 +540,7 @@ Item {
                 onDismissRequested: root.closePopup("calendar")
 
                 length: 430
-                depth: calendarContent.implicitHeight + 36
+                depth: root.calendarPanelDepth
                 duration: 180
 
                 backgroundColor: Theme.panelBg
@@ -548,6 +565,7 @@ Item {
                     spacing: Theme.panelItemGap
 
                     Frame.PanelSectionHeader {
+                        id: calendarSectionHeader
                         width: parent.width
                         title: "Calendar"
                         detail: Qt.formatDateTime(clockTimer.now, "hh:mm")
@@ -555,7 +573,7 @@ Item {
 
                     Rectangle {
                         width: parent.width
-                        height: 500
+                        height: Math.max(480, calendarPanel.depth - calendarSectionHeader.height - parent.spacing - Theme.panelPadding * 2 - 10)
                         color: "transparent"
                         clip: true
 
@@ -630,6 +648,10 @@ Item {
                     toast: true
                     onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
                     onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
+                    onActivated: notification => {
+                        if (!root.notificationCenter?.activateNotification(notification))
+                            root.openPopup = "notifications";
+                    }
                     onInteractionChanged: interacting => root.notificationCenter?.setActiveNotificationHovered(interacting)
                 }
             }

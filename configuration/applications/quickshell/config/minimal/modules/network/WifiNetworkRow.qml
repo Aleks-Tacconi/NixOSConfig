@@ -28,10 +28,12 @@ Rectangle {
     }
 
     function detail() {
+        if (root.pending)
+            return "Connecting...";
         if (root.network.active)
             return "Connected";
         if (!root.network.supported)
-            return "Open settings";
+            return "Enterprise · Setup in settings";
         if (root.network.savedUuid.length > 0)
             return `Saved · ${root.network.security}`;
         return root.network.security;
@@ -39,7 +41,7 @@ Rectangle {
 
     function actionIndicator() {
         if (root.network.active)
-            return "";
+            return root.hovered ? "Disconnect" : "";
         if (!root.network.supported)
             return "↗";
         if (root.network.requiresPassword && root.network.savedUuid.length === 0)
@@ -49,7 +51,8 @@ Rectangle {
 
     implicitHeight: 42
     radius: Theme.surfaceRadius
-    color: root.network.active ? Theme.panelSurface : (root.hovered && root.interactive ? Theme.panelSurfaceHover : "transparent")
+    opacity: root.pending ? 1.0 : (root.interactive ? 1.0 : 0.55)
+    color: root.hovered && root.interactive ? Theme.panelSurfaceHover : (root.network.active ? Theme.panelSurface : "transparent")
 
     Behavior on color {
         ColorAnimation {
@@ -115,9 +118,9 @@ Rectangle {
         Text {
             visible: !root.pending && root.actionIndicator().length > 0
             text: root.actionIndicator()
-            color: root.hovered ? Theme.fg : Theme.muted
+            color: (root.network.active && root.hovered) ? Theme.red : (root.hovered ? Theme.fg : Theme.muted)
             font.family: Theme.fontFamily
-            font.pixelSize: Theme.panelMetaSize
+            font.pixelSize: (root.network.active && root.hovered) ? Theme.panelCaptionSize : Theme.panelMetaSize
         }
 
         Text {

@@ -1,9 +1,14 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
 import "../.." as ShellConfig
 
+/**
+ * Global background service managing notifications, agenda syncing, and desktop actions.
+ */
 Scope {
     id: root
 
@@ -34,21 +39,33 @@ Scope {
     readonly property bool hasNotifications: root.notificationValues.length > 0
     readonly property int notificationCount: root.notificationValues.length
     readonly property bool menuOpen: openMenuCount > 0
+    readonly property bool centerOpen: Object.keys(root.centerOpenKeys).length > 0
     readonly property bool hyprsunsetEnabled: hyprsunsetProcess.running && hyprsunsetProcess.processId > 0
     readonly property bool hyprsunsetPending: root.hyprsunsetTargetEnabled !== root.hyprsunsetEnabled
 
     property var openMenuKeys: ({})
+    property var centerOpenKeys: ({})
 
-    function setMenuOpen(screenKey, open) {
-        const next = root.openMenuKeys;
+    /** Returns a copy of a screen-key set with the key added or removed. */
+    function withScreenKey(keys, screenKey, present) {
+        const next = Object.assign({}, keys);
 
-        if (open)
+        if (present)
             next[screenKey] = true;
         else
             delete next[screenKey];
 
-        root.openMenuKeys = next;
-        root.openMenuCount = Object.keys(next).length;
+        return next;
+    }
+
+    function setMenuOpen(screenKey, open) {
+        root.openMenuKeys = root.withScreenKey(root.openMenuKeys, screenKey, open);
+        root.openMenuCount = Object.keys(root.openMenuKeys).length;
+    }
+
+    /** Records whether the notification list is open on a screen. */
+    function setCenterOpen(screenKey, open) {
+        root.centerOpenKeys = root.withScreenKey(root.centerOpenKeys, screenKey, open);
     }
 
     function setNotificationPopupScreen(screenKey) {
@@ -61,7 +78,7 @@ Scope {
     }
 
     function enqueueNotification(notification) {
-        if (root.dndEnabled)
+        if (root.dndEnabled || root.centerOpen)
             return;
 
         const next = root.notificationQueue.slice();
@@ -102,6 +119,10 @@ Scope {
         const remaining = Math.max(1, root.activeNotificationRemaining);
         root.activeNotificationDeadline = Date.now() + remaining;
         root.notificationPopupOpen = true;
+
+        if (root.activeNotification.urgency === NotificationUrgency.Critical)
+            return;
+
         notificationDwellTimer.interval = remaining;
         notificationDwellTimer.restart();
     }
@@ -176,12 +197,31 @@ Scope {
         notification.dismiss();
     }
 
+    /** Runs an action and removes the notification, even if the app marked it resident. */
     function invokeNotificationAction(notification, action) {
         if (!notification || !action)
             return;
         if (notification === root.activeNotification)
             root.hideActiveNotification(true);
+
+        // invoke() already closes non-resident notifications; closing twice logs an error.
+        const resident = notification.resident;
         action.invoke();
+
+        if (resident)
+            notification.dismiss();
+    }
+
+    /** Invokes the default action if the notification has one; returns whether it did. */
+    function activateNotification(notification) {
+        const actions = Array.from(notification?.actions ?? []);
+        const defaultAction = actions.find(action => action.identifier === "default") ?? null;
+
+        if (defaultAction === null)
+            return false;
+
+        root.invokeNotificationAction(notification, defaultAction);
+        return true;
     }
 
     function suppressNotificationPopups() {
@@ -295,6 +335,11 @@ Scope {
 
         if (!notificationExitTimer.running)
             root.finishNotificationExit();
+    }
+
+    onCenterOpenChanged: {
+        if (root.centerOpen)
+            root.suppressNotificationPopups();
     }
 
     IpcHandler {

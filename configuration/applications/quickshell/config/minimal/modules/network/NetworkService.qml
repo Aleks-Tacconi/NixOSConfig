@@ -20,6 +20,7 @@ Scope {
     property bool scanPending: false
     property bool actionPending: false
     property string actionNetworkBssid: ""
+    property string actionStatusText: ""
     property string errorText: ""
     readonly property real downloadBytesPerSecond: traffic.downloadBytesPerSecond
     readonly property real uploadBytesPerSecond: traffic.uploadBytesPerSecond
@@ -85,6 +86,8 @@ Scope {
 
         onExited: (exitCode, exitStatus) => {
             root.scanPending = false;
+            if (root.actionStatusText === "Scanning for networks...")
+                root.actionStatusText = "";
             if (exitCode === 0)
                 root.applyScan(scanOutput.text);
             else
@@ -112,6 +115,7 @@ Scope {
             actionProcess.request = null;
             root.actionPending = false;
             root.actionNetworkBssid = "";
+            root.actionStatusText = "";
             if (exitCode === 0) {
                 root.errorText = "";
                 root.actionSucceeded();
@@ -183,10 +187,11 @@ Scope {
         }
     }
 
-    function startAction(command, request = null, password = "") {
+    function startAction(command, request = null, password = "", statusText = "Working...") {
         if (root.actionPending)
             return;
         root.actionPending = true;
+        root.actionStatusText = statusText;
         root.actionNetworkBssid = request !== null && request.network ? request.network.bssid : "";
         root.errorText = "";
         actionProcess.request = request;
@@ -197,6 +202,17 @@ Scope {
         }
     }
 
+    function cancelAction() {
+        if (actionProcess.running) {
+            actionProcess.kill();
+            actionProcess.request = null;
+            root.actionPending = false;
+            root.actionNetworkBssid = "";
+            root.actionStatusText = "";
+            root.errorText = "Operation cancelled";
+        }
+    }
+
     function activate(network) {
         if (network.active) {
             root.disconnectWifi(network);
@@ -204,6 +220,7 @@ Scope {
         }
         if (!network.supported) {
             root.openSettings();
+            root.errorText = "Opened connection settings for " + network.ssid;
             return;
         }
         if (network.requiresPassword && network.savedUuid.length === 0) {
@@ -211,10 +228,12 @@ Scope {
             return;
         }
         const command = ["quickshell-network-control", "connect", "--interface", root.wifiInterface, "--bssid", network.bssid];
+        if (network.savedUuid && network.savedUuid.length > 0)
+            command.push("--uuid", network.savedUuid);
         root.startAction(command, {
             network: network,
             retryWithPassword: network.requiresPassword
-        });
+        }, "", "Connecting to " + network.ssid + "...");
     }
 
     function activateWithPassword(network, password) {
@@ -224,7 +243,7 @@ Scope {
         ], {
             network: network,
             retryWithPassword: false
-        }, password);
+        }, password, "Connecting to " + network.ssid + "...");
     }
 
     function activateHidden(ssid, secured, password) {
@@ -234,7 +253,7 @@ Scope {
         ];
         if (secured)
             command.push("--password-stdin");
-        root.startAction(command, null, password);
+        root.startAction(command, null, password, "Connecting to " + ssid + "...");
     }
 
     function disconnectWifi(network = null) {
@@ -242,11 +261,16 @@ Scope {
             root.startAction(["quickshell-network-control", "disconnect", "--interface", root.wifiInterface], {
                 network: network,
                 retryWithPassword: false
-            });
+            }, "", "Disconnecting...");
     }
 
     function setWifiEnabled(enabled) {
-        root.startAction(["quickshell-network-control", "radio", enabled ? "on" : "off"]);
+        root.startAction(
+            ["quickshell-network-control", "radio", enabled ? "on" : "off"],
+            null,
+            "",
+            enabled ? "Enabling Wi-Fi..." : "Disabling Wi-Fi..."
+        );
     }
 
     function openSettings() {
@@ -260,6 +284,11 @@ Scope {
 
     function cleanError(output) {
         const message = output.trim().replace(/^Error:\s*/i, "");
+        const lower = message.toLowerCase();
+        if (lower.includes("secret") || lower.includes("password"))
+            return "Incorrect password or credentials required";
+        if (lower.includes("timeout") || lower.includes("not respond"))
+            return "Connection timed out. Please try again";
         return message.length > 0 ? message : "Network operation failed";
     }
 

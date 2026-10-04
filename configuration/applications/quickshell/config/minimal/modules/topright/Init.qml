@@ -9,6 +9,9 @@ import Quickshell.Wayland
 import "../frame" as Frame
 import "../../theme"
 
+/**
+ * Top-right status cluster with audio, battery, network, and media popups.
+ */
 Item {
     id: root
 
@@ -26,7 +29,7 @@ Item {
     property real popupRightMargin: Theme.gap * 2
     property string openPopup: ""
     readonly property real audioPopupHeight: audioView.playerCount > 0 ? 540 : 360
-    readonly property real networkPopupHeight: 440
+    readonly property real networkPopupHeight: 510
     readonly property bool audioOpen: root.openPopup === "audio"
     readonly property bool networkOpen: root.openPopup === "network"
     readonly property bool batteryOpen: root.openPopup === "battery"
@@ -40,7 +43,7 @@ Item {
 
     onNetworkOpenChanged: {
         if (root.networkOpen)
-            root.networkService.requestScan(true);
+            root.networkService.requestScan(root.networkService.networks.length === 0);
     }
 
     PwObjectTracker {
@@ -121,11 +124,11 @@ Item {
     }
 
     function iconForNetwork() {
+        if (root.networkService.networkType === "ethernet")
+            return root.networkService.networkState === "connected" ? "󰈀" : "󰈂";
+
         if (root.networkService.networkState !== "connected")
             return "󰤭";
-
-        if (root.networkService.networkType === "ethernet")
-            return "󰈀";
 
         return "󰤨";
     }
@@ -529,7 +532,7 @@ Item {
 
                 length: 360
                 depth: root.networkPopupHeight
-                duration: 150
+                duration: 180
 
                 backgroundColor: Theme.panelBg
                 curveRadius: Theme.panelRadius

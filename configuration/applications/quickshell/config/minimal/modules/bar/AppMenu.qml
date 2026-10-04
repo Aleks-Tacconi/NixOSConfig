@@ -71,7 +71,26 @@ Item {
         ?? root.actionRequest?.desktopEntry
         ?? root.lookupDesktopEntry(root.appId)
     readonly property var actionItems: root.actionPresentation?.actionItems ?? []
-    readonly property bool hasActionRows: root.actionItems.length > 0 || root.hasNativeMenu
+    readonly property var specificActionItems: {
+        const items = root.actionItems;
+        const result = [];
+        for (let i = 0; i < items.length; i++) {
+            if (!root.isNewWindowActionTitle(items[i].title))
+                result.push(items[i]);
+        }
+        return result;
+    }
+    readonly property bool hasExplicitNewWindowAction: {
+        for (let i = 0; i < root.actionItems.length; i++) {
+            if (root.isNewWindowActionTitle(root.actionItems[i].title))
+                return true;
+        }
+        return false;
+    }
+    readonly property bool canLaunchNewWindow: root.desktopEntry !== null
+        || (root.ipcWindow?.class?.length ?? 0) > 0
+        || root.hasExplicitNewWindowAction
+    readonly property bool hasActionRows: root.toplevel !== null
     readonly property bool actionInteractionHovered: identityMouse.containsMouse
         || triggerBridgeHover.hovered
         || actionsPanel.panelHovered
@@ -206,11 +225,19 @@ Item {
             return false;
 
         const windowClass = root.normalizedAppId(window?.class);
+        const windowInitialClass = root.normalizedAppId(window?.initialClass);
         const applicationId = root.normalizedAppId(appId);
-        return windowClass.length > 0 && applicationId.length > 0
+        if (applicationId.length === 0)
+            return windowClass.length > 0;
+
+        return (windowClass.length > 0
             && (windowClass === applicationId
                 || windowClass.endsWith(applicationId)
-                || applicationId.endsWith(windowClass));
+                || applicationId.endsWith(windowClass)))
+            || (windowInitialClass.length > 0
+                && (windowInitialClass === applicationId
+                    || windowInitialClass.endsWith(applicationId)
+                    || applicationId.endsWith(windowInitialClass)));
     }
 
     function toplevelAppId(target) {
@@ -219,7 +246,59 @@ Item {
     }
 
     function lookupDesktopEntry(appId) {
-        return DesktopEntries.byId(appId) ?? DesktopEntries.heuristicLookup(appId) ?? null;
+        return DesktopEntries.byId(appId)
+            ?? DesktopEntries.heuristicLookup(appId)
+            ?? (root.ipcWindow?.class ? DesktopEntries.heuristicLookup(root.ipcWindow.class) : null)
+            ?? (root.ipcWindow?.initialClass ? DesktopEntries.heuristicLookup(root.ipcWindow.initialClass) : null);
+    }
+
+    function isNewWindowActionTitle(title) {
+        const key = String(title ?? "").trim().toLowerCase();
+        return key === "new window"
+            || key === "new-window"
+            || key === "open a new window"
+            || key === "new empty window"
+            || key === "new instance";
+    }
+
+    function launchNewWindow() {
+        for (let i = 0; i < root.actionItems.length; i++) {
+            const item = root.actionItems[i];
+            if (root.isNewWindowActionTitle(item.title)) {
+                if (item.kind === "desktop") {
+                    item.desktopAction.execute();
+                } else if (item.kind === "gtk") {
+                    root.activateGtkAction(item.gtkAction);
+                }
+                root.closePresentation();
+                return;
+            }
+        }
+
+        if (root.desktopEntry !== null) {
+            root.desktopEntry.execute();
+        } else if (root.ipcWindow?.class) {
+            Hyprland.dispatch(`exec ${root.ipcWindow.class.toLowerCase()}`);
+        }
+        root.closePresentation();
+    }
+
+    function closeActiveWindow() {
+        if (root.toplevel !== null) {
+            root.toplevel.close();
+        } else if (root.ipcWindow?.address) {
+            Hyprland.dispatch(`closewindow address:${root.ipcWindow.address}`);
+        } else {
+            Hyprland.dispatch("closewindow activewindow");
+        }
+        root.closePresentation();
+    }
+
+    function forceQuitActiveWindow() {
+        Hyprland.dispatch("killactive");
+        if (root.activePid > 0)
+            killProcess.exec(["kill", "-9", String(root.activePid)]);
+        root.closePresentation();
     }
 
     function entryName(entry, appId) {
@@ -734,6 +813,10 @@ Item {
         }
     }
 
+    Process {
+        id: killProcess
+    }
+
     Timer {
         id: actionResolutionDeadline
 
@@ -878,9 +961,8 @@ Item {
                 length: 280
                 depth: Math.min(root.maxPopupDepth,
                     actionsContent.implicitHeight
-                        + detailsContent.implicitHeight
-                        + Theme.panelPadding * 2
-                        + (root.hasActionRows ? Theme.panelItemGap : 0))
+                        + (detailsSection.visible ? detailsContent.implicitHeight + Theme.panelItemGap : 0)
+                        + Theme.panelPadding * 2)
                 duration: 0
                 backgroundColor: Theme.panelBg
                 curveRadius: Theme.panelRadius
@@ -920,9 +1002,9 @@ Item {
                             topMargin: Theme.panelPadding
                             leftMargin: Theme.panelPadding
                             rightMargin: Theme.panelPadding
-                            bottomMargin: root.hasActionRows ? Theme.panelItemGap : 0
+                            bottomMargin: detailsSection.visible ? Theme.panelItemGap : 0
                         }
-                        visible: root.hasActionRows
+                        visible: true
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
                         contentWidth: width
@@ -935,8 +1017,22 @@ Item {
                             width: actionsScroll.width
                             spacing: Theme.panelItemGap
 
+                            Frame.PanelGroupLabel {
+                                Layout.fillWidth: true
+                                visible: nativeMenuView.atRoot && (root.canLaunchNewWindow || root.specificActionItems.length > 0)
+                                title: "Actions"
+                            }
+
+                            Frame.PanelActionRow {
+                                Layout.fillWidth: true
+                                visible: nativeMenuView.atRoot && root.canLaunchNewWindow
+                                icon: ""
+                                label: "New Window"
+                                onClicked: root.launchNewWindow()
+                            }
+
                             Repeater {
-                                model: root.actionItems
+                                model: root.specificActionItems
 
                                 Frame.PanelActionRow {
                                     required property var modelData
@@ -958,6 +1054,18 @@ Item {
                                 }
                             }
 
+                            Frame.PanelDivider {
+                                Layout.fillWidth: true
+                                fullWidth: true
+                                visible: nativeMenuView.atRoot && root.hasNativeMenu
+                            }
+
+                            Frame.PanelGroupLabel {
+                                Layout.fillWidth: true
+                                visible: nativeMenuView.atRoot && root.hasNativeMenu
+                                title: "Menu"
+                            }
+
                             Frame.PanelMenuView {
                                 id: nativeMenuView
 
@@ -968,12 +1076,42 @@ Item {
                                 onActivated: root.closePresentation()
                             }
 
+                            Frame.PanelDivider {
+                                Layout.fillWidth: true
+                                fullWidth: true
+                                visible: nativeMenuView.atRoot
+                            }
+
+                            Frame.PanelGroupLabel {
+                                Layout.fillWidth: true
+                                visible: nativeMenuView.atRoot
+                                title: "Application"
+                            }
+
+                            Frame.PanelActionRow {
+                                Layout.fillWidth: true
+                                visible: nativeMenuView.atRoot
+                                icon: "󰅖"
+                                label: "Close Window"
+                                onClicked: root.closeActiveWindow()
+                            }
+
+                            Frame.PanelActionRow {
+                                Layout.fillWidth: true
+                                visible: nativeMenuView.atRoot
+                                icon: "󰅚"
+                                label: "Force Quit"
+                                accentColor: Theme.red
+                                onClicked: root.forceQuitActiveWindow()
+                            }
+
                         }
                     }
 
                     Item {
                         id: detailsSection
 
+                        visible: nativeMenuView.atRoot
                         anchors {
                             left: parent.left
                             right: parent.right
@@ -982,7 +1120,7 @@ Item {
                             rightMargin: Theme.panelPadding
                             bottomMargin: Theme.panelPadding
                         }
-                        height: detailsContent.implicitHeight
+                        height: visible ? detailsContent.implicitHeight : 0
 
                         ColumnLayout {
                             id: detailsContent
@@ -990,9 +1128,13 @@ Item {
                             width: parent.width
                             spacing: Theme.gap
 
+                            Frame.PanelDivider {
+                                Layout.fillWidth: true
+                                fullWidth: true
+                            }
+
                             Item {
-                                visible: root.hasActionRows
-                                Layout.preferredHeight: visible ? Theme.gap * 2 : 0
+                                Layout.preferredHeight: Theme.gap
                             }
 
                             WindowDetails {

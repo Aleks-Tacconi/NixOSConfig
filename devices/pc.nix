@@ -25,8 +25,14 @@
     ./hardware-configuration-pc.nix
 
     ../configuration/applications/emulator/configuration.nix
+    ../configuration/applications/whatsapp/configuration.nix
     ../configuration/nvidia/configuration.nix
   ];
   boot.loader.grub.useOSProber = true;
   time.hardwareClockInLocalTime = true;
+
+  environment.systemPackages = with pkgs; [
+    discord
+  ];
+  programs.steam.enable = true;
 }

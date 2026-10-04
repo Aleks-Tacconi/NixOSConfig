@@ -60,9 +60,9 @@ Item {
             audio.muted = !audio.muted
     }
 
-    function cyclePlayer() {
+    function cyclePlayer(direction = 1) {
         if (root.playerCount > 1)
-            root.selectedPlayerIndex = (root.selectedPlayerIndex + 1) % root.playerCount
+            root.selectedPlayerIndex = (root.selectedPlayerIndex + direction + root.playerCount) % root.playerCount
     }
 
     ColumnLayout {
@@ -201,10 +201,10 @@ Item {
 
                                 Text {
                                     visible: modelData === root.defaultSink
-                                    text: "Current"
-                                    color: Theme.muted
+                                    text: "✓"
+                                    color: Theme.red
                                     font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.panelCaptionSize
+                                    font.pixelSize: Theme.fontSize
                                 }
                             }
 
@@ -252,7 +252,9 @@ Item {
             player: root.selectedPlayer
             playerCount: root.playerCount
             selectedPlayerIndex: root.selectedPlayerIndex
-            onCyclePlayer: root.cyclePlayer()
+            onPreviousPlayer: root.cyclePlayer(-1)
+            onNextPlayer: root.cyclePlayer(1)
+            onCyclePlayer: root.cyclePlayer(1)
         }
     }
 }

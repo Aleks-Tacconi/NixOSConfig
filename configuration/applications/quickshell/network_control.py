@@ -81,22 +81,34 @@ def device_status() -> dict[str, Any]:
         parts = split_terse(line)
         if len(parts) < 4 or parts[0] == "lo":
             continue
+        dev_type = parts[1]
+        if dev_type in {"wired", "802-3-ethernet"}:
+            dev_type = "ethernet"
+        elif dev_type == "802-11-wireless":
+            dev_type = "wifi"
+
+        state = parts[2]
+        if state.startswith("connected"):
+            state = "connected"
+
         devices.append(
             {
                 "interfaceName": parts[0],
-                "type": parts[1],
-                "state": parts[2],
+                "type": dev_type,
+                "state": state,
                 "label": ":".join(parts[3:]) or parts[0],
             }
         )
 
     connected = [device for device in devices if device["state"] == "connected"]
-    preferred = next((device for device in connected if device["type"] == "wifi"), None)
+    # Prioritize active Ethernet over Wi-Fi
+    preferred = next((device for device in connected if device["type"] == "ethernet"), None)
     preferred = preferred or next(
-        (device for device in connected if device["type"] == "ethernet"), None
+        (device for device in connected if device["type"] == "wifi"), None
     )
+    preferred = preferred or (connected[0] if connected else None)
     preferred = preferred or next(
-        (device for device in devices if device["type"] in {"wifi", "ethernet"}), None
+        (device for device in devices if device["type"] in {"ethernet", "wifi"}), None
     )
     wifi = next((device for device in connected if device["type"] == "wifi"), None)
     wifi = wifi or next((device for device in devices if device["type"] == "wifi"), None)
@@ -126,18 +138,39 @@ def security_details(security: str) -> tuple[str, bool, bool]:
 
 def saved_wifi_profiles() -> dict[str, str]:
     """Map saved Wi-Fi SSIDs to their NetworkManager profile UUIDs."""
-    output = run_nmcli(["-t", "-e", "yes", "-f", "UUID,TYPE", "connection", "show"])
+    output = run_nmcli(["-t", "-e", "yes", "-f", "UUID,TYPE,NAME", "connection", "show"])
+    uuids: list[tuple[str, str]] = []
     profiles: dict[str, str] = {}
     for line in output.splitlines():
         parts = split_terse(line)
-        if len(parts) != 2 or parts[1] not in {"wifi", "802-11-wireless"}:
+        if len(parts) < 3 or parts[1] not in {"wifi", "802-11-wireless"}:
             continue
-        ssid_output = run_nmcli(
-            ["-t", "-e", "yes", "-g", "802-11-wireless.ssid", "connection", "show", "uuid", parts[0]]
+        uuids.append((parts[0], parts[2]))
+    if not uuids:
+        return {}
+    try:
+        raw_ssids = run_nmcli(
+            [
+                "-t",
+                "-e",
+                "yes",
+                "-g",
+                "connection.uuid,802-11-wireless.ssid",
+                "connection",
+                "show",
+                *[u[0] for u in uuids],
+            ]
         )
-        ssid = split_terse(ssid_output.strip())[0] if ssid_output.strip() else ""
-        if ssid and ssid not in profiles:
-            profiles[ssid] = parts[0]
+        lines = [line.strip() for line in raw_ssids.splitlines() if line.strip()]
+        for i in range(0, len(lines) - 1, 2):
+            uuid_val = lines[i]
+            ssid_val = lines[i + 1]
+            if ssid_val and ssid_val not in profiles:
+                profiles[ssid_val] = uuid_val
+    except Exception:
+        for uuid_val, name in uuids:
+            if name and name not in profiles:
+                profiles[name] = uuid_val
     return profiles
 
 
@@ -157,6 +190,9 @@ def wifi_networks(interface_name: str, rescan: bool) -> list[dict[str, Any]]:
         if len(parts) < 5 or not parts[1]:
             continue
         security_label, requires_password, supported = security_details(parts[4])
+        saved_uuid = saved.get(parts[1], "")
+        if saved_uuid:
+            supported = True
         network = {
             "active": parts[0] == "*",
             "ssid": parts[1],
@@ -165,7 +201,7 @@ def wifi_networks(interface_name: str, rescan: bool) -> list[dict[str, Any]]:
             "security": security_label,
             "requiresPassword": requires_password,
             "supported": supported,
-            "savedUuid": saved.get(parts[1], ""),
+            "savedUuid": saved_uuid,
         }
         key = (network["ssid"], security_label)
         current = networks.get(key)
@@ -181,7 +217,13 @@ def connect_network(arguments: argparse.Namespace) -> None:
     if arguments.password_stdin:
         command.insert(0, "--ask")
         password = sys.stdin.readline().rstrip("\n") + "\n"
-    run_nmcli([*command, "device", "wifi", "connect", arguments.bssid, "ifname", arguments.interface], input_text=password)
+    try:
+        run_nmcli([*command, "device", "wifi", "connect", arguments.bssid, "ifname", arguments.interface], input_text=password)
+    except NetworkError:
+        if arguments.uuid and not arguments.password_stdin:
+            run_nmcli([*command, "connection", "up", "uuid", arguments.uuid])
+        else:
+            raise
 
 
 def connect_hidden(arguments: argparse.Namespace) -> None:

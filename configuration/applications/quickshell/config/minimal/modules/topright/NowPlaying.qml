@@ -13,6 +13,8 @@ Item {
     property int playerCount: 1
     property int selectedPlayerIndex: 0
 
+    signal previousPlayer
+    signal nextPlayer
     signal cyclePlayer
 
     readonly property real trackLengthSec: root.player?.lengthSupported ? root.player.length : 0
@@ -52,11 +54,27 @@ Item {
                     : (root.player?.isPlaying ? "Playing" : "Paused")
             }
 
-            MediaControlButton {
+            RowLayout {
                 visible: root.playerCount > 1
-                controlSize: 32
-                icon: "󰑓"
-                onClicked: root.cyclePlayer()
+                spacing: Theme.gap
+
+                MediaControlButton {
+                    controlSize: 26
+                    icon: ""
+                    onClicked: {
+                        root.previousPlayer()
+                        root.cyclePlayer()
+                    }
+                }
+
+                MediaControlButton {
+                    controlSize: 26
+                    icon: ""
+                    onClicked: {
+                        root.nextPlayer()
+                        root.cyclePlayer()
+                    }
+                }
             }
         }
 
