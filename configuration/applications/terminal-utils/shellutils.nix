@@ -130,7 +130,7 @@ in
     sshfs
     nmap
     dig
-    magic-wormhole
+    # magic-wormhole
 
     # Build tools / compilers / libs
     gnumake
@@ -150,7 +150,6 @@ in
         demjson3
         numpy
         regex
-        tkinter
         stdenv
         pip
         pynvim
@@ -178,24 +177,24 @@ in
     # Other programming tools
     cargo
     rustc
-    nix-search-cli
+    # nix-search-cli
     uv
     luajitPackages.luarocks
     stylelint
     stylelint-lsp
     mprocs
-    postgresql
-    swi-prolog
+    # postgresql
+    # swi-prolog
 
     # Misc utilities
     htop
     unzip
     wget
     ffmpeg
-    imagemagick
-    ripmime
+    # imagemagick
+    # ripmime
     gcalcli
-    tracy
+    # tracy
     kdePackages.wayland-protocols
     upower
     wlr-protocols
@@ -203,9 +202,9 @@ in
     xwayland-run
     playerctl
     ncdu
-    xrandr
-    libxcvt
-    pandoc
+    # xrandr
+    # libxcvt
+    # pandoc
     texliveFull
     bun
     # arduino

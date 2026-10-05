@@ -75,8 +75,8 @@ coprimes
 CORS
 Covid
 CreateProcess
-creational
 Creational
+creational
 creativecommons
 CS2800
 CS2860
@@ -190,8 +190,8 @@ GID
 GIDs
 Github
 github
-gitlab
 GitLab
+gitlab
 GL
 Goodharts
 Grossmano
@@ -257,8 +257,8 @@ JDBC
 JDBC's
 Jeffries
 JetBrains
-Jisc
 JISC
+Jisc
 js
 JUnit
 k1
@@ -270,8 +270,8 @@ KDF
 keccak
 Kerighan
 keystream
-Keystreams
 keystreams
+Keystreams
 KLOC
 Koblitz
 Kohnfelder
@@ -307,8 +307,8 @@ matchability
 MD4
 MD5
 MDC
-memoization
 Memoization
+memoization
 Mergesort
 metareasoning
 mili
@@ -364,8 +364,8 @@ PINs
 PKE
 PKI
 PKIs
-Plaintext
 plaintext
+Plaintext
 plaintexts
 PMD
 POSIX
@@ -378,8 +378,8 @@ Praerit
 preimage
 preorder
 prolog
-Pseudorandomness
 pseudorandomness
+Pseudorandomness
 pseudotransitivity
 Pthreads
 PVV
@@ -391,8 +391,8 @@ QID
 QIDs
 QUEry
 QUIC
-Quicksort
 quicksort
+Quicksort
 R1
 RC6
 README's
@@ -437,8 +437,8 @@ Sedol
 sequence
 Serialisability
 serialisable
-serializer
 Serializer
+serializer
 serializers
 ServerSide
 SFTP
@@ -459,10 +459,10 @@ smartcard
 SonarQube
 Soton
 sp
-SPDX
 spdx
-SpotBugs
+SPDX
 spotbugs
+SpotBugs
 SpringBootTest
 SQLi
 SQLite
@@ -508,8 +508,8 @@ TODO
 TODO's
 Toon
 TOU
-Traceroute
 traceroute
+Traceroute
 Tracert
 Trygve
 TSL
@@ -533,8 +533,8 @@ Unlicense
 Unlinkability
 URIs
 URNs
-userid
 UserID
+userid
 Utd
 v2
 v3
@@ -542,8 +542,8 @@ v4
 v6
 varient
 VCS
-vibecoding
 Vibecoding
+vibecoding
 Vite
 VLR
 VSC
