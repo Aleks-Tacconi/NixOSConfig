@@ -60,6 +60,7 @@
     ../configuration/applications/libreoffice/configuration.nix
     ../configuration/applications/mediaplayer/configuration.nix
     ../configuration/applications/nvim/configuration.nix
+    ../configuration/applications/notebook/configuration.nix
     ../configuration/applications/obsidian/configuration.nix
     ../configuration/applications/qbittorrent/configuration.nix
     ../configuration/applications/syncthing/configuration.nix
