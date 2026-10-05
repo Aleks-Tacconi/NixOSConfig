@@ -6,25 +6,6 @@
   ...
 }:
 
-let
-  currentPythonKernel = pkgs.runCommand "jupyter-current-python-kernel" { } ''
-        mkdir -p $out/share/jupyter/kernels/current-python
-
-        cat > $out/share/jupyter/kernels/current-python/kernel.json <<EOF
-        {
-          "argv": [
-            "python",
-            "-m",
-            "ipykernel_launcher",
-            "-f",
-            "{connection_file}"
-          ],
-          "display_name": "Current Python",
-          "language": "python"
-        }
-    EOF
-  '';
-in
 {
   programs.java = {
     enable = true;
@@ -158,10 +139,12 @@ in
         pyperclip
         pylatexenc
         virtualenv
-
-        # for jupyter notebooks
         ipykernel
+        jupyter-client
         jupytext
+        nbconvert
+        notebook
+        jupyterlab
       ]
     ))
 
@@ -170,9 +153,6 @@ in
     isort
     poetry
     pylint
-
-    # for jupyter notebooks
-    currentPythonKernel
 
     # Other programming tools
     cargo
@@ -215,8 +195,6 @@ in
     # fakeroot
     # rpm
   ];
-
-  home.file.".local/share/jupyter/runtime/.keep".text = "";
 
   home.file.".pylintrc".text = ''
     [MESSAGES CONTROL]
