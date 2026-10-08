@@ -16,7 +16,6 @@
   imports = [
     ./core.nix
     ./hardware-configuration-laptop.nix
-    ../configuration/nixconfig/bluetooth.nix
     ../configuration/nixconfig/power_profiles.nix
 
     ../configuration/applications/vial/configuration.nix

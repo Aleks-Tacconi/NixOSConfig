@@ -184,7 +184,7 @@
     ncdu
     # xrandr
     # libxcvt
-    # pandoc
+    pandoc
     texliveFull
     bun
     # arduino
