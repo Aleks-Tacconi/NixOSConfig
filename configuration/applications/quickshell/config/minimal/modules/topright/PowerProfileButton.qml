@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import "../../theme"
 
@@ -18,6 +20,12 @@ Rectangle {
     color: root.active ? Theme.panelSurfaceHover : (profileMouse.containsMouse && root.enabled ? Theme.panelSurface : "transparent")
     opacity: root.enabled ? 1 : 0.38
     border.width: 0
+
+    Behavior on color {
+        ColorAnimation {
+            duration: 120
+        }
+    }
 
     Row {
         anchors.centerIn: parent

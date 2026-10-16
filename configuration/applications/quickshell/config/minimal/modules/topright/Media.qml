@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
@@ -109,6 +111,7 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
                     onClicked: mouse => root.setVolumePercent(mouse.x / width * 100)
                     onPositionChanged: mouse => {
                         if (pressed)

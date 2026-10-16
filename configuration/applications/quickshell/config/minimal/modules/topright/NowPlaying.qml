@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import "../frame" as Frame
@@ -25,7 +27,7 @@ Item {
     Timer {
         interval: 1000
         repeat: true
-        running: root.player?.isPlaying ?? false
+        running: (root.player?.isPlaying ?? false) && root.visible
         onTriggered: root.player.positionChanged()
     }
 
@@ -61,19 +63,13 @@ Item {
                 MediaControlButton {
                     controlSize: 26
                     icon: ""
-                    onClicked: {
-                        root.previousPlayer()
-                        root.cyclePlayer()
-                    }
+                    onClicked: root.previousPlayer()
                 }
 
                 MediaControlButton {
                     controlSize: 26
                     icon: ""
-                    onClicked: {
-                        root.nextPlayer()
-                        root.cyclePlayer()
-                    }
+                    onClicked: root.nextPlayer()
                 }
             }
         }

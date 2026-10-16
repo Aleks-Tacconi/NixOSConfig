@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import "../../theme"
@@ -23,7 +25,7 @@ Item {
 
     Timer {
         interval: 30000
-        running: true
+        running: root.visible
         repeat: true
         onTriggered: root.clockNow = new Date()
     }

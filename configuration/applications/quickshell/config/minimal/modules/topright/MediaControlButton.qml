@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import "../../theme"
 
@@ -20,6 +22,12 @@ Rectangle {
     opacity: root.enabled ? 1 : 0.38
     border.width: root.primary ? 1 : 0
     border.color: Theme.popupInnerEdge
+
+    Behavior on color {
+        ColorAnimation {
+            duration: 120
+        }
+    }
 
     Text {
         anchors.centerIn: parent
