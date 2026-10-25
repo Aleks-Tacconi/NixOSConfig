@@ -10,6 +10,14 @@ import Quickshell.Io
 Scope {
     id: root
 
+    property var trafficViewers: []
+
+    /** Track open network panels without one monitor disabling another. */
+    function setTrafficVisible(view, visible) {
+        const viewers = root.trafficViewers.filter(item => item !== view);
+        root.trafficViewers = visible ? viewers.concat([view]) : viewers;
+    }
+
     property string interfaceName: ""
     property string wifiInterface: ""
     property string networkType: "none"
@@ -26,6 +34,7 @@ Scope {
     readonly property real uploadBytesPerSecond: traffic.uploadBytesPerSecond
     readonly property bool tailscaleConnected: tailscale.connected
     readonly property bool tailscalePending: tailscale.pending
+    readonly property string tailscaleError: tailscale.errorText
     property bool scanAfterStatus: false
     property bool queuedScan: false
     property bool queuedRescan: false
@@ -38,6 +47,7 @@ Scope {
         id: traffic
 
         interfaceName: root.interfaceName
+        active: root.trafficViewers.length > 0
     }
 
     TailscaleService {

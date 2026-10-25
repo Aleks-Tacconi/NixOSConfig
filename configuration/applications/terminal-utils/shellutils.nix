@@ -157,6 +157,12 @@
     # Other programming tools
     cargo
     rustc
+    clippy
+    rustfmt
+    cargo-nextest
+    rust-analyzer
+    bacon
+
     # nix-search-cli
     uv
     luajitPackages.luarocks

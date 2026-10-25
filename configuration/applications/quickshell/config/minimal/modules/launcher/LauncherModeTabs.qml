@@ -41,6 +41,8 @@ Rectangle {
     signal modeRequested(string mode)
 
     Row {
+        id: modeRow
+
         anchors {
             fill: parent
             margins: 3
@@ -59,8 +61,8 @@ Rectangle {
                 readonly property bool active: modelData.key === root.mode
                 readonly property bool hovered: mouseArea.containsMouse
 
-                width: (parent.width - parent.spacing * Math.max(0, root.modes.length - 1)) / root.modes.length
-                height: parent.height
+                width: (modeRow.width - modeRow.spacing * Math.max(0, root.modes.length - 1)) / root.modes.length
+                height: modeRow.height
 
                 Rectangle {
                     anchors.fill: parent

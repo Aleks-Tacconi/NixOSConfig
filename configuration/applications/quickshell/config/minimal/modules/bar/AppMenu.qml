@@ -1,11 +1,11 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import "app-menu-actions.js" as Actions
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.DBusMenu
 import Quickshell.Hyprland
-import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
 import "../.." as ShellConfig
@@ -51,7 +51,7 @@ Item {
             return root.actionRequest.ipcWindow;
 
         const liveWindow = Hyprland.activeToplevel?.lastIpcObject;
-        if (root.ipcMatchesApp(liveWindow, root.appId))
+        if (Actions.ipcMatchesApp(liveWindow, root.appId))
             return liveWindow;
 
         return {};
@@ -66,7 +66,7 @@ Item {
     readonly property bool hasNativeMenu: root.nativeMenu !== null
     readonly property string appId: root.actionPresentation?.appId
         ?? root.actionRequest?.appId
-        ?? root.toplevelAppId(root.toplevel)
+        ?? Actions.toplevelAppId(root.toplevel)
     readonly property var desktopEntry: root.actionPresentation?.desktopEntry
         ?? root.actionRequest?.desktopEntry
         ?? root.lookupDesktopEntry(root.appId)
@@ -75,14 +75,14 @@ Item {
         const items = root.actionItems;
         const result = [];
         for (let i = 0; i < items.length; i++) {
-            if (!root.isNewWindowActionTitle(items[i].title))
+            if (!Actions.isNewWindowActionTitle(items[i].title))
                 result.push(items[i]);
         }
         return result;
     }
     readonly property bool hasExplicitNewWindowAction: {
         for (let i = 0; i < root.actionItems.length; i++) {
-            if (root.isNewWindowActionTitle(root.actionItems[i].title))
+            if (Actions.isNewWindowActionTitle(root.actionItems[i].title))
                 return true;
         }
         return false;
@@ -91,9 +91,6 @@ Item {
         || (root.ipcWindow?.class?.length ?? 0) > 0
         || root.hasExplicitNewWindowAction
     readonly property bool hasActionRows: root.toplevel !== null
-    readonly property bool actionInteractionHovered: identityMouse.containsMouse
-        || triggerBridgeHover.hovered
-        || actionsPanel.panelHovered
     readonly property string appName: root.actionPresentation?.appName
         ?? root.actionRequest?.appName
         ?? root.entryName(root.desktopEntry, root.appId)
@@ -101,7 +98,7 @@ Item {
         ?? root.actionRequest?.iconSource
         ?? root.entryIcon(root.desktopEntry)
 
-    visible: ShellConfig.Config.appMenu.enable && root.toplevel !== null
+    visible: ShellConfig.Config.appMenu.enable && root.toplevel !== null && root.maxWidth > 0
     width: visible ? Math.min(root.maxWidth, menuRow.implicitWidth) : 0
     height: Theme.barHeight
     clip: false
@@ -113,18 +110,8 @@ Item {
     onActivePidChanged: root.queueNativeMenuProbe()
 
     onActionStateChanged: {
-        actionHoverClose.stop();
         if (root.actionsOpen)
             nativeMenuView.reset();
-        if (root.actionsOpen && !root.actionInteractionHovered)
-            actionHoverClose.restart();
-    }
-    onActionInteractionHoveredChanged: {
-        if (root.actionInteractionHovered) {
-            actionHoverClose.stop();
-        } else if (root.actionsOpen) {
-            actionHoverClose.restart();
-        }
     }
 
     Connections {
@@ -173,7 +160,7 @@ Item {
     }
 
     function startPendingNativeMenuProbe() {
-        if (qtMenuProbeProcess.running || root.pendingNativeProbePid <= 0)
+        if (backend.qtMenuProbeProcess.running || root.pendingNativeProbePid <= 0)
             return;
 
         const pid = root.pendingNativeProbePid;
@@ -181,8 +168,8 @@ Item {
         if (pid !== root.activePid)
             return;
 
-        qtMenuProbeProcess.probedPid = pid;
-        qtMenuProbeProcess.exec(["quickshell-qt-menu", String(pid)]);
+        backend.qtMenuProbeProcess.probedPid = pid;
+        backend.qtMenuProbeProcess.exec(["quickshell-qt-menu", String(pid)]);
     }
 
     function finishNativeMenuProbe(pid, exitCode, output) {
@@ -200,50 +187,9 @@ Item {
         }
     }
 
-    function snapshotIpcWindow(window) {
-        return Object.freeze({
-            address: String(window?.address ?? ""),
-            pid: Number(window?.pid ?? 0),
-            class: String(window?.class ?? ""),
-            title: String(window?.title ?? ""),
-            workspace: Object.freeze({
-                id: Number(window?.workspace?.id ?? 0),
-                name: String(window?.workspace?.name ?? "")
-            })
-        });
-    }
 
-    function normalizedAppId(value) {
-        return String(value ?? "")
-            .toLowerCase()
-            .replace(/\.desktop$/, "")
-            .replace(/[^a-z0-9]+/g, "");
-    }
 
-    function ipcMatchesApp(window, appId) {
-        if (Number(window?.pid ?? 0) <= 0)
-            return false;
 
-        const windowClass = root.normalizedAppId(window?.class);
-        const windowInitialClass = root.normalizedAppId(window?.initialClass);
-        const applicationId = root.normalizedAppId(appId);
-        if (applicationId.length === 0)
-            return windowClass.length > 0;
-
-        return (windowClass.length > 0
-            && (windowClass === applicationId
-                || windowClass.endsWith(applicationId)
-                || applicationId.endsWith(windowClass)))
-            || (windowInitialClass.length > 0
-                && (windowInitialClass === applicationId
-                    || windowInitialClass.endsWith(applicationId)
-                    || applicationId.endsWith(windowInitialClass)));
-    }
-
-    function toplevelAppId(target) {
-        const appId = String(target?.appId ?? "");
-        return appId.length > 0 ? appId : "Application";
-    }
 
     function lookupDesktopEntry(appId) {
         return DesktopEntries.byId(appId)
@@ -252,19 +198,11 @@ Item {
             ?? (root.ipcWindow?.initialClass ? DesktopEntries.heuristicLookup(root.ipcWindow.initialClass) : null);
     }
 
-    function isNewWindowActionTitle(title) {
-        const key = String(title ?? "").trim().toLowerCase();
-        return key === "new window"
-            || key === "new-window"
-            || key === "open a new window"
-            || key === "new empty window"
-            || key === "new instance";
-    }
 
     function launchNewWindow() {
         for (let i = 0; i < root.actionItems.length; i++) {
             const item = root.actionItems[i];
-            if (root.isNewWindowActionTitle(item.title)) {
+            if (Actions.isNewWindowActionTitle(item.title)) {
                 if (item.kind === "desktop") {
                     item.desktopAction.execute();
                 } else if (item.kind === "gtk") {
@@ -278,7 +216,7 @@ Item {
         if (root.desktopEntry !== null) {
             root.desktopEntry.execute();
         } else if (root.ipcWindow?.class) {
-            Hyprland.dispatch(`exec ${root.ipcWindow.class.toLowerCase()}`);
+            Hyprland.dispatch(`hl.dsp.exec_cmd("${root.ipcWindow.class.toLowerCase()}")`);
         }
         root.closePresentation();
     }
@@ -287,87 +225,32 @@ Item {
         if (root.toplevel !== null) {
             root.toplevel.close();
         } else if (root.ipcWindow?.address) {
-            Hyprland.dispatch(`closewindow address:${root.ipcWindow.address}`);
+            Hyprland.dispatch(`hl.dsp.window.close({ address = "${root.ipcWindow.address}" })`);
         } else {
-            Hyprland.dispatch("closewindow activewindow");
+            Hyprland.dispatch("hl.dsp.window.close()");
         }
         root.closePresentation();
     }
 
     function forceQuitActiveWindow() {
-        Hyprland.dispatch("killactive");
+        Hyprland.dispatch("hl.dsp.window.kill()");
         if (root.activePid > 0)
-            killProcess.exec(["kill", "-9", String(root.activePid)]);
+            backend.killProcess.exec(["kill", "-9", String(root.activePid)]);
         root.closePresentation();
     }
 
     function entryName(entry, appId) {
-        return entry?.name?.length > 0 ? entry.name : root.friendlyName(appId);
+        return entry?.name?.length > 0 ? entry.name : Actions.friendlyName(appId);
     }
 
     function entryIcon(entry) {
         return entry?.icon?.length > 0 ? Quickshell.iconPath(entry.icon, true) : "";
     }
 
-    function copyDesktopActions(actions) {
-        const copy = [];
-        for (let index = 0; index < (actions?.length ?? 0); index++) {
-            copy.push(actions[index]);
-        }
-        return Object.freeze(copy);
-    }
 
-    function friendlyName(appId) {
-        const shortName = appId.split(".").pop() || "Application";
-        const spaced = shortName
-            .replace(/[-_]+/g, " ")
-            .replace(/([a-z0-9])([A-Z])/g, "$1 $2");
 
-        return spaced.replace(/\b\w/g, letter => letter.toUpperCase());
-    }
 
-    function actionKey(value) {
-        return String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-    }
 
-    function actionKeys(title, actionId) {
-        const shortId = String(actionId ?? "").split(".").pop();
-        return [root.actionKey(title), root.actionKey(shortId)].filter(key => key.length > 0);
-    }
-
-    function actionGlyph(title) {
-        const key = root.actionKey(title);
-        if (key.includes("incognito") || key.includes("private"))
-            return "";
-        if (key.includes("new") || key === "open")
-            return "󰐕";
-        if (key.includes("search") || key.includes("find"))
-            return "";
-        if (key.includes("copy"))
-            return "";
-        if (key.includes("paste"))
-            return "";
-        if (key.includes("cut"))
-            return "";
-        if (key.includes("save"))
-            return "";
-        if (key.includes("print"))
-            return "";
-        if (key.includes("settings") || key.includes("preferences"))
-            return "";
-        if (key.includes("refresh") || key.includes("reload"))
-            return "󰑐";
-        if (key.includes("edit"))
-            return "";
-        if (key.includes("view"))
-            return "";
-        if (key.includes("help") || key.includes("about"))
-            return "";
-        if (key.includes("quit") || key.includes("exit") || key.includes("logout"))
-            return "󰍃";
-
-        return "";
-    }
 
     function actionIconSource(actionIcon, resolveIconName) {
         const icon = String(actionIcon ?? "");
@@ -379,68 +262,7 @@ Item {
         return "";
     }
 
-    function combineActions(desktopActions, gtkActions) {
-        const combined = [];
-        const seen = [];
 
-        for (let index = 0; index < desktopActions.length; index++) {
-            const desktopAction = desktopActions[index];
-            const title = String(desktopAction.name ?? "").trim();
-            if (title.length === 0)
-                continue;
-
-            const keys = root.actionKeys(title, "");
-            combined.push(Object.freeze({
-                kind: "desktop",
-                title: title,
-                desktopAction: desktopAction
-            }));
-            seen.push(...keys);
-        }
-
-        for (const gtkAction of gtkActions) {
-            const keys = root.actionKeys(gtkAction.title, gtkAction.action);
-            if (keys.some(key => seen.includes(key)))
-                continue;
-
-            combined.push(Object.freeze({
-                kind: "gtk",
-                title: gtkAction.title,
-                gtkAction: gtkAction
-            }));
-            seen.push(...keys);
-        }
-
-        return Object.freeze(combined);
-    }
-
-    function parseGtkActions(output) {
-        try {
-            const actions = JSON.parse(output);
-            if (!Array.isArray(actions))
-                return null;
-
-            const parsed = [];
-            for (const action of actions) {
-                if (action === null
-                        || typeof action.service !== "string" || action.service.length === 0
-                        || typeof action.path !== "string" || !action.path.startsWith("/")
-                        || typeof action.action !== "string" || action.action.length === 0
-                        || typeof action.title !== "string" || action.title.length === 0)
-                    return null;
-
-                parsed.push(Object.freeze({
-                    service: action.service,
-                    path: action.path,
-                    action: action.action,
-                    title: action.title
-                }));
-            }
-            return Object.freeze(parsed);
-        } catch (error) {
-            return null;
-        }
-    }
 
     function requestIsCurrent(request) {
         if (request === null || root.actionRequest === null || !root.actionResolving)
@@ -451,7 +273,7 @@ Item {
             && request.generation === root.actionRequest.generation
             && request.target !== null
             && request.target === root.actionRequest.target
-            && root.toplevelAppId(request.target) === request.appId
+            && Actions.toplevelAppId(request.target) === request.appId
             && (active === null || active === request.target)
             && Number(request.pid ?? 0) === Number(root.actionRequest.pid ?? 0)
             && String(request.address ?? "") === String(root.actionRequest.address ?? "");
@@ -462,10 +284,10 @@ Item {
         if (target === null)
             return;
 
-        const appId = root.toplevelAppId(target);
+        const appId = Actions.toplevelAppId(target);
         const desktopEntry = root.lookupDesktopEntry(appId);
         const liveIpcWindow = Hyprland.activeToplevel?.lastIpcObject;
-        const expectedAddress = root.ipcMatchesApp(liveIpcWindow, appId)
+        const expectedAddress = Actions.ipcMatchesApp(liveIpcWindow, appId)
             ? String(liveIpcWindow.address ?? "")
             : "";
         const request = Object.freeze({
@@ -473,11 +295,11 @@ Item {
             target: target,
             appId: appId,
             desktopEntry: desktopEntry,
-            desktopActions: root.copyDesktopActions(desktopEntry?.actions),
+            desktopActions: Actions.copyDesktopActions(desktopEntry?.actions),
             appName: root.entryName(desktopEntry, appId),
             iconSource: root.entryIcon(desktopEntry),
             title: String(target.title ?? root.entryName(desktopEntry, appId)),
-            ipcWindow: root.snapshotIpcWindow(null),
+            ipcWindow: Actions.snapshotIpcWindow(null),
             pid: 0,
             address: "",
             expectedAddress: expectedAddress
@@ -488,7 +310,7 @@ Item {
         root.actionOpenRequested = openWhenReady;
         root.actionRequest = request;
         root.actionState = "resolving-window";
-        actionResolutionDeadline.restart();
+        backend.actionResolutionDeadline.restart();
 
         if (expectedAddress.length > 0 && Number(liveIpcWindow?.pid ?? 0) > 0) {
             root.finishWindowRequest(request, 0, JSON.stringify(liveIpcWindow));
@@ -500,7 +322,7 @@ Item {
     }
 
     function startPendingWindowRequest() {
-        if (activeWindowProcess.running || root.pendingWindowRequest === null)
+        if (backend.activeWindowProcess.running || root.pendingWindowRequest === null)
             return;
 
         const request = root.pendingWindowRequest;
@@ -508,8 +330,8 @@ Item {
         if (!root.requestIsCurrent(request))
             return;
 
-        activeWindowProcess.request = request;
-        activeWindowProcess.exec(["hyprctl", "activewindow", "-j"]);
+        backend.activeWindowProcess.request = request;
+        backend.activeWindowProcess.exec(["hyprctl", "activewindow", "-j"]);
     }
 
     function finishWindowRequest(request, exitCode, output) {
@@ -524,9 +346,9 @@ Item {
             return;
         }
 
-        const ipcWindow = root.snapshotIpcWindow(window);
+        const ipcWindow = Actions.snapshotIpcWindow(window);
         if (exitCode !== 0
-                || !root.ipcMatchesApp(ipcWindow, request.appId)
+                || !Actions.ipcMatchesApp(ipcWindow, request.appId)
                 || ipcWindow.pid <= 0
                 || ipcWindow.address.length === 0) {
             root.finalizeActionRequest(request, [], true);
@@ -561,7 +383,7 @@ Item {
     }
 
     function startPendingGtkRequest() {
-        if (gtkListProcess.running || root.pendingGtkRequest === null)
+        if (backend.gtkListProcess.running || root.pendingGtkRequest === null)
             return;
 
         const request = root.pendingGtkRequest;
@@ -569,8 +391,8 @@ Item {
         if (!root.requestIsCurrent(request) || request.pid <= 0 || request.address.length === 0)
             return;
 
-        gtkListProcess.request = request;
-        gtkListProcess.exec(["quickshell-gtk-actions", "list", String(request.pid)]);
+        backend.gtkListProcess.request = request;
+        backend.gtkListProcess.exec(["quickshell-gtk-actions", "list", String(request.pid)]);
     }
 
     function finishGtkRequest(request, exitCode, output) {
@@ -580,15 +402,15 @@ Item {
                 || request.target !== root.actionRequest.target)
             return;
 
-        const actions = exitCode === 0 ? root.parseGtkActions(output) : null;
+        const actions = exitCode === 0 ? Actions.parseGtkActions(output) : null;
         if (actions === null) {
             root.finalizeActionRequest(request, [], true);
             return;
         }
 
         if (actions.length === 0
-                && qtMenuProbeProcess.running
-                && qtMenuProbeProcess.probedPid === request.pid) {
+                && backend.qtMenuProbeProcess.running
+                && backend.qtMenuProbeProcess.probedPid === request.pid) {
             root.deferredGtkResult = Object.freeze({
                 request: request,
                 actions: actions
@@ -610,7 +432,7 @@ Item {
         if (!root.requestIsCurrent(request))
             return;
 
-        actionResolutionDeadline.stop();
+        backend.actionResolutionDeadline.stop();
         const presentation = Object.freeze({
             generation: request.generation,
             target: request.target,
@@ -622,7 +444,7 @@ Item {
             ipcWindow: request.ipcWindow,
             pid: request.pid,
             address: request.address,
-            actionItems: root.combineActions(request.desktopActions, gtkActions),
+            actionItems: Actions.combineActions(request.desktopActions, gtkActions),
             unavailable: unavailable
         });
 
@@ -634,7 +456,7 @@ Item {
     }
 
     function cancelResolution() {
-        actionResolutionDeadline.stop();
+        backend.actionResolutionDeadline.stop();
         root.actionGeneration++;
         root.actionRequest = null;
         root.actionPresentation = null;
@@ -647,7 +469,6 @@ Item {
     }
 
     function closePresentation() {
-        actionHoverClose.stop();
         if (root.actionResolving) {
             root.cancelResolution();
         } else if (root.actionsOpen) {
@@ -659,7 +480,7 @@ Item {
         if (root.actionState === "idle")
             return;
 
-        actionResolutionDeadline.stop();
+        backend.actionResolutionDeadline.stop();
         root.actionGeneration++;
         root.actionRequest = null;
         root.pendingWindowRequest = null;
@@ -694,7 +515,7 @@ Item {
         return root.presentationReusable
             && presentation !== null
             && presentation.target !== null
-            && root.toplevelAppId(presentation.target) === presentation.appId
+            && Actions.toplevelAppId(presentation.target) === presentation.appId
             && (active === null || active === presentation.target);
     }
 
@@ -738,13 +559,13 @@ Item {
     }
 
     function startPendingActivationRequest() {
-        if (gtkActivateProcess.running || root.pendingActivationRequest === null)
+        if (backend.gtkActivateProcess.running || root.pendingActivationRequest === null)
             return;
 
         const request = root.pendingActivationRequest;
         root.pendingActivationRequest = null;
-        gtkActivateProcess.request = request;
-        gtkActivateProcess.exec([
+        backend.gtkActivateProcess.request = request;
+        backend.gtkActivateProcess.exec([
             "quickshell-gtk-actions",
             "activate",
             request.service,
@@ -753,89 +574,9 @@ Item {
         ]);
     }
 
-    Process {
-        id: activeWindowProcess
-
-        property var request: null
-
-        stdout: StdioCollector {
-            id: activeWindowOutput
-        }
-
-        onExited: (exitCode, exitStatus) => {
-            root.finishWindowRequest(activeWindowProcess.request, exitCode, activeWindowOutput.text);
-            activeWindowProcess.request = null;
-            Qt.callLater(() => root.startPendingWindowRequest());
-        }
-    }
-
-    Process {
-        id: gtkListProcess
-
-        property var request: null
-
-        stdout: StdioCollector {
-            id: gtkListOutput
-        }
-
-        onExited: (exitCode, exitStatus) => {
-            root.finishGtkRequest(gtkListProcess.request, exitCode, gtkListOutput.text);
-            gtkListProcess.request = null;
-            Qt.callLater(() => root.startPendingGtkRequest());
-        }
-    }
-
-    Process {
-        id: gtkActivateProcess
-
-        property var request: null
-
-        onExited: {
-            gtkActivateProcess.request = null;
-            Qt.callLater(() => root.startPendingActivationRequest());
-        }
-    }
-
-    Process {
-        id: qtMenuProbeProcess
-
-        property int probedPid: 0
-
-        stdout: StdioCollector {
-            id: qtMenuProbeOutput
-        }
-
-        onExited: (exitCode, exitStatus) => {
-            root.finishNativeMenuProbe(qtMenuProbeProcess.probedPid, exitCode, qtMenuProbeOutput.text);
-            qtMenuProbeProcess.probedPid = 0;
-            Qt.callLater(() => root.finishDeferredGtkRequest());
-            Qt.callLater(() => root.startPendingNativeMenuProbe());
-        }
-    }
-
-    Process {
-        id: killProcess
-    }
-
-    Timer {
-        id: actionResolutionDeadline
-
-        interval: 2000
-        onTriggered: {
-            const request = root.actionRequest;
-            if (request !== null && root.actionResolving)
-                root.finalizeActionRequest(request, [], true);
-        }
-    }
-
-    Timer {
-        id: actionHoverClose
-
-        interval: 200
-        onTriggered: {
-            if (root.actionsOpen && !root.actionInteractionHovered)
-                root.closePresentation();
-        }
+    AppMenuBackend {
+        id: backend
+        owner: root
     }
 
     Row {
@@ -847,7 +588,7 @@ Item {
         Item {
             id: identityButton
 
-            width: Math.min(148, identityRow.implicitWidth)
+            width: Math.min(root.maxWidth, 148, identityRow.implicitWidth)
             height: parent.height
             clip: false
 
@@ -873,19 +614,19 @@ Item {
                 spacing: Theme.gap * 2
 
                 IconImage {
-                    visible: root.iconSource.length > 0
+                    visible: root.iconSource.length > 0 && identityButton.width >= 16
                     width: 16
                     height: 16
                     source: root.iconSource
                 }
 
                 Text {
-                    width: Math.min(116, implicitWidth)
+                    width: Math.max(0, Math.min(116, implicitWidth, identityButton.width - (root.iconSource.length > 0 ? 16 + identityRow.spacing : 0)))
                     color: Theme.red
                     elide: Text.ElideRight
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize + 1
-                    font.bold: true
+                    font.weight: Theme.emphasisWeight
                     text: root.appName
                 }
 
@@ -924,6 +665,7 @@ Item {
 
         WlrLayershell.namespace: "quickshell:appMenuActions"
         WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: root.actionsOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         anchors {
             top: true
@@ -957,7 +699,9 @@ Item {
                 corner: "topLeft"
                 requestedOpen: root.actionsOpen
                 autoClose: false
-                dismissOnExit: false
+                clickDismiss: true
+                activatorMouseArea: identityMouse
+                onDismissRequested: root.closePresentation()
                 length: 280
                 depth: Math.min(root.maxPopupDepth,
                     actionsContent.implicitHeight
@@ -1039,7 +783,7 @@ Item {
 
                                     Layout.fillWidth: true
                                     visible: nativeMenuView.atRoot
-                                    icon: root.actionGlyph(modelData.title)
+                                    icon: Actions.actionGlyph(modelData.title)
                                     iconSource: root.actionIconSource(modelData.desktopAction?.icon, true)
                                     label: modelData.title
                                     showTrailing: false
@@ -1072,7 +816,6 @@ Item {
                                 visible: root.hasNativeMenu
                                 Layout.fillWidth: true
                                 menu: root.nativeMenu
-                                fallbackIcon: ""
                                 onActivated: root.closePresentation()
                             }
 

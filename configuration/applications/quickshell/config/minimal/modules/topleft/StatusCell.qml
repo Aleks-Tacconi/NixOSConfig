@@ -12,12 +12,15 @@ Item {
 
     property string icon: ""
     property string label: ""
+    property string labelFontFamily: Theme.fontFamily
+    property color labelColor: Theme.fg
     property bool dotVisible: false
     property bool crossed: false
     property bool scrollLabel: false
+    property bool scrollActive: false
     property int labelMaxWidth: 0
 
-    readonly property bool labelOverflowing: scrollLabel && labelMaxWidth > 0 && labelText.implicitWidth > labelMaxWidth
+    readonly property bool labelOverflowing: labelMaxWidth > 0 && labelText.implicitWidth > labelMaxWidth
 
     width: content.implicitWidth
     height: 28
@@ -83,15 +86,17 @@ Item {
                 id: labelText
 
                 x: 0
+                width: root.scrollLabel && root.scrollActive ? implicitWidth : labelClip.width
+                elide: Text.ElideRight
                 text: root.label
-                color: Theme.fg
-                font.family: Theme.fontFamily
+                color: root.labelColor
+                font.family: root.labelFontFamily
                 font.pixelSize: Theme.fontSize + 1
                 maximumLineCount: 1
                 font.bold: true
 
                 SequentialAnimation on x {
-                    running: root.labelOverflowing
+                    running: root.visible && root.scrollLabel && root.scrollActive && root.labelOverflowing
                     loops: Animation.Infinite
                     onStopped: labelText.x = 0
 
@@ -112,11 +117,11 @@ Item {
             }
 
             Text {
-                visible: root.labelOverflowing
+                visible: root.scrollLabel && root.scrollActive && root.labelOverflowing
                 x: labelText.x + labelText.implicitWidth + Theme.gap * 8
                 text: root.label
-                color: Theme.fg
-                font.family: Theme.fontFamily
+                color: root.labelColor
+                font.family: root.labelFontFamily
                 font.pixelSize: Theme.fontSize + 1
                 maximumLineCount: 1
                 font.bold: true

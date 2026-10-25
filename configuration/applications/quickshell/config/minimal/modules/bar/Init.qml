@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../../theme"
 import "../dock" as Dock
+import "../frame" as Frame
 import "../power" as Power
 import "../topleft/" as TopLeft
 import "../topright/" as TopRight
@@ -25,6 +26,8 @@ Scope {
             id: bar
 
             required property var modelData
+
+            readonly property real sideWidth: Math.max(0, (bar.width - workspaceViewport.width) / 2 - Theme.gap * 8)
 
             screen: modelData
 
@@ -47,48 +50,33 @@ Scope {
             WlrLayershell.namespace: "quickshell:topBar"
             WlrLayershell.layer: WlrLayer.Top
 
-            Rectangle {
+            Frame.PanelSurface {
                 anchors.fill: parent
                 color: Theme.bg
                 radius: 0
+                framed: false
 
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-
-                        GradientStop {
-                            position: 0
-                            color: Theme.glassHighlightSoft
-                        }
-
-                        GradientStop {
-                            position: 0.55
-                            color: "transparent"
-                        }
-
-                        GradientStop {
-                            position: 1
-                            color: Theme.glassShadow
-                        }
-                    }
-                }
 
                 Row {
                     id: leftCluster
 
                     anchors {
+                        top: parent.top
+                        bottom: parent.bottom
                         left: parent.left
                         leftMargin: Theme.gap * 4
-                        verticalCenter: parent.verticalCenter
                     }
-                    spacing: Theme.gap * 5 + 2
+                    spacing: Theme.gap * 6
 
                     TopLeft.Init {
+                        id: leftStatus
+                        maxWidth: Math.max(0, bar.sideWidth - Theme.panelRowHeight * 2 - leftCluster.spacing)
                         popupScreen: bar.modelData
                         notificationCenter: root.notificationCenter
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors {
+                            top: parent.top
+                            bottom: parent.bottom
+                        }
                     }
 
                     AppMenu {
@@ -97,15 +85,27 @@ Scope {
                         popupScreen: bar.modelData
                         parentWindow: bar
                         popupLeftMargin: leftCluster.x + appMenu.x - Theme.gap * 2
-                        maxWidth: Math.max(132, Math.min(340, bar.width * 0.27))
+                        maxWidth: Math.max(0, bar.sideWidth - leftStatus.width - leftCluster.spacing)
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
-                Workspaces {
-                    id: workspaces
+                Flickable {
+                    id: workspaceViewport
 
                     anchors.centerIn: parent
+                    width: Math.min(workspaces.implicitWidth, bar.width * 0.24)
+                    height: Theme.barHeight
+                    contentWidth: workspaces.implicitWidth
+                    contentHeight: height
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    flickableDirection: Flickable.HorizontalFlick
+
+                    Workspaces {
+                        id: workspaces
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 Row {
@@ -118,20 +118,24 @@ Scope {
                     }
 
                     anchors {
+                        top: parent.top
+                        bottom: parent.bottom
                         right: parent.right
                         rightMargin: rightCluster.outerMargin
-                        verticalCenter: parent.verticalCenter
                     }
 
-                    spacing: Theme.gap * 5 + 2
+                    spacing: Theme.gap * 6
 
                     Dock.Init {
                         id: dock
 
                         popupScreen: bar.modelData
-                        maxWidth: Math.max(96, Math.min(300, bar.width * 0.24))
+                        maxWidth: Math.max(0, Math.min(300, bar.sideWidth - systemCluster.width - rightCluster.spacing))
                         popupRightMargin: rightCluster.outerMargin + rightCluster.trailingWidth(dock)
-                        anchors.verticalCenter: parent.verticalCenter
+                        anchors {
+                            top: parent.top
+                            bottom: parent.bottom
+                        }
                     }
 
                     Row {
@@ -141,8 +145,11 @@ Scope {
                             return systemCluster.width - item.x - item.width;
                         }
 
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: Theme.gap * 2 + 2
+                        anchors {
+                            top: parent.top
+                            bottom: parent.bottom
+                        }
+                        spacing: Theme.gap * 4
 
                         TopRight.Init {
                             id: topRightStatus
@@ -150,15 +157,10 @@ Scope {
                             popupScreen: bar.modelData
                             popupRightMargin: rightCluster.outerMargin + systemCluster.trailingWidth(topRightStatus)
                             networkService: root.networkService
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Tray {
-                            id: tray
-
-                            popupScreen: bar.modelData
-                            popupRightMargin: rightCluster.outerMargin + systemCluster.trailingWidth(tray)
-                            anchors.verticalCenter: parent.verticalCenter
+                            anchors {
+                                top: parent.top
+                                bottom: parent.bottom
+                            }
                         }
 
                         Power.Init {

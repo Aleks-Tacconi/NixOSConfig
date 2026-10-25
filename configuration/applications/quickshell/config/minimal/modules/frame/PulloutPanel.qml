@@ -1,12 +1,14 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
+import Quickshell.Hyprland
 import "../../theme"
 
 /**
- * Minimal popup panel with hover-aware open and close behavior.
+ * Shared popup surface with explicit dismissal or hover-preview behavior.
  */
-Item {
+FocusScope {
     id: root
 
     default property alias content: contentHost.data
@@ -17,8 +19,9 @@ Item {
     property bool forceClose: false
     property var activatorMouseArea: null
     property bool autoClose: false
-    property bool dismissOnExit: false
-    property int closeDelay: 200
+    property bool dismissOnExit: root.clickDismiss
+    property bool clickDismiss: false
+    property int closeDelay: Theme.popupDismissDelay
     property int hoverLeaseDuration: 700
     property real length: parent ? parent.width : 0
     property real depth: 0
@@ -34,6 +37,32 @@ Item {
     property real seamOverlap: 3
     property bool eraseBaseBorder: true
     property real progress: effectiveOpen ? 1 : 0
+
+    Keys.onEscapePressed: event => {
+        if (root.clickDismiss) {
+            root.dismissRequested();
+            event.accepted = true;
+        }
+    }
+
+    onEffectiveOpenChanged: {
+        if (root.effectiveOpen && root.clickDismiss)
+            Qt.callLater(() => {
+                if (root.effectiveOpen)
+                    root.forceActiveFocus(Qt.PopupFocusReason);
+            });
+    }
+
+    HyprlandFocusGrab {
+        active: root.clickDismiss && root.effectiveOpen
+        windows: root.activatorMouseArea
+            ? [root.QsWindow.window, root.activatorMouseArea.QsWindow.window]
+            : [root.QsWindow.window]
+        onCleared: {
+            if (root.clickDismiss && root.effectiveOpen && !root.interactionHovered)
+                root.dismissRequested();
+        }
+    }
 
     signal dismissRequested
 
@@ -171,48 +200,10 @@ Item {
         }
     }
 
-    Rectangle {
+    PanelSurface {
         anchors.fill: parent
         color: root.backgroundColor
         radius: root.curveRadius
-        border.color: Theme.popupBorder
-        border.width: Theme.popupBorderWidth
-    }
-
-    Rectangle {
-        anchors {
-            fill: parent
-            margins: Theme.popupBorderWidth
-        }
-
-        color: "transparent"
-        radius: Math.max(0, root.curveRadius - Theme.popupBorderWidth)
-        border.color: Theme.popupInnerEdge
-        border.width: Theme.popupShadowWidth
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        color: "transparent"
-        radius: root.curveRadius
-        gradient: Gradient {
-            orientation: Gradient.Vertical
-
-            GradientStop {
-                position: 0
-                color: Theme.glassHighlight
-            }
-
-            GradientStop {
-                position: 0.34
-                color: Theme.glassHighlightSoft
-            }
-
-            GradientStop {
-                position: 1
-                color: Theme.glassShadow
-            }
-        }
     }
 
     Item {

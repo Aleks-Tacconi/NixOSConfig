@@ -91,8 +91,8 @@ Item {
             Text {
                 text: root.muted ? "󰖁" : ""
                 color: Theme.red
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
+                font.family: Theme.iconFontFamily
+                font.pixelSize: Theme.iconSize
             }
 
             Rectangle {

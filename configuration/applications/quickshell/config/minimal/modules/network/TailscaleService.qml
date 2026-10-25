@@ -13,6 +13,7 @@ Scope {
 
     property bool connected: false
     property bool pending: false
+    property string errorText: ""
 
     Timer {
         interval: 5000
@@ -37,7 +38,10 @@ Scope {
     Process {
         id: toggleProcess
 
-        onExited: {
+        stderr: StdioCollector { id: toggleError }
+
+        onExited: (exitCode, exitStatus) => {
+            root.errorText = exitCode === 0 ? "" : (toggleError.text.trim() || "Could not change VPN state. Check Tailscale permissions and try again.");
             root.pending = false;
             root.refresh();
         }
@@ -59,6 +63,7 @@ Scope {
     function toggle() {
         if (root.pending)
             return;
+        root.errorText = "";
         root.pending = true;
         toggleProcess.exec(["tailscale", root.connected ? "down" : "up"]);
     }

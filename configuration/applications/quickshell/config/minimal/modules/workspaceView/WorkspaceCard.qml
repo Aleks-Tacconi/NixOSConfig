@@ -119,7 +119,7 @@ Rectangle {
                 color: root.activeWorkspace ? Theme.red : Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: Math.min(parent.width, parent.height) * (root.compact ? 0.62 : 0.7)
-                font.bold: true
+                font.weight: Theme.emphasisWeight
                 opacity: root.activeWorkspace ? 0.22 : 0.16
                 text: root.newWorkspace ? "+" : root.workspaceId
             }
@@ -230,7 +230,7 @@ Rectangle {
                             color: Theme.fg
                             font.family: Theme.fontFamily
                             font.pixelSize: Math.max(12, Math.min(parent.width, parent.height) * 0.32)
-                            font.bold: true
+                            font.weight: Theme.emphasisWeight
                             opacity: 0.8
                             text: windowPreview.appClass.length > 0 ? windowPreview.appClass[0].toUpperCase() : "?"
                         }

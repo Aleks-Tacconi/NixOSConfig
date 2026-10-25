@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import "../../theme"
@@ -31,10 +32,9 @@ Item {
             Layout.minimumWidth: 0
             text: root.title
             color: Theme.muted
-            opacity: 0.72
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelMetaSize
-            font.weight: Font.Medium
+            font.weight: Theme.emphasisWeight
             elide: Text.ElideRight
             maximumLineCount: 1
         }
@@ -51,7 +51,6 @@ Item {
             Layout.maximumWidth: root.width * 0.5
             text: root.detail
             color: Theme.muted
-            opacity: 0.58
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelCaptionSize
             horizontalAlignment: Text.AlignRight

@@ -3,11 +3,12 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import "../../theme"
 
+/** Monospaced time display for the bar. */
 Text {
     id: clock
 
     color: Theme.red
-    font.family: Theme.fontFamily
+    font.family: Theme.monoFontFamily
     font.pixelSize: Theme.fontSize
 
     anchors {

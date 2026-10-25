@@ -24,8 +24,8 @@ Rectangle {
     height: 44
     radius: Theme.surfaceRadius
     color: searchInput.activeFocus ? Theme.panelSurfaceHover : Theme.panelSurface
-    border.width: searchInput.activeFocus ? 1 : 0
-    border.color: Theme.popupInnerEdge
+    border.width: Theme.popupBorderWidth
+    border.color: searchInput.activeFocus ? Theme.focusBorder : Theme.popupBorder
 
     Text {
         anchors {
@@ -35,8 +35,8 @@ Rectangle {
         }
 
         color: Theme.red
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.panelBodySize
+        font.family: Theme.iconFontFamily
+        font.pixelSize: Theme.iconSize
         text: ""
     }
 

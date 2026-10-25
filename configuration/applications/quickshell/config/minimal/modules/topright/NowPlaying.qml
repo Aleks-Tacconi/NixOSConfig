@@ -51,9 +51,7 @@ Item {
             Frame.PanelGroupLabel {
                 Layout.fillWidth: true
                 title: "Now playing"
-                detail: root.playerCount > 1
-                    ? `${root.player?.isPlaying ? "Playing" : "Paused"} · ${Math.min(root.selectedPlayerIndex + 1, root.playerCount)}/${root.playerCount}`
-                    : (root.player?.isPlaying ? "Playing" : "Paused")
+                detail: root.player?.isPlaying ? "Playing" : "Paused"
             }
 
             RowLayout {
@@ -76,10 +74,10 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 88
+            Layout.preferredHeight: Theme.artworkSize + Theme.gap * 4
             radius: Theme.cardRadius
-            color: Theme.panelSurface
-            border.width: 1
+            color: "transparent"
+            border.width: 0
             border.color: Theme.popupInnerEdge
 
             RowLayout {
@@ -90,8 +88,8 @@ Item {
                 spacing: Theme.gap * 3
 
                 Rectangle {
-                    Layout.preferredWidth: 72
-                    Layout.preferredHeight: 72
+                    Layout.preferredWidth: Theme.artworkSize
+                    Layout.preferredHeight: Theme.artworkSize
                     radius: Theme.cardRadius
                     color: Theme.bg2
                     clip: true
@@ -110,7 +108,7 @@ Item {
                         visible: artwork.status !== Image.Ready
                         text: "󰝚"
                         color: Theme.muted
-                        font.family: Theme.fontFamily
+                        font.family: Theme.iconFontFamily
                         font.pixelSize: Theme.fontSize + 8
                     }
                 }
@@ -124,8 +122,10 @@ Item {
                         text: root.player?.trackTitle || "No track"
                         color: Theme.fg
                         font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelBodySize + 1
-                        font.bold: true
+                        font.pixelSize: Theme.panelTitleSize
+                        maximumLineCount: 2
+                        wrapMode: Text.Wrap
+                        font.weight: Theme.emphasisWeight
                         elide: Text.ElideRight
                         textFormat: Text.PlainText
                     }

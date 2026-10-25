@@ -118,7 +118,11 @@ Item {
             root.service.activateWithPassword(root.selectedNetwork, password);
     }
 
+    Component.onCompleted: root.service.setTrafficVisible(root, root.open)
+    Component.onDestruction: root.service.setTrafficVisible(root, false)
+
     onOpenChanged: {
+        root.service.setTrafficVisible(root, root.open);
         if (!root.open && root.editing)
             root.closeEditor();
     }
@@ -179,8 +183,8 @@ Item {
                     anchors.centerIn: parent
                     text: "󰑐"
                     color: (root.service.scanPending || (scanMouse.containsMouse && scanButton.enabled)) ? Theme.fg : Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
+                    font.family: Theme.iconFontFamily
+                    font.pixelSize: Theme.iconSize
                 }
 
                 RotationAnimation {
@@ -211,15 +215,15 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: activeCardLayout.implicitHeight + Theme.gap * 3
+            implicitHeight: activeCardLayout.implicitHeight + Theme.gap * 2
             radius: Theme.cardRadius
-            color: Theme.panelSurface
+            color: "transparent"
 
             ColumnLayout {
                 id: activeCardLayout
                 anchors {
                     fill: parent
-                    margins: Theme.gap * 2
+                    margins: Theme.gap
                 }
                 spacing: Theme.gap * 1.5
 
@@ -245,7 +249,7 @@ Item {
                             color: Theme.fg
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.panelBodySize
-                            font.bold: true
+                            font.weight: Theme.emphasisWeight
                         }
 
                         Text {
@@ -283,7 +287,7 @@ Item {
                             color: disconnectMouse.containsMouse ? Theme.red : Theme.muted
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.panelCaptionSize
-                            font.bold: true
+                            font.weight: Theme.emphasisWeight
 
                             Behavior on color {
                                 ColorAnimation {
@@ -330,7 +334,7 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: 24
                         radius: Theme.surfaceRadius
-                        color: Theme.bg2
+                        color: "transparent"
 
                         RowLayout {
                             anchors.centerIn: parent
@@ -356,7 +360,7 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: 24
                         radius: Theme.surfaceRadius
-                        color: Theme.bg2
+                        color: "transparent"
 
                         RowLayout {
                             anchors.centerIn: parent
@@ -444,7 +448,7 @@ Item {
                 Layout.fillWidth: true
                 title: "Available networks"
                 detail: root.service.wifiEnabled
-                    ? `${root.availableNetworks.length}`
+                    ? ""
                     : "Wi-Fi off"
             }
 
@@ -556,9 +560,9 @@ Item {
             }
 
             Text {
-                visible: root.service.errorText.length > 0
+                visible: root.service.errorText.length > 0 || root.service.tailscaleError.length > 0
                 Layout.fillWidth: true
-                text: root.service.errorText
+                text: [root.service.errorText, root.service.tailscaleError].filter(text => text.length > 0).join("\n")
                 color: Theme.fg
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelCaptionSize
@@ -692,7 +696,7 @@ Item {
                     Layout.fillWidth: true
                     implicitHeight: 38
                     radius: Theme.surfaceRadius
-                    color: confirmBtnMouse.containsMouse ? (root.mode === "confirm_disconnect" ? Theme.red : Theme.panelSurfaceHover) : Theme.panelSurfaceHover
+                    color: confirmBtnMouse.containsMouse ? Theme.panelSurfaceHover : Theme.panelSurface
 
                     Text {
                         anchors.centerIn: parent
@@ -700,7 +704,7 @@ Item {
                         color: Theme.fg
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.panelMetaSize
-                        font.bold: true
+                        font.weight: Theme.emphasisWeight
                     }
 
                     MouseArea {

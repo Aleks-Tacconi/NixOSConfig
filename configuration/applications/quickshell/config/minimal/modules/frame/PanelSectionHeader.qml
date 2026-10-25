@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import "../../theme"
@@ -35,7 +36,7 @@ Item {
             color: Theme.fg
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelTitleSize
-            font.bold: true
+            font.weight: Theme.headingWeight
             elide: Text.ElideRight
             maximumLineCount: 1
         }
@@ -47,7 +48,7 @@ Item {
             color: root.detailColor
             font.family: Theme.fontFamily
             font.pixelSize: root.detailStrong ? Theme.panelBodySize : Theme.panelCaptionSize
-            font.bold: root.detailStrong
+            font.weight: root.detailStrong ? Theme.emphasisWeight : Font.Normal
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
             maximumLineCount: 1

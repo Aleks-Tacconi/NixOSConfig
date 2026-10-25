@@ -34,8 +34,8 @@ Rectangle {
         Text {
             text: root.icon
             color: root.active ? Theme.fg : Theme.muted
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.panelMetaSize
+            font.family: Theme.iconFontFamily
+            font.pixelSize: Theme.iconSize
         }
 
         Text {
@@ -43,7 +43,7 @@ Rectangle {
             color: root.active ? Theme.fg : Theme.muted
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelCaptionSize
-            font.bold: root.active
+            font.weight: root.active ? Theme.emphasisWeight : Font.Normal
         }
     }
 

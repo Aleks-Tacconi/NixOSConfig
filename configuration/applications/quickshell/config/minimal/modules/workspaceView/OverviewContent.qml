@@ -104,23 +104,13 @@ Rectangle {
                     color: Theme.red
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize
-                    font.bold: true
+                    font.weight: Theme.emphasisWeight
                     text: root.activeWorkspaceId > 0 ? `Workspace ${root.activeWorkspaceId}` : "Workspaces"
-                }
-
-                Text {
-                    id: windowLabel
-
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelMetaSize
-                    text: root.activeWindowCount === 1 ? "1 window" : `${root.activeWindowCount} windows`
                 }
 
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(40, parent.width - activeLabel.implicitWidth - windowLabel.implicitWidth - hintLabel.implicitWidth - parent.spacing * 3)
+                    width: Math.max(40, parent.width - activeLabel.implicitWidth - hintLabel.implicitWidth - parent.spacing * 2)
                     height: 1
                     color: Theme.darkRed
                 }
@@ -167,7 +157,7 @@ Rectangle {
 
                         onClicked: {
                             root.requestClose();
-                            Hyprland.dispatch(`workspace ${workspaceId}`);
+                            Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspaceId} })`);
                         }
 
                         onDragEntered: {

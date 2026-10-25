@@ -40,7 +40,7 @@ Rectangle {
         color: root.primary || root.hovered ? Theme.fg : Theme.muted
         font.family: Theme.fontFamily
         font.pixelSize: Theme.panelMetaSize
-        font.bold: root.primary
+        font.weight: root.primary ? Theme.emphasisWeight : Font.Normal
         elide: Text.ElideRight
         maximumLineCount: 1
         textFormat: Text.PlainText

@@ -15,7 +15,7 @@ Item {
     property var menuStack: []
     property bool showRootBack: false
     property string rootBackLabel: "Back"
-    property string fallbackIcon: ""
+    property string fallbackIcon: ""
 
     readonly property var currentMenu: root.menuStack.length > 0
         ? root.menuStack[root.menuStack.length - 1]
@@ -44,6 +44,12 @@ Item {
         }
 
         root.menuStack = root.menuStack.slice(0, -1);
+    }
+
+    function cleanText(text) {
+        if (!text)
+            return "";
+        return String(text).replace(/&&/g, "&").replace(/&/g, "").replace(/^_/, "").replace(/([^\w])_/, "$1");
     }
 
     function entryIcon(entry) {
@@ -76,27 +82,56 @@ Item {
             onClicked: root.goBack()
         }
 
+        Rectangle {
+            visible: root.showRootBack || !root.atRoot
+            Layout.fillWidth: true
+            height: 1
+            color: Theme.popupBorder
+        }
+
         Repeater {
             model: menuOpener.children
 
-            PanelActionRow {
+            Item {
+                id: menuItem
                 required property var modelData
 
                 Layout.fillWidth: true
-                visible: !modelData.isSeparator && modelData.text.length > 0
-                enabled: modelData.enabled
-                label: modelData.text
-                icon: root.entryIcon(modelData)
-                iconSource: modelData.buttonType === QsMenuButtonType.None ? modelData.icon : ""
-                showTrailing: modelData.hasChildren
-                onClicked: {
-                    if (modelData.hasChildren) {
-                        root.openSubmenu(modelData);
-                        return;
-                    }
+                Layout.preferredHeight: menuItem.modelData.isSeparator ? 9 : (menuItem.modelData.text.length > 0 ? actionRow.implicitHeight : 0)
+                implicitHeight: Layout.preferredHeight
+                visible: menuItem.modelData.isSeparator || menuItem.modelData.text.length > 0
 
-                    modelData.triggered();
-                    root.activated();
+                Rectangle {
+                    visible: menuItem.modelData.isSeparator
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        verticalCenter: parent.verticalCenter
+                        leftMargin: Theme.gap
+                        rightMargin: Theme.gap
+                    }
+                    height: 1
+                    color: Theme.popupBorder
+                }
+
+                PanelActionRow {
+                    id: actionRow
+                    anchors.fill: parent
+                    visible: !menuItem.modelData.isSeparator && menuItem.modelData.text.length > 0
+                    enabled: menuItem.modelData.enabled
+                    label: root.cleanText(menuItem.modelData.text)
+                    icon: root.entryIcon(menuItem.modelData)
+                    iconSource: menuItem.modelData.buttonType === QsMenuButtonType.None ? menuItem.modelData.icon : ""
+                    showTrailing: menuItem.modelData.hasChildren
+                    onClicked: {
+                        if (menuItem.modelData.hasChildren) {
+                            root.openSubmenu(menuItem.modelData);
+                            return;
+                        }
+
+                        menuItem.modelData.triggered();
+                        root.activated();
+                    }
                 }
             }
         }

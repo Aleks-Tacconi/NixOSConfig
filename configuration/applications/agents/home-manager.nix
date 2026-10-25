@@ -7,6 +7,7 @@
   };
 
   home.packages = with pkgs; [
+    codex
     rtk
   ];
 
@@ -21,6 +22,9 @@
     # Shared agent standards
     ".agents/AGENTS.md".source = ../../../agents/AGENTS.md;
     ".agents/skills".source = ../../../agents/skills;
+
+    # Codex configuration (skills are shared via ~/.agents/skills)
+    ".codex/AGENTS.md".source = ../../../agents/AGENTS.md;
 
     # Gemini / agy configuration
     ".gemini/GEMINI.md".source = ../../../agents/AGENTS.md;

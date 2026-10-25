@@ -110,7 +110,7 @@ Rectangle {
                     color: Theme.fg
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelBodySize
-                    font.bold: true
+                    font.weight: Theme.emphasisWeight
                 }
             }
 
@@ -126,7 +126,7 @@ Rectangle {
                     color: root.critical ? Theme.fg : Theme.muted
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelCaptionSize
-                    font.bold: root.critical
+                    font.weight: root.critical ? Theme.emphasisWeight : Font.Normal
                     maximumLineCount: 1
                     elide: Text.ElideRight
                     textFormat: Text.PlainText
@@ -138,7 +138,7 @@ Rectangle {
                     color: Theme.fg
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelBodySize
-                    font.bold: true
+                    font.weight: Theme.emphasisWeight
                     maximumLineCount: root.toast ? 1 : 2
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight

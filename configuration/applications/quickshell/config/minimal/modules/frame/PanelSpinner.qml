@@ -19,7 +19,7 @@ Item {
         anchors.centerIn: parent
         text: "󰑐"
         color: Theme.muted
-        font.family: Theme.fontFamily
+        font.family: Theme.iconFontFamily
         font.pixelSize: root.spinnerSize
     }
 

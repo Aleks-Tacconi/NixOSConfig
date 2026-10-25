@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import Quickshell.Io
 
@@ -8,13 +10,15 @@ Item {
     id: root
 
     required property string interfaceName
+    property bool active: false
+    onActiveChanged: root.reset()
     property real downloadBytesPerSecond: 0
     property real uploadBytesPerSecond: 0
     property real previousRxBytes: 0
     property real previousTxBytes: 0
     property real previousTrafficTime: 0
 
-    onInterfaceNameChanged: reset()
+    onInterfaceNameChanged: root.reset()
 
     FileView {
         id: rxBytesFile
@@ -35,7 +39,7 @@ Item {
     Timer {
         interval: 1000
         repeat: true
-        running: root.interfaceName.length > 0
+        running: root.active && root.interfaceName.length > 0
         triggeredOnStart: true
         onTriggered: root.update()
     }

@@ -52,7 +52,7 @@ ColumnLayout {
                 color: Theme.fg
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelBodySize
-                font.bold: true
+                font.weight: Theme.emphasisWeight
             }
         }
 
@@ -97,7 +97,7 @@ ColumnLayout {
         visible: root.windowCount > 0
         Layout.fillWidth: true
         title: "Windows"
-        detail: String(root.windowCount)
+        detail: ""
     }
 
     Item {

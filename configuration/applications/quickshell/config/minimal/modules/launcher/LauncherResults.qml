@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import "../frame" as Frame
 import "../../theme"
 
@@ -25,16 +26,10 @@ Item {
     }
 
     function ensureIndexVisible(index) {
-        const rowTop = index * (root.rowHeight + resultsColumn.spacing);
-        const rowBottom = rowTop + root.rowHeight;
-
-        if (rowTop < resultList.contentY)
-            resultList.contentY = rowTop;
-        else if (rowBottom > resultList.contentY + resultList.height)
-            resultList.contentY = rowBottom - resultList.height;
+        resultList.positionViewAtIndex(index, ListView.Contain);
     }
 
-    Flickable {
+    ListView {
         id: resultList
 
         anchors {
@@ -43,63 +38,34 @@ Item {
         }
         clip: true
         boundsBehavior: Flickable.StopAtBounds
-        contentWidth: width
-        contentHeight: resultsColumn.implicitHeight
+        spacing: Theme.panelItemGap
+        model: ScriptModel { values: root.items }
         interactive: contentHeight > height
 
-        Column {
-            id: resultsColumn
+        delegate: LauncherRow {
+            required property int index
+            required property var modelData
 
-            width: resultList.width
-            spacing: Theme.panelItemGap
-
-            Repeater {
-                model: root.items
-
-                delegate: LauncherRow {
-                    required property int index
-                    required property var modelData
-
-                    width: resultsColumn.width
-                    height: root.rowHeight
-                    item: modelData
-                    selected: index === root.selectedIndex
-                    onActivated: root.activated(index, modelData)
-                    onCopyRequested: root.copyRequested(index, modelData)
-                    onHoveredRequested: root.highlighted(index)
-                }
-            }
-
-            Rectangle {
-                visible: root.items.length === 0
-                width: parent.width
-                height: 156
-                radius: Theme.cardRadius
-                color: "transparent"
-                border.width: 0
-
-                Column {
-                    anchors.centerIn: parent
-                    spacing: Theme.gap
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        color: Theme.red
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 8
-                        text: ""
-                    }
-
-                    Text {
-                        color: Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelMetaSize
-                        horizontalAlignment: Text.AlignHCenter
-                        text: root.emptyText
-                    }
-                }
-            }
+            width: ListView.view.width
+            height: root.rowHeight
+            item: modelData
+            selected: index === root.selectedIndex
+            onActivated: root.activated(index, modelData)
+            onCopyRequested: root.copyRequested(index, modelData)
+            onHoveredRequested: root.highlighted(index)
         }
+    }
+
+    Text {
+        anchors.centerIn: parent
+        width: parent.width
+        visible: root.items.length === 0
+        text: root.emptyText
+        color: Theme.muted
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.panelMetaSize
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.Wrap
     }
 
     Frame.PanelScrollIndicator {

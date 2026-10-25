@@ -23,7 +23,7 @@ Item {
     property real menuGap: Theme.gap
     property real menuCurveRadius: 16
     property int revealDuration: 180
-    property int closeDelay: 200
+    property int closeDelay: Theme.popupDismissDelay
     property bool menuOpen: false
     property real menuProgress: 0
 
@@ -112,9 +112,9 @@ Item {
         anchors.centerIn: parent
         color: Theme.red
         opacity: root.indicatorActive ? 1 : 0.9
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize + 1
-        font.bold: true
+        font.family: Theme.iconFontFamily
+        font.pixelSize: Theme.iconSize
+        font.bold: false
         text: ""
     }
 
@@ -144,6 +144,7 @@ Item {
 
         WlrLayershell.namespace: "quickshell:powerMenu"
         WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: root.menuOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         anchors {
             top: true
@@ -168,7 +169,7 @@ Item {
                 corner: "topRight"
                 requestedOpen: root.menuOpen
                 activatorMouseArea: indicatorMouse
-                dismissOnExit: true
+                clickDismiss: true
                 closeDelay: root.closeDelay
                 hoverLeaseDuration: 1200
                 duration: root.revealDuration
@@ -210,7 +211,7 @@ Item {
                         color: Theme.red
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.panelTitleSize
-                        font.bold: true
+                        font.weight: Theme.emphasisWeight
                         text: "Power Menu"
                     }
 

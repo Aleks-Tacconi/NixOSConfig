@@ -79,7 +79,7 @@ ClippingRectangle {
         color: Theme.fg
         font.family: Theme.fontFamily
         font.pixelSize: Theme.panelMetaSize
-        font.bold: root.active
+        font.weight: root.active ? Theme.emphasisWeight : Font.Normal
         elide: Text.ElideRight
         textFormat: Text.PlainText
     }

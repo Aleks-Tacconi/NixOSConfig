@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
@@ -23,6 +25,15 @@ Rectangle {
     property real horizontalPadding: Theme.gap * 2
 
     readonly property bool hovered: mouseArea.containsMouse
+
+    activeFocusOnTab: root.enabled
+    Accessible.role: Accessible.Button
+    Accessible.name: root.label
+    Accessible.description: root.detailText
+    Accessible.onPressAction: root.clicked()
+    Keys.onReturnPressed: root.clicked()
+    Keys.onEnterPressed: root.clicked()
+    Keys.onSpacePressed: root.clicked()
 
     signal clicked
 
@@ -61,8 +72,8 @@ Rectangle {
             visible: root.iconSource.length === 0 && root.icon.length > 0
             horizontalAlignment: Text.AlignHCenter
             color: !root.enabled ? Theme.muted : (root.active || root.hovered ? root.accentColor : Theme.muted)
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize + 2
+            font.family: Theme.iconFontFamily
+            font.pixelSize: Theme.iconSize
             text: root.icon
         }
 

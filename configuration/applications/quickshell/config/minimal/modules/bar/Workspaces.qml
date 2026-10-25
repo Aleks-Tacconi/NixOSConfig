@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell.Hyprland
 import "../../theme"
 
+/** Compact workspace selector with a persistent active highlight. */
 RowLayout {
     id: root
 
@@ -28,7 +29,7 @@ RowLayout {
         return sortedIds.length > 0 ? sortedIds : [1];
     }
 
-    spacing: 2
+    spacing: Theme.gap
 
     HoverHandler {
         id: hoverHandler
@@ -75,7 +76,7 @@ RowLayout {
                     leftMargin: -Theme.gap
                     rightMargin: -Theme.gap
                 }
-                color: button.hovered ? Theme.panelSurfaceHover : "transparent"
+                color: button.hovered || button.active ? Theme.panelSurfaceHover : "transparent"
                 radius: Theme.radius
 
                 Behavior on color {
@@ -83,6 +84,16 @@ RowLayout {
                         duration: 120
                     }
                 }
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 2
+                radius: 1
+                visible: button.active
+                color: Theme.fg
             }
 
             Text {
@@ -99,12 +110,16 @@ RowLayout {
             MouseArea {
                 id: workspaceMouse
 
-                anchors.fill: parent
+                anchors {
+                    fill: parent
+                    topMargin: -2
+                    bottomMargin: -2
+                }
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
 
                 onClicked: {
-                    Hyprland.dispatch("workspace " + button.workspaceId);
+                    Hyprland.dispatch(`hl.dsp.focus({ workspace = ${button.workspaceId} })`);
                 }
             }
 

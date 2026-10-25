@@ -206,8 +206,8 @@ ColumnLayout {
             }
             text: root.showPassword ? "󰈈" : "󰈉"
             color: revealArea.containsMouse ? Theme.fg : Theme.muted
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.panelBodySize
+            font.family: Theme.iconFontFamily
+            font.pixelSize: Theme.iconSize
         }
 
         MouseArea {
@@ -264,7 +264,7 @@ ColumnLayout {
                     color: Theme.fg
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelMetaSize
-                    font.bold: modelData.submit
+                    font.weight: modelData.submit ? Theme.emphasisWeight : Font.Normal
                 }
 
                 Frame.PanelSpinner {

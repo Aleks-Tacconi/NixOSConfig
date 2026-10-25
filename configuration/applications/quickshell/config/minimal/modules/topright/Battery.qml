@@ -99,39 +99,44 @@ Item {
         Frame.PanelSectionHeader {
             Layout.fillWidth: true
             title: "Battery"
-            detail: `${root.percent}%`
-            detailColor: Theme.red
-            detailStrong: true
+            detail: root.stateText()
         }
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: Theme.gap * 3
+            spacing: Theme.panelItemGap
 
             Text {
-                text: "󰁹"
+                text: `${root.percent}%`
                 color: Theme.fg
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelBodySize
+                font.pixelSize: Theme.displaySize
+                font.bold: true
             }
 
-            Rectangle {
+            Text {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 10
-                radius: 5
-                color: Theme.bg2
-
-                Rectangle {
-                    width: parent.width * Math.max(0, Math.min(100, root.percent)) / 100
-                    height: parent.height
-                    radius: parent.radius
-                    color: Theme.red
-                }
+                text: root.remainingText()
+                color: Theme.muted
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelBodySize
+                horizontalAlignment: Text.AlignRight
+                wrapMode: Text.Wrap
             }
         }
 
-        Item {
-            Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 8
+            radius: 4
+            color: Theme.bg2
+
+            Rectangle {
+                width: parent.width * Math.max(0, Math.min(100, root.percent)) / 100
+                height: parent.height
+                radius: parent.radius
+                color: Theme.red
+            }
         }
 
         GridLayout {
@@ -139,38 +144,6 @@ Item {
             columns: 2
             columnSpacing: Theme.panelItemGap
             rowSpacing: Theme.gap
-
-            Text {
-                text: "Status"
-                color: Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-            }
-
-            Text {
-                Layout.fillWidth: true
-                text: root.stateText()
-                color: Theme.fg
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-                horizontalAlignment: Text.AlignRight
-            }
-
-            Text {
-                text: "Remaining"
-                color: Theme.muted
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-            }
-
-            Text {
-                Layout.fillWidth: true
-                text: root.remainingText()
-                color: Theme.fg
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.panelMetaSize
-                horizontalAlignment: Text.AlignRight
-            }
 
             Text {
                 text: "Rate"

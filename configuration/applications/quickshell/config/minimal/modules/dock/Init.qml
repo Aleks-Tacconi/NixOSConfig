@@ -7,7 +7,7 @@ import "../frame" as Frame
 import "../../theme"
 
 /**
- * Compact top-bar dock with click popups for app windows.
+ * Top-bar dock combining open and pinned applications with tray icons.
  */
 Item {
     id: root
@@ -24,7 +24,7 @@ Item {
     property real minPopupHeight: 70
     property real currentPopupHeight: minPopupHeight
     property int revealDuration: 150
-    property int closeDelay: 120
+    property int closeDelay: Theme.popupDismissDelay
     property var hoveredApp: null
     property var hoveredActivator: null
     property var displayedApp: null
@@ -32,12 +32,12 @@ Item {
     property var pendingOpenActivator: null
     property bool forcePopupClose: false
 
-    readonly property int appCount: dockData.appGroups.length
-    readonly property real fullWidth: Math.max(0, dockRow.implicitWidth + root.hoverOverflow * 2)
+    readonly property int appCount: dockData.appGroups.length + dockItems.trayCount
+    readonly property real fullWidth: dockItems.fullWidth
 
     width: Math.min(root.maxWidth, root.fullWidth)
     height: Theme.barHeight
-    visible: root.appCount > 0
+    visible: root.appCount > 0 && root.maxWidth > 0
     clip: false
 
     DockData {
@@ -87,6 +87,7 @@ Item {
     }
 
     function openForApp(appGroup, activatorMouseArea) {
+        dockItems.closeTrayMenu();
         const nextAppId = appGroup?.appId ?? "";
         const displayedAppId = root.displayedApp?.appId ?? "";
         const wasRequestedOpen = root.hoveredApp !== null;
@@ -149,6 +150,7 @@ Item {
 
         WlrLayershell.namespace: "quickshell:topBarDockPullout"
         WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: root.hoveredApp !== null ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         anchors {
             top: true
@@ -167,7 +169,8 @@ Item {
             requestedOpen: root.hoveredApp !== null
             forceClose: root.forcePopupClose
             activatorMouseArea: root.hoveredActivator
-            autoClose: true
+            clickDismiss: true
+            onDismissRequested: root.dismissPopup()
             closeDelay: root.closeDelay
             hoverLeaseDuration: 700
             duration: root.revealDuration
@@ -220,41 +223,19 @@ Item {
         }
     }
 
-    Flickable {
-        anchors {
-            fill: parent
-            topMargin: 4
-            bottomMargin: 4
-        }
+    DockItems {
+        id: dockItems
 
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        contentWidth: root.fullWidth
-        contentHeight: height
-        interactive: contentWidth > width
-
-        Row {
-            id: dockRow
-
-            x: root.hoverOverflow
-            y: (parent.height - height) / 2
-            height: root.buttonSize
-            spacing: root.dockGap
-
-            Repeater {
-                model: dockData.appGroups
-
-                delegate: DockAppButton {
-                    required property var modelData
-
-                    width: root.buttonSize
-                    height: root.buttonSize
-                    appGroup: modelData
-                    dataSource: dockData
-
-                    onPopupRequested: (appGroup, activatorMouseArea) => root.openForApp(appGroup, activatorMouseArea)
-                }
-            }
-        }
+        anchors.fill: parent
+        anchors.topMargin: Theme.gap
+        anchors.bottomMargin: Theme.gap
+        dataSource: dockData
+        popupScreen: root.popupScreen
+        popupRightMargin: root.popupRightMargin
+        buttonSize: root.buttonSize
+        spacing: root.dockGap
+        hoverOverflow: root.hoverOverflow
+        onPopupRequested: (appGroup, activator) => root.openForApp(appGroup, activator)
+        onTrayMenuRequested: root.dismissPopup()
     }
 }

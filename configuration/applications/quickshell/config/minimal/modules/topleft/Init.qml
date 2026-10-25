@@ -17,6 +17,7 @@ Item {
     height: Theme.barHeight
 
     property var popupScreen: null
+    property real maxWidth: 430
     property var notificationCenter: null
     property string openPopup: ""
     readonly property bool calendarOpen: root.openPopup === "calendar"
@@ -26,8 +27,8 @@ Item {
     readonly property bool menuOpen: !root.colorPickerActive && (root.notificationsOpen || root.calendarOpen || notificationsPanel.progress > 0 || calendarPanel.progress > 0)
     readonly property bool ownsNotificationPopup: root.notificationCenter !== null && root.notificationCenter.notificationPopupScreenKey === root.currentScreenKey
     readonly property var activeNotification: root.notificationCenter?.activeNotification ?? null
-    readonly property real notificationPanelDepth: Math.max(0, Math.min(560, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
-    readonly property real calendarPanelDepth: Math.max(0, Math.min(600, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
+    readonly property real notificationPanelDepth: Math.max(0, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap * 2)
+    readonly property real calendarPanelDepth: Math.max(0, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap * 2)
 
     function notificationIcon() {
         return root.notificationCenter?.dndEnabled ? "󰂛" : "󰂚";
@@ -108,34 +109,42 @@ Item {
     Item {
         id: statusFrame
 
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+            left: parent.left
+        }
         width: statusContent.implicitWidth
-        height: statusContent.implicitHeight
 
         Row {
             id: statusContent
 
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            spacing: Theme.gap * 5 + 2
+            anchors {
+                top: parent.top
+                bottom: parent.bottom
+                left: parent.left
+            }
+            spacing: Theme.gap * 6
 
             Item {
                 id: calendarSegment
 
+                anchors {
+                    top: parent.top
+                    bottom: parent.bottom
+                }
                 z: calendarTrigger.containsMouse ? 1 : 0
                 width: calendarStatusRow.implicitWidth
-                height: 28
 
                 Rectangle {
                     anchors {
-                        top: parent.top
-                        bottom: parent.bottom
+                        verticalCenter: parent.verticalCenter
                         left: parent.left
                         right: parent.right
                         leftMargin: -Theme.gap * 2
                         rightMargin: -Theme.gap * 2
                     }
+                    height: 28
                     color: calendarTrigger.containsMouse ? Theme.panelSurfaceHover : "transparent"
                     radius: Theme.radius
                 }
@@ -144,9 +153,11 @@ Item {
                     id: calendarStatusRow
 
                     anchors.centerIn: parent
-                    spacing: Theme.gap * 5 + 2
+                    spacing: Theme.gap * 6
 
                     StatusCell {
+                        id: clockStatus
+                        labelFontFamily: Theme.monoFontFamily
                         icon: ""
                         label: Qt.formatDateTime(clockTimer.now, "hh:mm")
                     }
@@ -154,15 +165,26 @@ Item {
                     StatusCell {
                         icon: "󰃭"
                         label: root.notificationCenter?.calendarPreview ?? "No events"
+                        labelColor: Theme.muted
+                        labelMaxWidth: Math.max(0, Math.min(220, root.maxWidth - clockStatus.width - notificationsSegment.width - statusContent.spacing - calendarStatusRow.spacing - Theme.fontSize - Theme.gap * 2))
+                        visible: labelMaxWidth >= Theme.fontSize * 4
                         scrollLabel: true
-                        labelMaxWidth: 220
+                        scrollActive: calendarTrigger.containsMouse
                     }
                 }
 
                 MouseArea {
                     id: calendarTrigger
 
-                    anchors.fill: parent
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        bottomMargin: -Theme.popupGap
+                        left: parent.left
+                        right: parent.right
+                        leftMargin: -Theme.gap * 2
+                        rightMargin: -Theme.gap * 2
+                    }
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
@@ -173,19 +195,22 @@ Item {
             Item {
                 id: notificationsSegment
 
+                anchors {
+                    top: parent.top
+                    bottom: parent.bottom
+                }
                 z: notificationsTrigger.containsMouse ? 1 : 0
                 width: notificationsStatus.width
-                height: 28
 
                 Rectangle {
                     anchors {
-                        top: parent.top
-                        bottom: parent.bottom
+                        verticalCenter: parent.verticalCenter
                         left: parent.left
                         right: parent.right
                         leftMargin: -Theme.gap * 2
                         rightMargin: -Theme.gap * 2
                     }
+                    height: 28
                     color: notificationsTrigger.containsMouse ? Theme.panelSurfaceHover : "transparent"
                     radius: Theme.radius
                 }
@@ -195,14 +220,22 @@ Item {
 
                     anchors.centerIn: parent
                     icon: root.notificationIcon()
-                    label: String(root.notificationCenter?.notificationCount ?? 0)
+                    label: root.notificationCenter?.hasNotifications ? String(root.notificationCenter.notificationCount) : ""
                     dotVisible: root.notificationCenter?.hasNotifications ?? false
                 }
 
                 MouseArea {
                     id: notificationsTrigger
 
-                    anchors.fill: parent
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        bottomMargin: -Theme.popupGap
+                        left: parent.left
+                        right: parent.right
+                        leftMargin: -Theme.gap * 2
+                        rightMargin: -Theme.gap * 2
+                    }
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
@@ -239,6 +272,7 @@ Item {
 
         WlrLayershell.namespace: "quickshell:topLeftNotificationsPullout"
         WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: root.notificationsOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         anchors {
             top: true
@@ -264,7 +298,7 @@ Item {
                 requestedOpen: root.notificationsOpen && !root.colorPickerActive && notificationPanel.progress <= 0
                 forceClose: root.colorPickerActive
                 activatorMouseArea: notificationsTrigger
-                dismissOnExit: true
+                clickDismiss: true
                 onDismissRequested: root.closePopup("notifications")
 
                 length: 430
@@ -320,7 +354,7 @@ Item {
                                         verticalCenter: parent.verticalCenter
                                     }
                                     title: "Notifications"
-                                    detail: String(root.notificationCenter?.notificationCount ?? 0)
+                                    detail: ""
                                 }
 
                                 Rectangle {
@@ -342,7 +376,7 @@ Item {
                                         color: clearMouse.containsMouse ? Theme.fg : Theme.muted
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.panelCaptionSize
-                                        font.bold: true
+                                        font.weight: Theme.emphasisWeight
                                     }
 
                                     MouseArea {
@@ -511,6 +545,7 @@ Item {
 
         WlrLayershell.namespace: "quickshell:topLeftCalendarPullout"
         WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.keyboardFocus: root.calendarOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         anchors {
             top: true
@@ -536,7 +571,7 @@ Item {
                 requestedOpen: root.calendarOpen && !root.colorPickerActive
                 forceClose: root.colorPickerActive
                 activatorMouseArea: calendarTrigger
-                dismissOnExit: true
+                clickDismiss: true
                 onDismissRequested: root.closePopup("calendar")
 
                 length: 430
@@ -551,38 +586,15 @@ Item {
                     left: parent.left
                 }
 
-                Column {
-                    id: calendarContent
-
+                CalendarMonth {
                     anchors {
                         fill: parent
-                        topMargin: Theme.panelPadding
-                        leftMargin: Theme.panelPadding
-                        rightMargin: Theme.panelPadding
-                        bottomMargin: Theme.panelPadding
+                        margins: Theme.panelPadding
                     }
-
-                    spacing: Theme.panelItemGap
-
-                    Frame.PanelSectionHeader {
-                        id: calendarSectionHeader
-                        width: parent.width
-                        title: "Calendar"
-                        detail: Qt.formatDateTime(clockTimer.now, "hh:mm")
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: Math.max(480, calendarPanel.depth - calendarSectionHeader.height - parent.spacing - Theme.panelPadding * 2 - 10)
-                        color: "transparent"
-                        clip: true
-
-                        CalendarMonth {
-                            anchors.fill: parent
-
-                            events: root.notificationCenter?.calendarEvents ?? []
-                            onEventOpenRequested: event => root.notificationCenter?.openCalendarEvent(event)
-                        }
+                    events: root.notificationCenter?.calendarEvents ?? []
+                    onEventOpenRequested: event => {
+                        root.closePopup("calendar");
+                        root.notificationCenter?.openCalendarEvent(event);
                     }
                 }
             }

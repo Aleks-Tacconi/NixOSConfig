@@ -13,6 +13,7 @@ Item {
     required property var appGroup
     required property var dataSource
 
+    property var trayItem: null
     property int lastFocused: -1
     property alias activatorMouseArea: mouseArea
 
@@ -24,6 +25,7 @@ Item {
     readonly property bool hovered: mouseArea.containsMouse
     readonly property string iconSource: root.dataSource.iconSourceForApp(root.appGroup?.appId ?? "")
 
+    signal trayMenuRequested(var item, var activator)
     signal popupRequested(var appGroup, var activatorMouseArea)
 
     width: 30
@@ -32,9 +34,15 @@ Item {
 
     onAppGroupChanged: root.lastFocused = -1
 
+    /** Focus a window, activate a background tray app, or launch a pinned app. */
     function focusNextWindow() {
         if (root.windowCount <= 0) {
-            root.dataSource.launchApp(root.appGroup.appId);
+            if (root.trayItem?.onlyMenu)
+                root.trayMenuRequested(root.trayItem, mouseArea);
+            else if (root.trayItem)
+                root.trayItem.activate();
+            else
+                root.dataSource.launchApp(root.appGroup.appId);
             return;
         }
 
@@ -78,7 +86,7 @@ Item {
             color: Theme.fg
             font.family: Theme.fontFamily
             font.pixelSize: 15
-            font.bold: true
+            font.weight: Theme.emphasisWeight
             text: root.appGroup?.appId?.[0]?.toUpperCase() ?? "?"
         }
     }
@@ -90,11 +98,11 @@ Item {
             horizontalCenter: parent.horizontalCenter
         }
 
-        visible: root.windowCount > 0
+        visible: root.windowCount > 0 || root.trayItem !== null
         spacing: 3
 
         Repeater {
-            model: Math.min(root.windowCount, 3)
+            model: Math.min(Math.max(root.windowCount, root.trayItem ? 1 : 0), 3)
 
             delegate: Rectangle {
                 required property int index
@@ -117,14 +125,27 @@ Item {
             rightMargin: -Theme.gap / 2
             top: parent.top
             bottom: parent.bottom
+            bottomMargin: -Theme.popupGap
         }
 
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
 
+        onWheel: wheel => {
+            if (!root.trayItem) {
+                wheel.accepted = false;
+                return;
+            }
+            const horizontal = wheel.angleDelta.y === 0;
+            root.trayItem.scroll(horizontal ? wheel.angleDelta.x : wheel.angleDelta.y, horizontal);
+        }
         onClicked: mouse => {
-            if (mouse.button === Qt.RightButton)
+            if (mouse.button === Qt.MiddleButton && root.trayItem)
+                root.trayItem.secondaryActivate();
+            else if (mouse.button === Qt.RightButton && root.trayItem?.hasMenu && !(mouse.modifiers & Qt.ShiftModifier))
+                root.trayMenuRequested(root.trayItem, mouseArea);
+            else if (mouse.button === Qt.RightButton)
                 root.popupRequested(root.appGroup, mouseArea);
             else
                 root.focusNextWindow();

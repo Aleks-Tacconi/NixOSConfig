@@ -52,7 +52,7 @@ Rectangle {
     implicitHeight: 42
     radius: Theme.surfaceRadius
     opacity: root.pending ? 1.0 : (root.interactive ? 1.0 : 0.55)
-    color: root.hovered && root.interactive ? Theme.panelSurfaceHover : (root.network.active ? Theme.panelSurface : "transparent")
+    color: root.hovered && root.interactive ? Theme.panelSurfaceHover : "transparent"
 
     Behavior on color {
         ColorAnimation {
@@ -72,8 +72,8 @@ Rectangle {
             Layout.preferredWidth: Theme.fontSize + 10
             text: root.signalIcon()
             color: root.network.active || root.hovered ? Theme.fg : Theme.muted
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize + 2
+            font.family: Theme.iconFontFamily
+            font.pixelSize: Theme.iconSize
             horizontalAlignment: Text.AlignHCenter
         }
 
@@ -104,8 +104,8 @@ Rectangle {
             visible: root.network.requiresPassword
             text: "󰌾"
             color: Theme.muted
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.panelMetaSize
+            font.family: Theme.iconFontFamily
+            font.pixelSize: Theme.iconSize
         }
 
         Frame.PanelSpinner {
@@ -119,7 +119,7 @@ Rectangle {
             visible: !root.pending && root.actionIndicator().length > 0
             text: root.actionIndicator()
             color: (root.network.active && root.hovered) ? Theme.red : (root.hovered ? Theme.fg : Theme.muted)
-            font.family: Theme.fontFamily
+            font.family: Theme.iconFontFamily
             font.pixelSize: (root.network.active && root.hovered) ? Theme.panelCaptionSize : Theme.panelMetaSize
         }
 
