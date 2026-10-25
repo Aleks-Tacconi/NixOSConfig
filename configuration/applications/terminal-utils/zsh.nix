@@ -7,8 +7,7 @@
 }:
 
 let
-  system = pkgs.stdenv.hostPlatform.system;
-  hyprlandPkg = inputs.hyprland.packages.${system}.hyprland;
+  hyprlandPkg = pkgs.hyprland;
 in
 {
   programs.zsh = {

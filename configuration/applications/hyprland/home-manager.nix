@@ -8,8 +8,7 @@
 }:
 
 let
-  system = pkgs.stdenv.hostPlatform.system;
-  hyprlandPkg = inputs.hyprland.packages.${system}.hyprland;
+  hyprlandPkg = pkgs.hyprland;
   cleanRun = pkgs.writeShellScriptBin "clean-run" ''
     exec ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all "$@"
   '';
@@ -457,7 +456,6 @@ in
         hl.exec_cmd("clean-run blueman-applet")
         hl.exec_cmd("[workspace 1] clean-run ghostty")
         hl.exec_cmd("[workspace 2 silent] clean-run google-chrome-stable")
-        hl.exec_cmd("hyprlock")
       end)
     '';
 
