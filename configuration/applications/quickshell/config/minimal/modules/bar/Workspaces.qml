@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
@@ -54,14 +56,13 @@ RowLayout {
             property var workspace: Hyprland.workspaces.values.find(w => w.id === workspaceId)
             property bool active: Hyprland.focusedWorkspace?.id === workspaceId
             property bool hovered: workspaceMouse.containsMouse
-            readonly property color surfaceColor: "transparent"
 
             z: button.hovered ? 1 : 0
             Layout.preferredWidth: 22
             Layout.preferredHeight: 28
 
             radius: Theme.radius
-            color: button.surfaceColor
+            color: "transparent"
             border.width: 0
             scale: 1
 
@@ -76,6 +77,12 @@ RowLayout {
                 }
                 color: button.hovered ? Theme.panelSurfaceHover : "transparent"
                 radius: Theme.radius
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+                }
             }
 
             Text {
@@ -97,13 +104,7 @@ RowLayout {
                 hoverEnabled: true
 
                 onClicked: {
-                    Hyprland.dispatch("hl.dsp.focus({ workspace = " + button.workspaceId + " })");
-                }
-            }
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: 150
+                    Hyprland.dispatch("workspace " + button.workspaceId);
                 }
             }
 

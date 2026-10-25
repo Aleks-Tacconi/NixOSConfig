@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import "../../theme"
 
@@ -20,6 +22,12 @@ Rectangle {
     color: root.primary ? Theme.panelSurfaceHover : (root.hovered ? Theme.panelSurfaceHover : Theme.panelSurface)
     border.width: root.primary ? 1 : 0
     border.color: Theme.popupInnerEdge
+
+    Behavior on color {
+        ColorAnimation {
+            duration: 120
+        }
+    }
 
     Text {
         id: actionLabel

@@ -130,7 +130,17 @@ Item {
         if (root.networkService.networkState !== "connected")
             return "󰤭";
 
-        return "󰤨";
+        const networks = root.networkService.networks ?? [];
+        const activeNetwork = networks.find(net => net.active) ?? networks.find(net => net.ssid === root.networkService.networkLabel);
+        const signal = (activeNetwork && typeof activeNetwork.signal === "number") ? activeNetwork.signal : 100;
+
+        if (signal >= 75)
+            return "󰤨";
+        if (signal >= 50)
+            return "󰤥";
+        if (signal >= 25)
+            return "󰤢";
+        return "󰤟";
     }
 
     function laptopBatteryDevice() {

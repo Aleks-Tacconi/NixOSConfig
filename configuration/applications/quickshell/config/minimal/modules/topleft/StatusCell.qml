@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import "../../theme"
@@ -19,13 +21,6 @@ Item {
 
     width: content.implicitWidth
     height: 28
-
-    Rectangle {
-        anchors.fill: parent
-        color: "transparent"
-        radius: Theme.radius
-        border.width: 0
-    }
 
     RowLayout {
         id: content
