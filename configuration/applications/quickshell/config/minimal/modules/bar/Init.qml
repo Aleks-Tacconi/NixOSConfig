@@ -94,9 +94,9 @@ Scope {
                     id: workspaceViewport
 
                     anchors.centerIn: parent
-                    width: Math.min(workspaces.implicitWidth, bar.width * 0.24)
+                    width: Math.min(workspaces.implicitWidth + Theme.gap * 2, bar.width * 0.24)
                     height: Theme.barHeight
-                    contentWidth: workspaces.implicitWidth
+                    contentWidth: workspaces.implicitWidth + Theme.gap * 2
                     contentHeight: height
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
@@ -104,6 +104,7 @@ Scope {
 
                     Workspaces {
                         id: workspaces
+                        x: Theme.gap
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -149,7 +150,7 @@ Scope {
                             top: parent.top
                             bottom: parent.bottom
                         }
-                        spacing: Theme.gap * 4
+                        spacing: Theme.gap * 1.5
 
                         TopRight.Init {
                             id: topRightStatus

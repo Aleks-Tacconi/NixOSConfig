@@ -31,6 +31,7 @@ Item {
     readonly property var laptopBattery: BatteryService.laptopBattery
     readonly property bool hasBattery: laptopBattery !== null || BatteryService.sysfsBatteryPresent
     readonly property int batteryPercent: Math.round(laptopBattery !== null ? laptopBattery.percentage * 100 : BatteryService.sysfsBatteryPercentValue)
+    readonly property string batteryIcon: ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"][Math.max(0, Math.min(10, Math.floor(root.batteryPercent / 10)))]
     readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
 
     onNetworkOpenChanged: {
@@ -111,7 +112,7 @@ Item {
                 top: parent.top
                 bottom: parent.bottom
             }
-            spacing: Theme.gap * 2
+            spacing: Theme.gap / 2
 
             Item {
                 id: audioSegment
@@ -121,17 +122,15 @@ Item {
                     bottom: parent.bottom
                 }
                 z: audioTrigger.containsMouse ? 1 : 0
-                width: Theme.panelRowHeight
+                width: Theme.panelRowHeight + Theme.gap
 
                 Rectangle {
                     anchors {
                         verticalCenter: parent.verticalCenter
                         left: parent.left
                         right: parent.right
-                        leftMargin: -Theme.gap
-                        rightMargin: -Theme.gap
                     }
-                    height: 28
+                    height: Theme.panelRowHeight
                     color: audioTrigger.containsMouse || root.audioOpen ? Theme.panelSurfaceHover : "transparent"
                     radius: Theme.radius
                     Behavior on color {
@@ -161,8 +160,6 @@ Item {
                         bottomMargin: -Theme.popupGap
                         left: parent.left
                         right: parent.right
-                        leftMargin: -Theme.gap
-                        rightMargin: -Theme.gap
                     }
                     acceptedButtons: Qt.LeftButton
                     hoverEnabled: true
@@ -184,17 +181,15 @@ Item {
                     bottom: parent.bottom
                 }
                 z: networkTrigger.containsMouse ? 1 : 0
-                width: Theme.panelRowHeight - Theme.gap
+                width: Theme.panelRowHeight
 
                 Rectangle {
                     anchors {
                         verticalCenter: parent.verticalCenter
                         left: parent.left
                         right: parent.right
-                        leftMargin: -Theme.gap
-                        rightMargin: -Theme.gap
                     }
-                    height: 28
+                    height: Theme.panelRowHeight
                     color: networkTrigger.containsMouse || root.networkOpen ? Theme.panelSurfaceHover : "transparent"
                     radius: Theme.radius
                     Behavior on color {
@@ -228,8 +223,6 @@ Item {
                         bottomMargin: -Theme.popupGap
                         left: parent.left
                         right: parent.right
-                        leftMargin: -Theme.gap
-                        rightMargin: -Theme.gap
                     }
                     acceptedButtons: Qt.LeftButton
                     hoverEnabled: true
@@ -247,17 +240,15 @@ Item {
                 }
                 z: batteryTrigger.containsMouse ? 1 : 0
                 visible: root.hasBattery
-                width: visible ? batteryRow.implicitWidth : 0
+                width: visible ? Theme.panelRowHeight + Theme.gap : 0
 
                 Rectangle {
                     anchors {
                         verticalCenter: parent.verticalCenter
                         left: parent.left
                         right: parent.right
-                        leftMargin: -Theme.gap
-                        rightMargin: -Theme.gap
                     }
-                    height: 28
+                    height: Theme.panelRowHeight
                     color: batteryTrigger.containsMouse || root.batteryOpen ? Theme.panelSurfaceHover : "transparent"
                     radius: Theme.radius
                     Behavior on color {
@@ -267,27 +258,15 @@ Item {
                     }
                 }
 
-                Row {
-                    id: batteryRow
-
+                Text {
                     anchors.centerIn: parent
-                    spacing: Theme.gap * 2
-
-                    Text {
-                        text: "󰁹"
-                        color: Theme.red
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 1
-                        font.bold: true
-                    }
-
-                    Text {
-                        text: root.formatPercent(root.batteryPercent)
-                        color: Theme.fg
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 1
-                        font.bold: true
-                    }
+                    text: batteryTrigger.containsMouse
+                        ? root.formatPercent(root.batteryPercent)
+                        : root.batteryIcon
+                    color: root.batteryPercent < 10 ? Theme.batteryCritical : Theme.fg
+                    font.family: Theme.fontFamily
+                    font.pixelSize: batteryTrigger.containsMouse ? Theme.fontSize + 1 : Theme.iconSize + Theme.gap / 2
+                    font.bold: true
                 }
 
                 MouseArea {
@@ -299,8 +278,6 @@ Item {
                         bottomMargin: -Theme.popupGap
                         left: parent.left
                         right: parent.right
-                        leftMargin: -Theme.gap
-                        rightMargin: -Theme.gap
                     }
                     acceptedButtons: Qt.LeftButton
                     hoverEnabled: true
@@ -351,6 +328,7 @@ Item {
                 corner: "topRight"
                 requestedOpen: root.audioOpen
                 activatorMouseArea: audioTrigger
+                dismissOnExit: false
                 clickDismiss: true
                 onDismissRequested: root.closePopup("audio")
 
@@ -425,8 +403,8 @@ Item {
 
                 corner: "topRight"
                 requestedOpen: root.networkOpen
-                dismissOnExit: !networkView.editing && !root.networkService.actionPending
                 activatorMouseArea: networkTrigger
+                dismissOnExit: false
                 clickDismiss: true
                 onDismissRequested: root.closePopup("network")
 
@@ -504,6 +482,7 @@ Item {
                 corner: "topRight"
                 requestedOpen: root.batteryOpen
                 activatorMouseArea: batteryTrigger
+                dismissOnExit: false
                 clickDismiss: true
                 onDismissRequested: root.closePopup("battery")
 

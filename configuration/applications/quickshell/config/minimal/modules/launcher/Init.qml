@@ -18,8 +18,8 @@ Scope {
     property bool open: false
     readonly property var enabledModes: ShellConfig.Config.launcher.enabledModes
     property string mode: root.enabledModes[0]
-    property real panelWidth: 680
-    property real panelDepth: 444
+    property real panelWidth: 620
+    property real panelDepth: 400
     property int revealDuration: 150
     property int targetMonitorId: -1
 
@@ -149,12 +149,14 @@ Scope {
                         autoClose: false
                         duration: root.revealDuration
                         length: Math.min(root.panelWidth, Math.max(0, launcherHost.width - 48))
-                        depth: Math.min(root.panelDepth, Math.max(0, launcherHost.height - 48))
+                        depth: Math.min(root.panelDepth, launcherContent.implicitHeight + Theme.panelPadding * 2, Math.max(0, launcherHost.height - 48))
                         backgroundColor: Theme.panelBg
                         curveRadius: Theme.panelRadius
 
                         anchors {
-                            centerIn: parent
+                            horizontalCenter: parent.horizontalCenter
+                            top: parent.top
+                            topMargin: (launcherHost.height - Math.min(root.panelDepth, Math.max(0, launcherHost.height - 48))) / 2
                         }
 
                         LauncherContent {
@@ -171,7 +173,7 @@ Scope {
                             open: screenRoot.wantsOpen
                             mode: root.mode
                             enabledModes: root.enabledModes
-                            maxVisibleRows: Math.max(2, Math.min(5, Math.floor((launcherPanel.depth - 132 + Theme.panelItemGap) / (56 + Theme.panelItemGap))))
+                            maxVisibleRows: Math.max(1, Math.min(5, Math.floor((Math.min(root.panelDepth, launcherHost.height - 48) - 120 + Theme.panelItemGap) / (launcherContent.rowHeight + Theme.panelItemGap))))
                             onRequestClose: root.hide()
                             onRequestModeCycle: direction => root.nextMode(direction)
                             onModeRequested: mode => root.setMode(mode)

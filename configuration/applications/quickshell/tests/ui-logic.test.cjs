@@ -18,6 +18,24 @@ function plain(value) {
 }
 
 const search = load('launcher/search.js');
+
+test('frequent recent apps rank ahead of older favorites before limiting', () => {
+    const now = 30 * 86400000;
+    const items = Array.from({ length: 90 }, (_, index) => ({ id: `app${index}`, title: `App ${index}` }));
+    items.push({ id: 'recent', title: 'Recent' }, { id: 'old', title: 'Old favorite' });
+    const history = { recent: { score: 2, lastUsed: now }, old: { score: 10, lastUsed: 0 } };
+    const result = plain(search.filterItems(items, '', true, history, now));
+    assert.equal(result[0].id, 'recent');
+    assert.equal(result[1].id, 'old');
+    assert.equal(items[0].id, 'app0');
+});
+
+test('exact search names outrank usage while equal matches prefer usage', () => {
+    const items = [{ id: 'a', title: 'Terminal' }, { id: 'b', title: 'Terminal Plus' }, { id: 'c', title: 'Terminal Pro' }];
+    const history = { c: { score: 100, lastUsed: 1000 } };
+    assert.deepEqual(plain(search.filterItems(items, 'Terminal', true, history, 1000)).map(item => item.id), ['a', 'c', 'b']);
+    assert.deepEqual(plain(search.filterItems(items, '', false, history, 1000)).map(item => item.id), ['a', 'b', 'c']);
+});
 const actions = load('bar/app-menu-actions.js');
 const calendar = load('topleft/calendar-data.js', {
     Qt: {
@@ -131,4 +149,14 @@ test('tray apps resolve desktop identity without application-specific aliases', 
         'player', desktop), false);
     assert.equal(trayApps.matchesGroup({ item: { id: 'player-1234' }, desktopEntry: null },
         'PLAYER', null), true);
+});
+
+test('recording launches decays prior usage without mutating saved history', () => {
+    const week = 7 * 86400000;
+    const history = { app: { score: 8, lastUsed: 0 } };
+    const updated = plain(search.recordLaunch(history, 'app', week));
+    assert.deepEqual(updated.app, { score: 5, lastUsed: week });
+    assert.equal(history.app.score, 8);
+    assert.equal(search.usageScore(history.app, -1), 8);
+    assert.equal(search.recordLaunch({}, 'new', week).new.score, 1);
 });

@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import "../frame" as Frame
+import "../wallpaper" as Wallpaper
 import "../../theme"
 
 /**
@@ -20,6 +21,7 @@ Item {
     property real maxWidth: 430
     property var notificationCenter: null
     property string openPopup: ""
+    property bool wallpaperPickerOpen: false
     readonly property bool calendarOpen: root.openPopup === "calendar"
     readonly property bool notificationsOpen: root.openPopup === "notifications"
     readonly property string currentScreenKey: screenKey(root.popupScreen)
@@ -63,6 +65,8 @@ Item {
     }
 
     onNotificationsOpenChanged: {
+        if (!root.notificationsOpen)
+            root.wallpaperPickerOpen = false;
         root.notificationCenter?.setCenterOpen(root.currentScreenKey, root.notificationsOpen);
     }
 
@@ -298,6 +302,7 @@ Item {
                 requestedOpen: root.notificationsOpen && !root.colorPickerActive && notificationPanel.progress <= 0
                 forceClose: root.colorPickerActive
                 activatorMouseArea: notificationsTrigger
+                dismissOnExit: false
                 clickDismiss: true
                 onDismissRequested: root.closePopup("notifications")
 
@@ -313,8 +318,15 @@ Item {
                     left: parent.left
                 }
 
+                Wallpaper.WallpaperPicker {
+                    anchors { fill: parent; margins: Theme.panelPadding }
+                    visible: root.wallpaperPickerOpen
+                    onBackRequested: root.wallpaperPickerOpen = false
+                }
+
                 Column {
                     id: notificationsContent
+                    visible: !root.wallpaperPickerOpen
 
                     anchors {
                         fill: parent
@@ -517,6 +529,13 @@ Item {
 
                                 ActionButton {
                                     width: actionBar.width
+                                    label: "Wallpapers"
+                                    icon: "󰸉"
+                                    onClicked: root.wallpaperPickerOpen = true
+                                }
+
+                                ActionButton {
+                                    width: actionBar.width
                                     label: "Screenshot"
                                     icon: ""
                                     onClicked: root.notificationCenter?.takeScreenshot()
@@ -571,6 +590,7 @@ Item {
                 requestedOpen: root.calendarOpen && !root.colorPickerActive
                 forceClose: root.colorPickerActive
                 activatorMouseArea: calendarTrigger
+                dismissOnExit: false
                 clickDismiss: true
                 onDismissRequested: root.closePopup("calendar")
 

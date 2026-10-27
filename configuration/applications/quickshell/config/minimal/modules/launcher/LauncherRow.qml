@@ -19,25 +19,13 @@ Rectangle {
 
     readonly property bool hovered: mouseArea.containsMouse
     readonly property bool copyable: ["file", "emoji", "clipboard"].includes(root.item.kind)
-    readonly property bool externalOpen: ["file", "application"].includes(root.item.kind)
     readonly property bool navigationItem: root.item.kind === "directory"
 
     radius: Theme.surfaceRadius
-    color: root.selected ? Theme.panelSurfaceHover : (root.hovered ? Theme.panelSurface : "transparent")
-    border.width: root.selected ? 1 : 0
-    border.color: Theme.popupInnerEdge
+    color: root.selected ? Theme.launcherSelection : (root.hovered ? Theme.panelSurface : "transparent")
+    border.width: 0
 
-    Rectangle {
-        visible: root.selected
-        anchors {
-            left: parent.left
-            top: parent.top
-            bottom: parent.bottom
-        }
-        width: 3
-        radius: 2
-        color: Theme.fg
-    }
+    Behavior on color { ColorAnimation { duration: 120 } }
 
     Row {
         z: 1
@@ -92,7 +80,7 @@ Rectangle {
                 elide: Text.ElideRight
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelBodySize
-                font.bold: true
+                font.bold: root.selected
                 text: root.item.title
                 textFormat: Text.PlainText
             }
@@ -112,10 +100,9 @@ Rectangle {
         Text {
             id: externalIndicator
 
-            visible: root.externalOpen
             width: visible ? Theme.fontSize + 4 : 0
             anchors.verticalCenter: parent.verticalCenter
-            text: "↗"
+            text: "↵"
             color: root.selected ? Theme.fg : Theme.muted
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelMetaSize

@@ -462,7 +462,7 @@ in
   };
 
   services.hyprpaper = {
-    enable = true;
+    enable = !quickshellCfg.enable;
     settings = {
       splash = false;
       wallpaper = [

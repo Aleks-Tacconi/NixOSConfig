@@ -8,9 +8,6 @@
 
 {
   environment.variables.NIXOS_HOST = "laptop";
-
-  services.ollama.enable = true;
-
   services = {
     loki = {
       enable = true;

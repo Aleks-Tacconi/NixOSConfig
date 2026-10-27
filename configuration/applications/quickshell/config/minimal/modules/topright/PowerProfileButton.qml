@@ -32,6 +32,7 @@ Rectangle {
         spacing: Theme.gap * 2
 
         Text {
+            anchors.verticalCenter: parent.verticalCenter
             text: root.icon
             color: root.active ? Theme.fg : Theme.muted
             font.family: Theme.iconFontFamily
@@ -39,6 +40,7 @@ Rectangle {
         }
 
         Text {
+            anchors.verticalCenter: parent.verticalCenter
             text: root.label
             color: root.active ? Theme.fg : Theme.muted
             font.family: Theme.fontFamily

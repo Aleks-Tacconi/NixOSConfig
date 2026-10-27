@@ -33,7 +33,7 @@ EOF
 in
 {
   home.packages = with pkgs; [
-    # Jupyter Python packages live in terminal-utils/shellutils.nix (single env)
+    # Jupyter Python packages live in terminal-utils/development/python.nix (single env)
 
     # Kernel definition
     currentPythonKernel

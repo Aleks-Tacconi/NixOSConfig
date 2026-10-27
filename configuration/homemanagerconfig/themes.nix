@@ -63,18 +63,44 @@ let
         -e 's/49, 50, 68/32, 32, 32/g' \
         "$src" > "$out"
   '';
+  wallpaperThemeDir = "${config.xdg.stateHome}/quickshell/wallpaper-theme";
+  wallpaperPython = pkgs.python3.withPackages (pythonPackages: [ pythonPackages.pillow ]);
+  wallpaperTheme = pkgs.writeShellScriptBin "quickshell-wallpaper-theme" ''
+    export PATH="${
+      lib.makeBinPath [
+        pkgs.glib
+        pkgs.dbus
+      ]
+    }:$PATH"
+    exec ${wallpaperPython}/bin/python ${./wallpaper_theme.py} \
+      --notify --config ${lib.escapeShellArg config.xdg.configHome} \
+      --output ${lib.escapeShellArg wallpaperThemeDir} \
+      --kde ${kdeColorScheme} \
+      --kvantum ${kvantumTheme}/share/Kvantum/${kvantumThemeName} \
+      --image "$1"
+  '';
   iconThemeName = "Papirus";
 in
 {
   home.packages = with pkgs; [
     kvantumTheme
+    wallpaperTheme
     kdePackages.breeze
   ];
 
   # Home Manager maps qtct to qt5ct, but KDE Connect uses Qt 6.
   home.sessionVariables.QT_QPA_PLATFORMTHEME = lib.mkForce "qt6ct";
 
-  home.file.".config/kdeglobals".source = kdeColorScheme;
+  home.file.".config/kdeglobals".source =
+    config.lib.file.mkOutOfStoreSymlink "${wallpaperThemeDir}/kdeglobals";
+
+  home.activation.initializeWallpaperTheme =
+    lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ]
+      ''
+        if [ ! -f ${lib.escapeShellArg "${wallpaperThemeDir}/qt.conf"} ]; then
+          $DRY_RUN_CMD ${wallpaperTheme}/bin/quickshell-wallpaper-theme ${./wallpapers/cypberpunk.jpg}
+        fi
+      '';
 
   home.pointerCursor = {
     enable = true;
@@ -91,15 +117,23 @@ in
       package = gtkTheme;
     };
     gtk4 = {
-      theme = config.gtk.theme;
+      theme = null;
+      extraCss = ''
+        :root {
+          --window-bg-color: #141414;
+          --view-bg-color: #101010;
+          --headerbar-bg-color: #181818;
+          --sidebar-bg-color: #181818;
+          --card-bg-color: #202020;
+          --dialog-bg-color: #202020;
+        }
+      '';
     };
     iconTheme = {
       name = iconThemeName;
       package = pkgs.papirus-icon-theme;
     };
   };
-
-  xdg.configFile."gtk-4.0/assets".source = "${gtkTheme}/share/themes/${gtkThemeName}/gtk-4.0/assets";
 
   dconf.settings = {
     "org/gnome/desktop/interface" = {
@@ -124,7 +158,8 @@ in
     ];
     qt5ctSettings = {
       Appearance = {
-        color_scheme = "dark";
+        custom_palette = true;
+        color_scheme_path = "${wallpaperThemeDir}/qt.conf";
         icon_theme = iconThemeName;
         standard_dialogs = "xdgdesktopportal";
         style = "kvantum";
@@ -132,7 +167,8 @@ in
     };
     qt6ctSettings = {
       Appearance = {
-        color_scheme = "dark";
+        custom_palette = true;
+        color_scheme_path = "${wallpaperThemeDir}/qt.conf";
         icon_theme = iconThemeName;
         standard_dialogs = "xdgdesktopportal";
         style = "kvantum";
@@ -142,10 +178,10 @@ in
 
   home.file.".config/Kvantum/kvantum.kvconfig".text = ''
     [General]
-    theme=${kvantumThemeName}
+    theme=wallpaper
   '';
-  home.file.".config/Kvantum/${kvantumThemeName}".source =
-    "${kvantumTheme}/share/Kvantum/${kvantumThemeName}";
+  home.file.".config/Kvantum/wallpaper".source =
+    config.lib.file.mkOutOfStoreSymlink "${wallpaperThemeDir}/Kvantum/wallpaper";
 
   home.file.".hyprland-assets/icon.png".source = ./.icon.png;
   home.file.".hyprland-assets/wallpaper.jpg".source = ./wallpapers/cypberpunk.jpg;

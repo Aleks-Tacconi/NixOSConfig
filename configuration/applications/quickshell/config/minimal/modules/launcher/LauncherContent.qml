@@ -18,7 +18,8 @@ Item {
     required property var enabledModes
 
     property int selectedIndex: 0
-    property int rowHeight: 56
+    property real rankingTime: Date.now()
+    property int rowHeight: Theme.panelRowHeight + Theme.panelSectionGap
     property int maxVisibleRows: 5
     property var clipboardItems: []
     property var fileItems: []
@@ -52,7 +53,8 @@ Item {
         })
     readonly property var sourceItems: root.enabledModes.includes(root.mode) ? root.sourceItemsByMode[root.mode] : []
     readonly property var filteredItems: root.filterItems()
-    readonly property int resultsHeight: root.maxVisibleRows * root.rowHeight + Math.max(0, root.maxVisibleRows - 1) * Theme.panelItemGap
+    readonly property int visibleResultRows: Math.max(1, Math.min(root.maxVisibleRows, root.filteredItems.length))
+    readonly property int resultsHeight: root.visibleResultRows * root.rowHeight + Math.max(0, root.visibleResultRows - 1) * Theme.panelItemGap
     readonly property string placeholder: root.mode === "applications" ? "Launch an application" : (root.mode === "emoji" ? "Search emoji" : (root.mode === "files" ? "Search files" : "Search copied text"))
 
     signal requestClose
@@ -67,6 +69,7 @@ Item {
             return;
         }
 
+        root.rankingTime = Date.now();
         searchBox.text = "";
         root.selectedIndex = 0;
         root.selectedFileDir = root.mode === "files" ? root.initialFileDirectory() : "";
@@ -102,6 +105,7 @@ Item {
 
             return {
                 kind: "application",
+                id: entry.id,
                 title: entry.name,
                 subtitle: subtitle,
                 icon: icon,
@@ -111,9 +115,9 @@ Item {
         }).sort((left, right) => left.title.localeCompare(right.title));
     }
 
-    /** Rank app names before keyword matches while preserving other modes' order. */
+    /** Rank name matches first, then favor frequent recent application launches. */
     function filterItems() {
-        return Search.filterItems(root.sourceItems, searchBox.text, root.mode === "applications");
+        return Search.filterItems(root.sourceItems, searchBox.text, root.mode === "applications", LaunchHistory.apps, root.rankingTime);
     }
 
     function initialFileDirectory() {
@@ -161,6 +165,7 @@ Item {
 
         if (item.kind === "application") {
             item.entry.execute();
+            LaunchHistory.record(item.id);
         } else if (item.kind === "emoji") {
             copyProcess.exec(["wl-copy", item.value]);
         } else if (item.kind === "directory") {
@@ -437,6 +442,11 @@ Item {
         anchors.fill: parent
         spacing: Theme.panelItemGap
 
+        LauncherModeHeading {
+            width: parent.width
+            mode: root.mode
+        }
+
         LauncherSearchBox {
             id: searchBox
 
@@ -481,13 +491,6 @@ Item {
                 }
                 onHighlighted: index => root.selectedIndex = index
             }
-        }
-
-        LauncherModeTabs {
-            width: parent.width
-            mode: root.mode
-            enabledModes: root.enabledModes
-            onModeRequested: mode => root.chooseMode(mode)
         }
 
     }

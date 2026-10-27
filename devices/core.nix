@@ -47,7 +47,6 @@
     ../configuration/applications/docker/configuration.nix
     ../configuration/applications/tailscale/configuration.nix
     ../configuration/applications/chrome/configuration.nix
-    ../configuration/applications/gdrive/configuration.nix
     ../configuration/applications/firefox/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix

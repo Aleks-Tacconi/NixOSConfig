@@ -24,8 +24,7 @@ Rectangle {
     height: 44
     radius: Theme.surfaceRadius
     color: searchInput.activeFocus ? Theme.panelSurfaceHover : Theme.panelSurface
-    border.width: Theme.popupBorderWidth
-    border.color: searchInput.activeFocus ? Theme.focusBorder : Theme.popupBorder
+    border.width: 0
 
     Text {
         anchors {

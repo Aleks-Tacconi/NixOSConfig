@@ -333,21 +333,3 @@ index 0000000..16d939e
 +    </method>
 +  </interface>
 +</node>
-diff --git a/src/dbus/dbusmenu/dbusmenu.cpp b/src/dbus/dbusmenu/dbusmenu.cpp
-index ea29f54..053128c 100644
---- a/src/dbus/dbusmenu/dbusmenu.cpp
-+++ b/src/dbus/dbusmenu/dbusmenu.cpp
-@@ -289,6 +289,13 @@ DBusMenu::DBusMenu(const QString& service, const QString& path, QObject* parent):
- 	    &DBusMenu::onLayoutUpdated
- 	);
- 
-+	QObject::connect(
-+	    this->interface,
-+	    &DBusMenuInterface::ItemsPropertiesUpdated,
-+	    this,
-+	    &DBusMenu::onItemPropertiesUpdated
-+	);
-+
- 	this->properties.setInterface(this->interface);
- 	this->properties.updateAllViaGetAll();
- }

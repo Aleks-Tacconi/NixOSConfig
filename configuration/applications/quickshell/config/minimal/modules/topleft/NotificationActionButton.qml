@@ -4,7 +4,7 @@ import QtQuick
 import "../../theme"
 
 /**
- * Compact notification action with primary and secondary emphasis.
+ * Quiet notification action that highlights on hover.
  */
 Rectangle {
     id: root
@@ -19,9 +19,8 @@ Rectangle {
     implicitWidth: Math.max(72, actionLabel.implicitWidth + Theme.gap * 6)
     implicitHeight: 34
     radius: Theme.surfaceRadius
-    color: root.primary ? Theme.panelSurfaceHover : (root.hovered ? Theme.panelSurfaceHover : Theme.panelSurface)
-    border.width: root.primary ? 1 : 0
-    border.color: Theme.popupInnerEdge
+    color: root.hovered ? Theme.panelSurfaceHover : "transparent"
+    border.width: 0
 
     Behavior on color {
         ColorAnimation {
@@ -37,10 +36,10 @@ Rectangle {
             margins: Theme.gap * 3
         }
         text: root.action?.text || "Open"
-        color: root.primary || root.hovered ? Theme.fg : Theme.muted
+        color: root.hovered ? Theme.fg : Theme.muted
         font.family: Theme.fontFamily
         font.pixelSize: Theme.panelMetaSize
-        font.weight: root.primary ? Theme.emphasisWeight : Font.Normal
+        font.weight: Font.Normal
         elide: Text.ElideRight
         maximumLineCount: 1
         textFormat: Text.PlainText

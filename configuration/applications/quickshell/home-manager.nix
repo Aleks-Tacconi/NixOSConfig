@@ -70,6 +70,10 @@ let
             readonly property string configDir: ${builtins.toJSON "${config.xdg.configHome}/quickshell/default/modules/launcher"}
         }
 
+        readonly property QtObject wallpapers: QtObject {
+            readonly property string directory: ${builtins.toJSON "file://${config.home.homeDirectory}/.local/share/wallpapers"}
+        }
+
         readonly property QtObject notifications: QtObject {
             readonly property int popupTimeout: ${toString cfg.notifications.popupTimeout}
             readonly property int queueLimit: ${toString cfg.notifications.queueLimit}
@@ -117,6 +121,7 @@ in
   ];
 
   xdg.configFile."quickshell/default".source = configTree;
+  xdg.dataFile."wallpapers".source = ../../homemanagerconfig/wallpapers;
 
   systemd.user.services.quickshell = {
     Unit = {

@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import "../../theme"
 
-/** Translucent glass surface with subtle borders and highlights. */
+/** Neutral dark popup surfaces and translucent bars with subtle edge shading. */
 Rectangle {
     id: root
 
@@ -11,23 +11,11 @@ Rectangle {
 
     color: root.framed ? Theme.panelBg : Theme.bg
     radius: root.framed ? Theme.panelRadius : 0
-    border.width: root.framed ? Theme.popupBorderWidth : 0
-    border.color: Theme.popupBorder
-
-    Rectangle {
-        anchors {
-            fill: parent
-            margins: Theme.popupBorderWidth
-        }
-        visible: root.framed
-        color: "transparent"
-        radius: Math.max(0, root.radius - Theme.popupBorderWidth)
-        border.color: Theme.popupInnerEdge
-        border.width: Theme.popupShadowWidth
-    }
+    border.width: 0
 
     Rectangle {
         anchors.fill: parent
+        visible: root.framed
         color: "transparent"
         radius: root.radius
         gradient: Gradient {
@@ -35,18 +23,45 @@ Rectangle {
 
             GradientStop {
                 position: 0
-                color: root.framed ? Theme.glassHighlight : Theme.glassHighlightSoft
+                color: root.framed ? Theme.popupEdgeShade : Theme.glassHighlightSoft
             }
 
             GradientStop {
-                position: root.framed ? 0.34 : 0.55
-                color: root.framed ? Theme.glassHighlightSoft : "transparent"
+                position: root.framed ? 0.025 : 0.55
+                color: "transparent"
+            }
+
+            GradientStop {
+                position: root.framed ? 0.975 : 1
+                color: root.framed ? "transparent" : Theme.glassShadow
             }
 
             GradientStop {
                 position: 1
-                color: Theme.glassShadow
+                color: root.framed ? Theme.popupEdgeShade : Theme.glassShadow
             }
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        visible: root.framed
+        radius: root.radius
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0; color: root.framed ? Theme.popupEdgeShade : Theme.glassShadow }
+            GradientStop { position: 0.025; color: "transparent" }
+            GradientStop { position: 0.975; color: "transparent" }
+            GradientStop { position: 1; color: root.framed ? Theme.popupEdgeShade : Theme.glassShadow }
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        visible: root.framed
+        color: "transparent"
+        radius: root.radius
+        border.width: Theme.popupBorderWidth
+        border.color: Theme.popupBorder
     }
 }

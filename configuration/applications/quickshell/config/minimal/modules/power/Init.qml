@@ -16,7 +16,7 @@ Item {
 
     property var popupScreen: null
     property real popupRightMargin: Theme.gap * 4
-    property real indicatorSize: 24
+    property real indicatorSize: Theme.panelRowHeight - Theme.gap * 2
     property real menuPadding: Theme.panelPadding
     property real actionButtonWidth: 220
     property real actionButtonHeight: Theme.panelRowHeight
@@ -60,7 +60,7 @@ Item {
     readonly property real menuHeight: menuContent.implicitHeight + root.menuPadding * 2
 
     width: root.indicatorSize
-    height: 28
+    height: Theme.barHeight
     z: indicatorMouse.containsMouse ? 1 : 0
 
     Process {
@@ -69,14 +69,12 @@ Item {
 
     Rectangle {
         anchors {
-            top: parent.top
-            bottom: parent.bottom
+            verticalCenter: parent.verticalCenter
             left: parent.left
             right: parent.right
-            leftMargin: -Theme.gap
-            rightMargin: -Theme.gap
         }
-        color: indicatorMouse.containsMouse ? Theme.panelSurfaceHover : "transparent"
+        height: Theme.panelRowHeight
+        color: indicatorMouse.containsMouse || root.menuOpen ? Theme.panelSurfaceHover : "transparent"
         radius: Theme.radius
     }
 
@@ -113,7 +111,7 @@ Item {
         color: Theme.red
         opacity: root.indicatorActive ? 1 : 0.9
         font.family: Theme.iconFontFamily
-        font.pixelSize: Theme.iconSize
+        font.pixelSize: Theme.fontSize + 1
         font.bold: false
         text: ""
     }
@@ -169,6 +167,7 @@ Item {
                 corner: "topRight"
                 requestedOpen: root.menuOpen
                 activatorMouseArea: indicatorMouse
+                dismissOnExit: false
                 clickDismiss: true
                 closeDelay: root.closeDelay
                 hoverLeaseDuration: 1200
