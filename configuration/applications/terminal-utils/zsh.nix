@@ -24,6 +24,7 @@ in
       cat = "bat --theme=ansi";
       cd = "z";
       open = "xdg-open";
+      nix-shell = ''nix-shell --run "$SHELL"'';
     };
 
     ohMyZsh = {
@@ -39,6 +40,26 @@ in
     histSize = 1000;
 
     interactiveShellInit = ''
+      # Use the configured shell when entering a development environment.
+      nix() {
+        if [[ $1 == "develop" ]]; then
+          shift
+          command nix develop "$@" -c "$SHELL"
+        else
+          command nix "$@"
+        fi
+      }
+
+      # Mark Nix environments after the prompt theme has loaded.
+      nix_shell_prompt() {
+        if [[ -n "$IN_NIX_SHELL" && "$PROMPT" != '%F{#89dceb}%f '* ]]; then
+          local prompt_body="''${PROMPT#*\) }"
+          PROMPT='%F{#89dceb}%f  '"$prompt_body"
+        fi
+      }
+      autoload -Uz add-zsh-hook
+      add-zsh-hook precmd nix_shell_prompt
+
       if [ -e /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh ]; then
         . /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh
       fi

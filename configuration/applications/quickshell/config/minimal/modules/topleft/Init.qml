@@ -18,6 +18,7 @@ Item {
     height: Theme.barHeight
 
     property var popupScreen: null
+    property real barLeftMargin: Theme.gap * 4
     property real maxWidth: 430
     property var notificationCenter: null
     property string openPopup: ""
@@ -268,10 +269,11 @@ Item {
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         visible: (!root.colorPickerActive && root.notificationsOpen) || notificationsPanel.progress > 0
-        implicitWidth: notificationsPanel.length + notificationsPanel.curveRadius
-        implicitHeight: notificationsPanel.depth + notificationsPanel.curveRadius
+        implicitWidth: Math.max(notificationsPanel.length + notificationsPanel.curveRadius, notificationsHoverBridge.x + notificationsHoverBridge.width)
+        implicitHeight: Theme.barHeight + Theme.popupGap + notificationsPanel.depth + notificationsPanel.curveRadius
         mask: Region {
-            item: notificationsPopupHost
+            Region { item: notificationsPanel }
+            Region { item: notificationsHoverBridge }
         }
 
         WlrLayershell.namespace: "quickshell:topLeftNotificationsPullout"
@@ -284,7 +286,7 @@ Item {
         }
 
         margins {
-            top: Theme.barHeight + Theme.popupGap
+            top: 0
             left: Theme.gap * 2
         }
 
@@ -295,6 +297,13 @@ Item {
             clip: false
             visible: notificationsPopupWindow.visible
 
+            Frame.PopupHoverBridge {
+                id: notificationsHoverBridge
+                activator: notificationsTrigger
+                x: root.barLeftMargin + statusFrame.x + statusContent.x + notificationsSegment.x + notificationsTrigger.x - Theme.gap * 2
+                onActivated: root.closePopup("notifications")
+            }
+
             Frame.PulloutPanel {
                 id: notificationsPanel
 
@@ -302,7 +311,7 @@ Item {
                 requestedOpen: root.notificationsOpen && !root.colorPickerActive && notificationPanel.progress <= 0
                 forceClose: root.colorPickerActive
                 activatorMouseArea: notificationsTrigger
-                dismissOnExit: false
+                bridgeHovered: notificationsHoverBridge.hovered
                 clickDismiss: true
                 onDismissRequested: root.closePopup("notifications")
 
@@ -315,6 +324,7 @@ Item {
 
                 anchors {
                     top: parent.top
+                    topMargin: Theme.barHeight + Theme.popupGap
                     left: parent.left
                 }
 
@@ -433,14 +443,6 @@ Item {
                                         values: root.notificationCenter?.newestNotifications ?? []
                                     }
 
-                                    displaced: Transition {
-                                        NumberAnimation {
-                                            property: "y"
-                                            duration: 150
-                                            easing.type: Easing.OutCubic
-                                        }
-                                    }
-
                                     delegate: NotificationCard {
                                         required property var modelData
 
@@ -556,10 +558,11 @@ Item {
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         visible: (!root.colorPickerActive && root.calendarOpen) || calendarPanel.progress > 0
-        implicitWidth: calendarPanel.length + calendarPanel.curveRadius
-        implicitHeight: calendarPanel.depth + calendarPanel.curveRadius
+        implicitWidth: Math.max(calendarPanel.length + calendarPanel.curveRadius, calendarHoverBridge.x + calendarHoverBridge.width)
+        implicitHeight: Theme.barHeight + Theme.popupGap + calendarPanel.depth + calendarPanel.curveRadius
         mask: Region {
-            item: calendarPopupHost
+            Region { item: calendarPanel }
+            Region { item: calendarHoverBridge }
         }
 
         WlrLayershell.namespace: "quickshell:topLeftCalendarPullout"
@@ -572,7 +575,7 @@ Item {
         }
 
         margins {
-            top: Theme.barHeight + Theme.popupGap
+            top: 0
             left: Theme.gap * 2
         }
 
@@ -583,6 +586,13 @@ Item {
             clip: false
             visible: calendarPopupWindow.visible
 
+            Frame.PopupHoverBridge {
+                id: calendarHoverBridge
+                activator: calendarTrigger
+                x: root.barLeftMargin + statusFrame.x + statusContent.x + calendarSegment.x + calendarTrigger.x - Theme.gap * 2
+                onActivated: root.closePopup("calendar")
+            }
+
             Frame.PulloutPanel {
                 id: calendarPanel
 
@@ -590,7 +600,7 @@ Item {
                 requestedOpen: root.calendarOpen && !root.colorPickerActive
                 forceClose: root.colorPickerActive
                 activatorMouseArea: calendarTrigger
-                dismissOnExit: false
+                bridgeHovered: calendarHoverBridge.hovered
                 clickDismiss: true
                 onDismissRequested: root.closePopup("calendar")
 
@@ -603,6 +613,7 @@ Item {
 
                 anchors {
                     top: parent.top
+                    topMargin: Theme.barHeight + Theme.popupGap
                     left: parent.left
                 }
 

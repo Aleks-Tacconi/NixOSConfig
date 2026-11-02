@@ -20,6 +20,8 @@ Row {
     property var activator: null
     readonly property var trayItems: SystemTray.items.values
     readonly property bool menuOpen: root.activeItem !== null && root.activeItem.hasMenu
+    readonly property var activeEntry: root.entries.find(entry => entry.item === root.activeItem) ?? null
+    readonly property string menuTitle: root.activeEntry?.desktopEntry?.name || root.activeItem?.title || root.activeItem?.id || ""
     signal menuRequested
 
     spacing: Theme.gap
@@ -94,18 +96,38 @@ Row {
             hoverLeaseDuration: 1200
             duration: 180
             length: trayWindow.width
-            depth: Math.min(Math.max(Theme.panelRowHeight * 3, menuView.implicitHeight + Theme.panelPadding * 2),
+            depth: Math.min(menuHeader.implicitHeight + Theme.panelItemGap + menuView.implicitHeight + Theme.panelPadding * 2,
                 Math.max(0, (root.popupScreen?.height ?? Theme.panelRowHeight * 20) - Theme.barHeight - Theme.popupGap - Theme.panelPadding))
             backgroundColor: Theme.panelBg
             corner: "topRight"
             curveRadius: Theme.panelRadius
             onDismissRequested: root.closeMenu()
 
+            Frame.PanelSectionHeader {
+                id: menuHeader
+
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    right: parent.right
+                    margins: Theme.panelPadding
+                }
+                title: root.menuTitle
+            }
+
             Flickable {
                 id: menuScroll
 
-                anchors.fill: parent
-                anchors.margins: Theme.panelPadding
+                anchors {
+                    top: menuHeader.bottom
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                    topMargin: Theme.panelItemGap
+                    leftMargin: Theme.panelPadding
+                    rightMargin: Theme.panelPadding
+                    bottomMargin: Theme.panelPadding
+                }
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 contentWidth: width

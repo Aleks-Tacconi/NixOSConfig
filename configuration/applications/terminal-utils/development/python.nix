@@ -30,6 +30,7 @@
     isort
     poetry
     pylint
+    ruff
     uv
     pyright
   ];

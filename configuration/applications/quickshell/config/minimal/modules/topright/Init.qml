@@ -296,9 +296,10 @@ Item {
         exclusionMode: ExclusionMode.Ignore
         visible: root.audioOpen || audioPanel.progress > 0
         implicitWidth: audioPanel.length + audioPanel.curveRadius
-        implicitHeight: audioPanel.depth + audioPanel.curveRadius
+        implicitHeight: Theme.barHeight + Theme.popupGap + audioPanel.depth + audioPanel.curveRadius
         mask: Region {
-            item: audioPopupHost
+            Region { item: audioPanel }
+            Region { item: audioHoverBridge }
         }
 
         WlrLayershell.namespace: "quickshell:topRightAudioPullout"
@@ -311,7 +312,7 @@ Item {
         }
 
         margins {
-            top: Theme.barHeight + Theme.popupGap
+            top: 0
             right: root.segmentRightMargin(audioSegment)
         }
 
@@ -322,13 +323,20 @@ Item {
             clip: false
             visible: audioPopupWindow.visible
 
+            Frame.PopupHoverBridge {
+                id: audioHoverBridge
+                activator: audioTrigger
+                x: parent.width - audioTrigger.width
+                onActivated: root.closePopup("audio")
+            }
+
             Frame.PulloutPanel {
                 id: audioPanel
 
                 corner: "topRight"
                 requestedOpen: root.audioOpen
                 activatorMouseArea: audioTrigger
-                dismissOnExit: false
+                bridgeHovered: audioHoverBridge.hovered
                 clickDismiss: true
                 onDismissRequested: root.closePopup("audio")
 
@@ -341,6 +349,7 @@ Item {
 
                 anchors {
                     top: parent.top
+                    topMargin: Theme.barHeight + Theme.popupGap
                     right: parent.right
                 }
 
@@ -372,9 +381,10 @@ Item {
         exclusionMode: ExclusionMode.Ignore
         visible: root.networkOpen || networkPanel.progress > 0
         implicitWidth: networkPanel.length + networkPanel.curveRadius
-        implicitHeight: networkPanel.depth + networkPanel.curveRadius
+        implicitHeight: Theme.barHeight + Theme.popupGap + networkPanel.depth + networkPanel.curveRadius
         mask: Region {
-            item: networkPopupHost
+            Region { item: networkPanel }
+            Region { item: networkHoverBridge }
         }
 
         WlrLayershell.namespace: "quickshell:topRightNetworkPullout"
@@ -387,7 +397,7 @@ Item {
         }
 
         margins {
-            top: Theme.barHeight + Theme.popupGap
+            top: 0
             right: root.segmentRightMargin(networkSegment)
         }
 
@@ -398,13 +408,20 @@ Item {
             clip: false
             visible: networkPopupWindow.visible
 
+            Frame.PopupHoverBridge {
+                id: networkHoverBridge
+                activator: networkTrigger
+                x: parent.width - networkTrigger.width
+                onActivated: root.closePopup("network")
+            }
+
             Frame.PulloutPanel {
                 id: networkPanel
 
                 corner: "topRight"
                 requestedOpen: root.networkOpen
                 activatorMouseArea: networkTrigger
-                dismissOnExit: false
+                bridgeHovered: networkHoverBridge.hovered
                 clickDismiss: true
                 onDismissRequested: root.closePopup("network")
 
@@ -417,6 +434,7 @@ Item {
 
                 anchors {
                     top: parent.top
+                    topMargin: Theme.barHeight + Theme.popupGap
                     right: parent.right
                 }
 
@@ -450,9 +468,10 @@ Item {
         exclusionMode: ExclusionMode.Ignore
         visible: root.hasBattery && (root.batteryOpen || batteryPanel.progress > 0)
         implicitWidth: batteryPanel.length + batteryPanel.curveRadius
-        implicitHeight: batteryPanel.depth + batteryPanel.curveRadius
+        implicitHeight: Theme.barHeight + Theme.popupGap + batteryPanel.depth + batteryPanel.curveRadius
         mask: Region {
-            item: batteryPopupHost
+            Region { item: batteryPanel }
+            Region { item: batteryHoverBridge }
         }
 
         WlrLayershell.namespace: "quickshell:topRightBatteryPullout"
@@ -465,7 +484,7 @@ Item {
         }
 
         margins {
-            top: Theme.barHeight + Theme.popupGap
+            top: 0
             right: root.segmentRightMargin(batterySegment)
         }
 
@@ -476,13 +495,20 @@ Item {
             clip: false
             visible: batteryPopupWindow.visible
 
+            Frame.PopupHoverBridge {
+                id: batteryHoverBridge
+                activator: batteryTrigger
+                x: parent.width - batteryTrigger.width
+                onActivated: root.closePopup("battery")
+            }
+
             Frame.PulloutPanel {
                 id: batteryPanel
 
                 corner: "topRight"
                 requestedOpen: root.batteryOpen
                 activatorMouseArea: batteryTrigger
-                dismissOnExit: false
+                bridgeHovered: batteryHoverBridge.hovered
                 clickDismiss: true
                 onDismissRequested: root.closePopup("battery")
 
@@ -495,6 +521,7 @@ Item {
 
                 anchors {
                     top: parent.top
+                    topMargin: Theme.barHeight + Theme.popupGap
                     right: parent.right
                 }
 

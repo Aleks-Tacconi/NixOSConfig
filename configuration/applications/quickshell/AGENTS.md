@@ -9,7 +9,7 @@ RULE: Must stay under 50 lines. Keep this file updated on any architectural chan
 - `home-manager.nix` & `configuration.nix`: Package, service & Config singleton generation.
 - Python helpers: `network_control.py` (NM CLI/JSON), `qt-menu.py` & `gtk-actions.py` (D-Bus menu).
 - `frame/PanelSurface.qml`: neutral black backgrounds at 70% opacity for popups and bars; popups add dark edge shading and faint outlines.
-- `frame/PulloutPanel.qml`: shared surfaces, Escape/outside-click dismissal and delayed hover-off closing; Wi-Fi editing suppresses hover dismissal.
+- `frame/PulloutPanel.qml`: shared surfaces, Escape/outside-click dismissal and delayed hover-off closing with `PopupHoverBridge.qml` covering buttons and button-to-panel gaps; Wi-Fi editing suppresses hover dismissal.
 - `wallpaper/`: persisted desktop backgrounds with crossfade/zoom transitions and a notification-panel picker; replaces hyprpaper when Quickshell is enabled and invokes `quickshell-wallpaper-theme` for Qt/KDE colors and live libadwaita accents.
 - `topright/BatteryService.qml`: shared UPower/sysfs state; network traffic sampling follows open network views.
 - `dock/DockItems.qml` merges open/pinned apps with tray entries using desktop identity in `dock/tray-apps.js`; `bar/Tray.qml` owns tray menus.

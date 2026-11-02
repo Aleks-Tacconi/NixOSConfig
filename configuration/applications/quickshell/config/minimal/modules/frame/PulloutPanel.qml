@@ -18,8 +18,9 @@ FocusScope {
     property bool requestedOpen: false
     property bool forceClose: false
     property var activatorMouseArea: null
+    property bool bridgeHovered: false
     property bool autoClose: false
-    property bool dismissOnExit: root.clickDismiss
+    property bool dismissOnExit: true
     property bool clickDismiss: false
     property int closeDelay: Theme.popupDismissDelay
     property int hoverLeaseDuration: 700
@@ -68,8 +69,15 @@ FocusScope {
 
     readonly property bool panelHovered: panelHover.hovered
     readonly property bool activatorHovered: root.activatorMouseArea?.containsMouse ?? false
-    readonly property bool interactionHovered: root.panelHovered || root.activatorHovered
+    readonly property bool interactionHovered: root.panelHovered || root.activatorHovered || root.bridgeHovered
     readonly property bool effectiveOpen: !forceClose && (autoClose ? heldOpen : requestedOpen)
+
+    onInteractionHoveredChanged: {
+        if (root.interactionHovered)
+            closeTimer.stop();
+        else
+            root.closeWhenReady();
+    }
 
     property bool heldOpen: requestedOpen
 
@@ -170,7 +178,7 @@ FocusScope {
         onTriggered: {
             if (!root.autoClose)
                 return;
-            if (root.panelHovered || (root.activatorMouseArea?.containsMouse ?? false)) {
+            if (root.interactionHovered) {
                 hoverLease.restart();
                 return;
             }

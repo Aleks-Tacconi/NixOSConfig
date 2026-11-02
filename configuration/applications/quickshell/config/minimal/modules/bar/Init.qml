@@ -70,6 +70,7 @@ Scope {
 
                     TopLeft.Init {
                         id: leftStatus
+                        barLeftMargin: leftCluster.x + leftStatus.x
                         maxWidth: Math.max(0, bar.sideWidth - Theme.panelRowHeight * 2 - leftCluster.spacing)
                         popupScreen: bar.modelData
                         notificationCenter: root.notificationCenter

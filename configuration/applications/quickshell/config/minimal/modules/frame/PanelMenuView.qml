@@ -61,6 +61,15 @@ Item {
         return root.fallbackIcon;
     }
 
+    /** Show a separator only between real items, collapsing runs and edges. */
+    function showSeparator(index) {
+        const entries = menuOpener.children.values;
+        const isItem = entry => !entry.isSeparator && entry.text.length > 0;
+        const previous = entries.slice(0, index).filter(entry => entry.isSeparator || isItem(entry)).pop();
+
+        return previous !== undefined && isItem(previous) && entries.slice(index + 1).some(isItem);
+    }
+
     QsMenuOpener {
         id: menuOpener
 
@@ -95,11 +104,12 @@ Item {
             Item {
                 id: menuItem
                 required property var modelData
+                required property int index
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: menuItem.modelData.isSeparator ? 9 : (menuItem.modelData.text.length > 0 ? actionRow.implicitHeight : 0)
                 implicitHeight: Layout.preferredHeight
-                visible: menuItem.modelData.isSeparator || menuItem.modelData.text.length > 0
+                visible: menuItem.modelData.isSeparator ? root.showSeparator(menuItem.index) : menuItem.modelData.text.length > 0
 
                 Rectangle {
                     visible: menuItem.modelData.isSeparator

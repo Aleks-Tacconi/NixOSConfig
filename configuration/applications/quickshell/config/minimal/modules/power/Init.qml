@@ -167,7 +167,6 @@ Item {
                 corner: "topRight"
                 requestedOpen: root.menuOpen
                 activatorMouseArea: indicatorMouse
-                dismissOnExit: false
                 clickDismiss: true
                 closeDelay: root.closeDelay
                 hoverLeaseDuration: 1200
