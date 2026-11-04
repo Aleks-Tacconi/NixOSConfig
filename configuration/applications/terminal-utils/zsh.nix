@@ -8,6 +8,7 @@
 
 let
   hyprlandPkg = pkgs.hyprland;
+  pommy = pkgs.callPackage ../../../packages/pommy { };
 in
 {
   programs.zsh = {
@@ -24,6 +25,7 @@ in
       cat = "bat --theme=ansi";
       cd = "z";
       open = "xdg-open";
+      pommy = "${pommy}/bin/pommy";
       nix-shell = ''nix-shell --run "$SHELL"'';
     };
 

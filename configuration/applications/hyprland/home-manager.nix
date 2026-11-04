@@ -98,6 +98,7 @@ in
         (mkExecBind "XF86MonBrightnessDown" "swayosd-client --brightness lower")
 
         (mkExecBind "Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m region; fi'")
+        (mkExecBind "CTRL + SHIFT + 4" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m region; fi'")
         (mkExecBind "SHIFT + Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m window; fi'")
 
         (mkBind (modKey "h") ''hl.dsp.focus({ direction = "l" })'')
@@ -371,6 +372,8 @@ in
           kb_model = "";
           kb_options = "";
           kb_rules = "";
+          repeat_rate = 30;
+          repeat_delay = 500;
           follow_mouse = 1;
           touchpad = {
             natural_scroll = true;

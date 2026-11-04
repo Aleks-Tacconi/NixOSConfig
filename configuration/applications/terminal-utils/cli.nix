@@ -3,6 +3,7 @@
 
 {
   home.packages = with pkgs; [
+    (pkgs.callPackage ../../../packages/pommy { })
     zip
     unzip
     tree

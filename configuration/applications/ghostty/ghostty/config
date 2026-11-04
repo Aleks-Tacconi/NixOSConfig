@@ -14,6 +14,17 @@ font-style = SemiBold
 font-size = 14
 keybind = ctrl+shift+backspace=reset_font_size
 
+# Select tmux windows using the configured Ctrl+S prefix.
+keybind = ctrl+1=text:\x131
+keybind = ctrl+2=text:\x132
+keybind = ctrl+3=text:\x133
+keybind = ctrl+4=text:\x134
+keybind = ctrl+5=text:\x135
+keybind = ctrl+6=text:\x136
+keybind = ctrl+7=text:\x137
+keybind = ctrl+8=text:\x138
+keybind = ctrl+9=text:\x139
+
 cursor-style = block
 cursor-style-blink = true
 shell-integration-features = no-cursor
