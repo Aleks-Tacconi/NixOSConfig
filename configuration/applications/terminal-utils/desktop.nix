@@ -3,7 +3,6 @@
 
 {
   home.packages = with pkgs; [
-    orca
     hyprshot
     wl-clipboard
     brightnessctl

@@ -20,6 +20,5 @@
     ./development/markup.nix
     ./development/php.nix
     ./development/julia.nix
-    ./development/python.nix
   ];
 }
