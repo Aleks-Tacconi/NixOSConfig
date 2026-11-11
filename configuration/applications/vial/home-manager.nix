@@ -6,9 +6,23 @@
   ...
 }:
 
+let
+  vial = pkgs.vial.override {
+    appimageTools = pkgs.appimageTools // {
+      wrapType2 =
+        args:
+        pkgs.appimageTools.wrapType2 (
+          args
+          // {
+            extraPkgs = pkgs: [ pkgs.libgpg-error ];
+          }
+        );
+    };
+  };
+in
 {
-  home.packages = with pkgs; [
+  home.packages = [
     vial
-    qmk
+    pkgs.qmk
   ];
 }

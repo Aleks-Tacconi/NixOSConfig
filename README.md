@@ -184,6 +184,7 @@ Use `#pc` instead for the desktop host.
 
 ## Commands
 
+
 | Command | Behavior |
 | --- | --- |
 | `nix flake check` | Evaluate the flake |

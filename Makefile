@@ -52,6 +52,7 @@ git:
 	@echo -e "$(GREEN)==> Git push complete!$(NC)"
 	@echo ""
 
+
 update:
 	@echo ""
 	@echo -e "$(YELLOW)==> Updating nix flake...$(NC)"

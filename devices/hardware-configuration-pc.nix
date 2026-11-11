@@ -25,7 +25,6 @@
     "kvm-amd"
     "rtl8822bu-aircrack"
   ];
-  boot.extraModulePackages = with config.boot.kernelPackages; [ ];
   boot.kernelParams = [
     "usbcore.autosuspend=-1"
     "nvidia-drm.modeset=1"
