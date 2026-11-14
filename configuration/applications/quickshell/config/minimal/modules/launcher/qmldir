@@ -1,0 +1,8 @@
+EmojiData 1.0 EmojiData.qml
+Init 1.0 Init.qml
+LauncherContent 1.0 LauncherContent.qml
+LauncherModeHeading 1.0 LauncherModeHeading.qml
+LauncherResults 1.0 LauncherResults.qml
+LauncherRow 1.0 LauncherRow.qml
+LauncherSearchBox 1.0 LauncherSearchBox.qml
+singleton LaunchHistory 1.0 LaunchHistory.qml

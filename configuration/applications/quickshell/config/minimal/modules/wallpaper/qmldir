@@ -1,0 +1,4 @@
+Init 1.0 Init.qml
+WallpaperPicker 1.0 WallpaperPicker.qml
+singleton WallpaperService 1.0 WallpaperService.qml
+WallpaperTile 1.0 WallpaperTile.qml

@@ -52,12 +52,33 @@ check: ## Evaluate the flake and run checks
 fmt: ## Check Nix formatting with nixfmt-rfc-style
 	nix run nixpkgs#nixfmt-rfc-style -- -c $$(git ls-files '*.nix')
 
-lint: ## Run statix and shellcheck linters
-	nix run nixpkgs#statix -- check .
+lint: ## Run Nix, Python, shell, and QML linters and tests
+	nix run nixpkgs#nixfmt-rfc-style -- -c configuration/applications/quickshell/*.nix
+	nix run nixpkgs#statix -- check configuration/applications/quickshell
+	nix run nixpkgs#ruff -- check \
+		configuration/applications/quickshell \
+		configuration/homemanagerconfig/wallpaper_theme.py
+	nix run nixpkgs#mypy -- --strict --ignore-missing-imports \
+		configuration/applications/quickshell/gtk-actions.py \
+		configuration/applications/quickshell/qt-menu.py \
+		configuration/applications/quickshell/network_control.py \
+		configuration/applications/quickshell/network_control_test.py \
+		configuration/homemanagerconfig/wallpaper_theme.py
+	nix run nixpkgs#python3 -- -m unittest discover -s configuration/applications/quickshell -p '*_test.py'
 	@sh_files="$$(git ls-files '*.sh')"; \
 	if [ -n "$$sh_files" ]; then \
 		nix run nixpkgs#shellcheck -- $$sh_files; \
 	fi
+	@qs_wrapped="$$(nix eval --raw '.#nixosConfigurations.laptop.config.home-manager.users.aleks.home.packages' --apply 'pkgs: (builtins.head (builtins.filter (p: (p.pname or "") == "quickshell-wrapper") pkgs)).wrapped.outPath')"; \
+	qt_dec="$$(nix eval --raw nixpkgs#qt6.qtdeclarative.outPath)"; \
+	qt_5c="$$(nix eval --raw nixpkgs#qt6.qt5compat.outPath)"; \
+	"$$qt_dec/bin/qmllint" \
+		-I "$$qt_dec/lib/qt-6/qml" \
+		-I "$$qt_5c/lib/qt-6/qml" \
+		-I "$$qs_wrapped/lib/qt-6/qml" \
+		-I configuration/applications/quickshell/config/minimal \
+		$$(find configuration/applications/quickshell/config/minimal -name 'qmldir' -printf '-i %p ') \
+		$$(find configuration/applications/quickshell/config/minimal -name '*.qml' | sort)
 
 git: ## Stage, commit (MSG="..."), and push to origin/main
 	@echo ""
