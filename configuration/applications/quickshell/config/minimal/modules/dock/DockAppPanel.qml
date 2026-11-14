@@ -170,7 +170,7 @@ ColumnLayout {
                 id: bodyColumn
 
                 width: bodyScroll.width
-                spacing: Theme.gap
+                spacing: root.showWindows ? Theme.panelSectionGap : Theme.gap
 
                 Text {
                     visible: (root.showOptions && !root.hasOptions) || (root.showWindows && root.windowCount === 0)
@@ -206,6 +206,7 @@ ColumnLayout {
                     visible: root.showOptions && root.appMenu !== null
                     Layout.fillWidth: true
                     menu: root.appMenu
+                    fallbackIcon: "󰘔"
                     onActivated: root.dismissRequested()
                 }
 
