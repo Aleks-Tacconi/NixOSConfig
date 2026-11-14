@@ -6,9 +6,6 @@
   ...
 }:
 
-let
-  hyprlandPkg = pkgs.hyprland;
-in
 {
   programs.zsh = {
     enable = true;
@@ -62,10 +59,6 @@ in
 
       if [ -e /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh ]; then
         . /etc/profiles/per-user/$USER/etc/profile.d/hm-session-vars.sh
-      fi
-
-      if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-        exec ${pkgs.coreutils}/bin/env -u LD_LIBRARY_PATH ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all ${hyprlandPkg}/bin/start-hyprland
       fi
 
       eval "$(zoxide init zsh)"

@@ -50,7 +50,6 @@
     ../configuration/applications/audiocontrol/configuration.nix
     ../configuration/applications/filemanager/configuration.nix
     ../configuration/applications/hyprland/configuration.nix
-    ../configuration/applications/hyprlock/configuration.nix
     ../configuration/applications/kdeconnect/configuration.nix
     ../configuration/applications/quickshell/configuration.nix
     ../configuration/applications/terminal-utils/configuration.nix
