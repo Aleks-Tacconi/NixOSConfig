@@ -94,7 +94,7 @@ Item {
         Rectangle {
             visible: root.showRootBack || !root.atRoot
             Layout.fillWidth: true
-            height: 1
+            Layout.preferredHeight: 1
             color: Theme.popupBorder
         }
 

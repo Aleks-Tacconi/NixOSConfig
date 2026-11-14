@@ -7,11 +7,11 @@ import "../../theme"
 Item {
     id: root
 
-    required property Item activator
+    property Item activator: null
     readonly property bool hovered: bridgeMouse.containsMouse
     signal activated
 
-    width: root.activator.width
+    width: root.activator?.width ?? 0
     height: Theme.barHeight + Theme.popupGap
 
     MouseArea {

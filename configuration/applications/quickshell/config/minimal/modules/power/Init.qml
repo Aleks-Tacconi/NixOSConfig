@@ -2,16 +2,14 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import "../frame" as Frame
 import "../../theme"
 
 /**
  * Top-bar power indicator with a click power menu.
  */
-Item {
+Frame.BarPillButton {
     id: root
 
     property var popupScreen: null
@@ -21,61 +19,25 @@ Item {
     property real actionButtonWidth: 220
     property real actionButtonHeight: Theme.panelRowHeight
     property real menuGap: Theme.gap
-    property real menuCurveRadius: 16
     property int revealDuration: 180
     property int closeDelay: Theme.popupDismissDelay
     property bool menuOpen: false
-    property real menuProgress: 0
 
-    readonly property bool indicatorActive: menuOpen || menuProgress > 0
+    readonly property bool indicatorActive: root.menuOpen || menuWindow.progress > 0
     readonly property var menuActions: [
-        {
-            label: "Shutdown",
-            icon: "⏻",
-            command: ["systemctl", "poweroff"]
-        },
-        {
-            label: "Lock",
-            icon: "",
-            command: ["hyprlock"]
-        },
-        {
-            label: "Suspend",
-            icon: "󰒲",
-            command: ["systemctl", "suspend"]
-        },
-        {
-            label: "Reboot",
-            icon: "󰜉",
-            command: ["systemctl", "reboot"]
-        },
-        {
-            label: "Logout",
-            icon: "󰍃",
-            command: ["hyprctl", "dispatch", "exit"]
-        },
+        { label: "Shutdown", icon: "⏻", command: ["systemctl", "poweroff"] },
+        { label: "Lock", icon: "", command: ["hyprlock"] },
+        { label: "Suspend", icon: "󰒲", command: ["systemctl", "suspend"] },
+        { label: "Reboot", icon: "󰜉", command: ["systemctl", "reboot"] },
+        { label: "Logout", icon: "󰍃", command: ["hyprctl", "dispatch", "exit"] },
     ]
 
-    readonly property real menuWidth: root.actionButtonWidth + root.menuPadding * 2
-    readonly property real menuHeight: menuContent.implicitHeight + root.menuPadding * 2
-
     width: root.indicatorSize
-    height: Theme.barHeight
-    z: indicatorMouse.containsMouse ? 1 : 0
+    active: root.menuOpen
+    onClicked: root.menuOpen = !root.menuOpen
 
     Process {
         id: actionRunner
-    }
-
-    Rectangle {
-        anchors {
-            verticalCenter: parent.verticalCenter
-            left: parent.left
-            right: parent.right
-        }
-        height: Theme.panelRowHeight
-        color: indicatorMouse.containsMouse || root.menuOpen ? Theme.panelSurfaceHover : "transparent"
-        radius: Theme.radius
     }
 
     Timer {
@@ -86,10 +48,10 @@ Item {
         interval: 250
         repeat: false
         onTriggered: {
-            if (pendingCommand !== null) {
-                actionRunner.command = pendingCommand;
+            if (pendingActionTimer.pendingCommand !== null) {
+                actionRunner.command = pendingActionTimer.pendingCommand;
                 actionRunner.running = true;
-                pendingCommand = null;
+                pendingActionTimer.pendingCommand = null;
             }
         }
     }
@@ -112,127 +74,71 @@ Item {
         opacity: root.indicatorActive ? 1 : 0.9
         font.family: Theme.iconFontFamily
         font.pixelSize: Theme.fontSize + 1
-        font.bold: false
         text: ""
     }
 
-    MouseArea {
-        id: indicatorMouse
-
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.menuOpen = !root.menuOpen
-    }
-
-    PanelWindow {
+    Frame.BarPopupWindow {
         id: menuWindow
 
-        screen: root.popupScreen
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        visible: root.menuOpen || menuPanel.progress > 0
-        implicitWidth: menuPanel.length + menuPanel.curveRadius
-        implicitHeight: menuPanel.depth + menuPanel.curveRadius
+        popupScreen: root.popupScreen
+        requestedOpen: root.menuOpen
+        namespace: "quickshell:powerMenu"
+        edgeMargin: root.popupRightMargin
+        panelWidth: root.actionButtonWidth + root.menuPadding * 2
+        panelDepth: menuContent.implicitHeight + root.menuPadding * 2
+        contentPadding: root.menuPadding
+        duration: root.revealDuration
+        closeDelay: root.closeDelay
+        hoverLeaseDuration: 1200
+        activatorMouseArea: root.mouseArea
+        onDismissRequested: root.menuOpen = false
 
-        mask: Region {
-            item: menuHost
-        }
+        ColumnLayout {
+            id: menuContent
 
-        WlrLayershell.namespace: "quickshell:powerMenu"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.menuOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-        anchors {
-            top: true
-            right: true
-        }
-
-        margins {
-            top: Theme.barHeight + Theme.popupGap
-            right: root.popupRightMargin
-        }
-
-        Item {
-            id: menuHost
+            readonly property bool readyToShow: menuWindow.effectiveOpen && menuWindow.progress > 0.96
 
             anchors.fill: parent
-            clip: false
-            visible: menuWindow.visible
+            visible: menuContent.readyToShow || menuContent.opacity > 0
+            opacity: menuContent.readyToShow ? 1 : 0
+            spacing: Theme.panelItemGap
 
-            Frame.PulloutPanel {
-                id: menuPanel
-
-                corner: "topRight"
-                requestedOpen: root.menuOpen
-                activatorMouseArea: indicatorMouse
-                clickDismiss: true
-                closeDelay: root.closeDelay
-                hoverLeaseDuration: 1200
-                duration: root.revealDuration
-                length: root.menuWidth
-                depth: root.menuHeight
-                backgroundColor: Theme.panelBg
-                curveRadius: Theme.panelRadius
-
-                onProgressChanged: root.menuProgress = menuPanel.progress
-                onDismissRequested: root.menuOpen = false
-
-                anchors {
-                    top: parent.top
-                    right: parent.right
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: menuContent.readyToShow ? 90 : 45
+                    easing.type: Easing.OutCubic
                 }
+            }
 
-                ColumnLayout {
-                    id: menuContent
+            Text {
+                Layout.fillWidth: true
+                color: Theme.red
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.panelTitleSize
+                font.weight: Theme.emphasisWeight
+                text: "Power Menu"
+            }
 
-                    readonly property bool readyToShow: menuPanel.effectiveOpen && menuPanel.progress > 0.96
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: root.menuGap
 
-                    anchors {
-                        fill: parent
-                        margins: root.menuPadding
-                    }
-                    visible: readyToShow || opacity > 0
-                    opacity: readyToShow ? 1 : 0
-                    spacing: Theme.panelItemGap
+                Repeater {
+                    model: root.menuActions
 
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: menuContent.readyToShow ? 90 : 45
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+                    Frame.PanelActionRow {
+                        id: actionRow
 
-                    Text {
+                        required property var modelData
+
                         Layout.fillWidth: true
-                        color: Theme.red
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.panelTitleSize
-                        font.weight: Theme.emphasisWeight
-                        text: "Power Menu"
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: root.menuGap
-
-                        Repeater {
-                            model: root.menuActions
-
-                            Frame.PanelActionRow {
-                                required property var modelData
-
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: root.actionButtonHeight
-                                horizontalPadding: 0
-                                enabled: !pendingActionTimer.running && !actionRunner.running
-                                icon: modelData.icon
-                                label: modelData.label
-                                showTrailing: false
-                                onClicked: root.runAction(modelData.command)
-                            }
-                        }
+                        Layout.preferredHeight: root.actionButtonHeight
+                        horizontalPadding: 0
+                        enabled: !pendingActionTimer.running && !actionRunner.running
+                        icon: actionRow.modelData.icon
+                        label: actionRow.modelData.label
+                        showTrailing: false
+                        onClicked: root.runAction(actionRow.modelData.command)
                     }
                 }
             }

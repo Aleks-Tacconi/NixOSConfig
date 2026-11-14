@@ -29,15 +29,8 @@ FocusScope {
     property int duration: 160
     property int easingType: Easing.OutCubic
     property color backgroundColor: Theme.panelBg
-    property color borderColor: Theme.bg2
-    property color outerBorderColor: Theme.bg
-    property color eraseColor: Theme.bg
-    property real borderWidth: 5
-    property real outerBorderWidth: 7
     property real curveRadius: Theme.panelRadius
-    property real seamOverlap: 3
-    property bool eraseBaseBorder: true
-    property real progress: effectiveOpen ? 1 : 0
+    property real progress: root.effectiveOpen ? 1 : 0
 
     Keys.onEscapePressed: event => {
         if (root.clickDismiss) {
@@ -70,7 +63,7 @@ FocusScope {
     readonly property bool panelHovered: panelHover.hovered
     readonly property bool activatorHovered: root.activatorMouseArea?.containsMouse ?? false
     readonly property bool interactionHovered: root.panelHovered || root.activatorHovered || root.bridgeHovered
-    readonly property bool effectiveOpen: !forceClose && (autoClose ? heldOpen : requestedOpen)
+    readonly property bool effectiveOpen: !root.forceClose && (root.autoClose ? root.heldOpen : root.requestedOpen)
 
     onInteractionHoveredChanged: {
         if (root.interactionHovered)
@@ -79,12 +72,12 @@ FocusScope {
             root.closeWhenReady();
     }
 
-    property bool heldOpen: requestedOpen
+    property bool heldOpen: root.requestedOpen
 
-    width: length
-    height: depth
-    visible: effectiveOpen || progress > 0
-    opacity: progress
+    width: root.length
+    height: root.depth
+    visible: root.effectiveOpen || root.progress > 0
+    opacity: root.progress
 
     onRequestedOpenChanged: {
         if (!root.autoClose) {
