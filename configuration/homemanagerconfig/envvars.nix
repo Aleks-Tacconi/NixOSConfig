@@ -1,6 +1,7 @@
 let
   browser = "google-chrome.desktop";
   editor = "nvim.desktop";
+  fileManager = "org.gnome.Nautilus.desktop";
   office = "onlyoffice-desktopeditors.desktop";
 in
 _:
@@ -42,6 +43,8 @@ _:
       "x-scheme-handler/http" = [ browser ];
       "x-scheme-handler/https" = [ browser ];
       "x-scheme-handler/unknown" = [ browser ];
+
+      "inode/directory" = [ fileManager ];
 
       "application/json" = [ editor ];
       "application/toml" = [ editor ];

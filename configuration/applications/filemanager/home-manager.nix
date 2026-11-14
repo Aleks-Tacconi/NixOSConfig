@@ -15,5 +15,6 @@
     Exec=nautilus %U
     Icon=org.gnome.Nautilus
     Categories=Utility;FileManager;
+    MimeType=inode/directory;
   '';
 }
