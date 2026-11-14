@@ -2,54 +2,20 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Services.SystemTray
-import Quickshell.Wayland
-import "../frame" as Frame
 import "../../theme"
 
-/** Inline tray icons for the dock, with a shared application menu popup. */
+/** Inline standalone tray icons for the dock, delegating menus to the unified dock popup. */
 Row {
     id: root
 
-    property var popupScreen: null
-    property real popupRightMargin: Theme.gap * 2
     property real buttonSize: Theme.panelRowHeight - Theme.gap / 2
     property var entries: []
-    property var activeItem: null
-    property var activator: null
-    readonly property var trayItems: SystemTray.items.values
-    readonly property bool menuOpen: root.activeItem !== null && root.activeItem.hasMenu
-    readonly property var activeEntry: root.entries.find(entry => entry.item === root.activeItem) ?? null
-    readonly property string menuTitle: root.activeEntry?.desktopEntry?.name || root.activeItem?.title || root.activeItem?.id || ""
-    signal menuRequested
+    property var activeTrayItem: null
+    signal popupRequested(var entry, var activator)
 
     spacing: Theme.gap
     visible: root.entries.length > 0
     height: root.buttonSize
-
-    onTrayItemsChanged: {
-        if (root.activeItem && !root.trayItems.includes(root.activeItem))
-            root.closeMenu();
-    }
-
-    /** Clear the current tray menu and its hover anchor. */
-    function closeMenu() {
-        root.activeItem = null;
-        root.activator = null;
-    }
-
-    /** Toggle an item's menu and close any dock window picker. */
-    function openMenu(item, mouseArea) {
-        if (!item.hasMenu)
-            return;
-        if (root.activeItem === item) {
-            root.closeMenu();
-            return;
-        }
-        root.menuRequested();
-        root.activeItem = item;
-        root.activator = mouseArea;
-    }
 
     Repeater {
         model: ScriptModel {
@@ -64,100 +30,8 @@ Row {
             height: root.buttonSize
             trayItem: trayButton.modelData.item
             desktopEntry: trayButton.modelData.desktopEntry
-            menuOpen: root.activeItem === trayButton.modelData.item
-            onMenuRequested: (item, activator) => root.openMenu(item, activator)
-        }
-    }
-
-    PanelWindow {
-        id: trayWindow
-
-        screen: root.popupScreen
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        visible: root.menuOpen || trayPanel.progress > 0
-        implicitWidth: Theme.panelRowHeight * 10
-        implicitHeight: trayPanel.depth
-        mask: Region { item: trayPanel }
-        WlrLayershell.namespace: "quickshell:systemTray"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.menuOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-        anchors { top: true; right: true }
-
-        // qmllint disable unqualified unresolved-type
-        margins {
-            top: Theme.barHeight + Theme.popupGap
-            right: root.popupRightMargin
-        }
-        // qmllint enable unqualified unresolved-type
-
-        Frame.PulloutPanel {
-            id: trayPanel
-
-            anchors { top: parent.top; right: parent.right }
-            requestedOpen: root.menuOpen
-            activatorMouseArea: root.activator
-            clickDismiss: true
-            closeDelay: Theme.popupDismissDelay
-            hoverLeaseDuration: 1200
-            duration: 180
-            length: trayWindow.width
-            depth: Math.min(menuHeader.implicitHeight + Theme.panelItemGap + menuView.implicitHeight + Theme.panelPadding * 2,
-                Math.max(0, (root.popupScreen?.height ?? Theme.panelRowHeight * 20) - Theme.barHeight - Theme.popupGap - Theme.panelPadding))
-            backgroundColor: Theme.panelBg
-            corner: "topRight"
-            curveRadius: Theme.panelRadius
-            onDismissRequested: root.closeMenu()
-
-            Frame.PanelSectionHeader {
-                id: menuHeader
-
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    right: parent.right
-                    margins: Theme.panelPadding
-                }
-                title: root.menuTitle
-            }
-
-            Flickable {
-                id: menuScroll
-
-                anchors {
-                    top: menuHeader.bottom
-                    left: parent.left
-                    right: parent.right
-                    bottom: parent.bottom
-                    topMargin: Theme.panelItemGap
-                    leftMargin: Theme.panelPadding
-                    rightMargin: Theme.panelPadding
-                    bottomMargin: Theme.panelPadding
-                }
-                clip: true
-                boundsBehavior: Flickable.StopAtBounds
-                contentWidth: menuScroll.width
-                contentHeight: menuView.implicitHeight
-                interactive: menuScroll.contentHeight > menuScroll.height
-
-                Frame.PanelMenuView {
-                    id: menuView
-
-                    width: menuScroll.width
-                    menu: root.activeItem?.menu ?? null
-                    onActivated: root.closeMenu()
-                }
-            }
-
-            Frame.PanelScrollIndicator {
-                anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                    right: parent.right
-                    margins: Theme.panelPadding
-                }
-                flickable: menuScroll
-            }
+            menuOpen: root.activeTrayItem === trayButton.modelData.item
+            onPopupRequested: activator => root.popupRequested(trayButton.modelData, activator)
         }
     }
 }

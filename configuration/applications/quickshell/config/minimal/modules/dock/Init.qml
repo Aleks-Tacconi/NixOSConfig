@@ -1,13 +1,12 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
-import Quickshell.Wayland
+import Quickshell.Services.SystemTray
 import "../frame" as Frame
 import "../../theme"
 
 /**
- * Top-bar dock combining open and pinned applications with tray icons.
+ * Top-bar dock combining open and pinned applications with tray icons and a unified popup.
  */
 Item {
     id: root
@@ -18,7 +17,7 @@ Item {
     property real dockGap: Theme.gap
     property real hoverOverflow: Theme.gap
     property real popupWidth: 340
-    property real popupMaxHeight: Math.max(0, Math.min(520, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
+    property real popupMaxHeight: Math.max(0, Math.min(640, (root.popupScreen?.height ?? 900) - Theme.barHeight - Theme.popupGap - Theme.gap * 6))
     property real popupRightMargin: Theme.gap * 2
     property real pulloutPadding: Theme.panelPadding
     property real minPopupHeight: 70
@@ -34,6 +33,10 @@ Item {
 
     readonly property int appCount: DockData.appGroups.length + dockItems.trayCount
     readonly property real fullWidth: dockItems.fullWidth
+    readonly property string activeGroupKey: root.hoveredApp?.appId
+        ? DockData.normalizedAppId(root.hoveredApp.appId)
+        : ""
+    readonly property var activeTrayItem: root.hoveredApp?.tray?.item ?? null
 
     width: Math.min(root.maxWidth, root.fullWidth)
     height: Theme.barHeight
@@ -48,58 +51,78 @@ Item {
         }
     }
 
-    function appGroupById(appId) {
-        const key = DockData.normalizedAppId(appId)
+    Connections {
+        target: SystemTray.items
 
-        return DockData.appGroups.find(group => DockData.normalizedAppId(group.appId) === key) ?? null
+        function onValuesChanged() {
+            root.refreshDisplayedApp();
+        }
+    }
+
+    function groupIdentity(appGroup) {
+        if (!appGroup)
+            return "";
+        const appId = DockData.normalizedAppId(appGroup.appId ?? "");
+        if (appId.length > 0)
+            return `app:${appId}`;
+        const trayId = String(appGroup.tray?.item?.id ?? "");
+        return trayId.length > 0 ? `tray:${trayId}` : "";
+    }
+
+    function findLatestGroup(identity) {
+        for (const group of dockItems.groups) {
+            if (root.groupIdentity(group) === identity)
+                return group;
+        }
+        for (const entry of dockItems.remainingTrayEntries) {
+            const trayGroup = dockItems.trayGroupForEntry(entry);
+            if (root.groupIdentity(trayGroup) === identity)
+                return trayGroup;
+        }
+        return null;
     }
 
     function displayGroup(appGroup) {
         if (!appGroup) {
-            root.displayedApp = null
-            return
+            root.displayedApp = null;
+            return;
         }
-
         root.displayedApp = {
-            appId: appGroup.appId,
-            pinned: appGroup.pinned,
-            toplevels: appGroup.toplevels.slice(),
+            appId: appGroup.appId ?? "",
+            pinned: appGroup.pinned ?? false,
+            toplevels: (appGroup.toplevels ?? []).slice(),
             active: appGroup.active ?? false,
-        }
+            tray: appGroup.tray ?? null,
+            desktopEntry: appGroup.desktopEntry ?? null
+        };
     }
 
     function refreshDisplayedApp() {
-        const appId = root.displayedApp?.appId ?? root.hoveredApp?.appId ?? ""
+        const current = root.displayedApp ?? root.hoveredApp;
+        const identity = root.groupIdentity(current);
+        if (identity.length === 0)
+            return;
 
-        if (appId.length === 0)
-            return
-
-        const latestGroup = root.appGroupById(appId)
-
+        const latestGroup = root.findLatestGroup(identity);
         if (latestGroup) {
-            root.displayGroup(latestGroup)
-            popupHeightSync.restart()
-            return
+            root.displayGroup(latestGroup);
+            popupHeightSync.restart();
+            return;
         }
 
-        root.hoveredApp = null
-        root.hoveredActivator = null
-        root.displayedApp = null
-        popupHeightSync.restart()
+        root.dismissPopup();
     }
 
     function openForApp(appGroup, activatorMouseArea) {
-        dockItems.closeTrayMenu();
-        const nextAppId = appGroup?.appId ?? "";
-        const displayedAppId = root.displayedApp?.appId ?? "";
-        const wasRequestedOpen = root.hoveredApp !== null;
-
-        if (nextAppId === displayedAppId && wasRequestedOpen) {
+        const nextIdentity = root.groupIdentity(appGroup);
+        const currentIdentity = root.groupIdentity(root.displayedApp);
+        if (nextIdentity.length > 0 && nextIdentity === currentIdentity && root.hoveredApp !== null) {
             root.dismissPopup();
             return;
         }
 
         root.forcePopupClose = false;
+        appPanel.resetMenu();
         root.displayGroup(appGroup);
         root.pendingOpenApp = appGroup;
         root.pendingOpenActivator = activatorMouseArea;
@@ -118,16 +141,12 @@ Item {
         return Math.min(root.popupMaxHeight, Math.max(root.minPopupHeight, appPanel.implicitHeight + root.pulloutPadding * 2));
     }
 
-    function syncPopupHeight() {
-        root.currentPopupHeight = root.desiredPopupHeight();
-    }
-
     Timer {
         id: popupHeightSync
 
-        interval: 0
+        interval: root.hoveredApp !== null ? 40 : 0
         onTriggered: {
-            root.syncPopupHeight();
+            root.currentPopupHeight = root.desiredPopupHeight();
             if (root.pendingOpenApp !== null) {
                 root.hoveredApp = root.pendingOpenApp;
                 root.hoveredActivator = root.pendingOpenActivator;
@@ -137,93 +156,53 @@ Item {
         }
     }
 
-    PanelWindow {
+    Frame.BarPopupWindow {
         id: pulloutWindow
 
-        screen: root.popupScreen
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        visible: root.hoveredApp !== null || pulloutPanel.progress > 0
-        implicitWidth: root.popupWidth
-        implicitHeight: pulloutPanel.depth
-        mask: Region {
-            item: pulloutPanel
+        popupScreen: root.popupScreen
+        namespace: "quickshell:topBarDockPullout"
+        alignEdge: "right"
+        edgeMargin: root.popupRightMargin
+        requestedOpen: root.hoveredApp !== null
+        forceClose: root.forcePopupClose
+        activatorMouseArea: root.hoveredActivator
+        closeDelay: root.closeDelay
+        hoverLeaseDuration: 900
+        duration: root.revealDuration
+        panelWidth: root.popupWidth
+        panelDepth: root.currentPopupHeight
+        contentPadding: root.pulloutPadding
+        onDismissRequested: root.dismissPopup()
+
+        onProgressChanged: {
+            if (pulloutWindow.progress > 0)
+                return;
+            root.hoveredApp = null;
+            root.hoveredActivator = null;
+            root.displayedApp = null;
+            root.currentPopupHeight = root.minPopupHeight;
+            root.forcePopupClose = false;
         }
 
-        WlrLayershell.namespace: "quickshell:topBarDockPullout"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.hoveredApp !== null ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-        anchors {
-            top: true
-            right: true
-        }
-
-        // qmllint disable unqualified unresolved-type
-        margins {
-            top: Theme.barHeight + Theme.popupGap
-            right: root.popupRightMargin
-        }
-        // qmllint enable unqualified unresolved-type
-
-        Frame.PulloutPanel {
-            id: pulloutPanel
-
-            corner: "topRight"
-            requestedOpen: root.hoveredApp !== null
-            forceClose: root.forcePopupClose
-            activatorMouseArea: root.hoveredActivator
-            clickDismiss: true
-            onDismissRequested: root.dismissPopup()
-            closeDelay: root.closeDelay
-            hoverLeaseDuration: 700
-            duration: root.revealDuration
-            length: root.popupWidth
-            depth: root.currentPopupHeight
-            backgroundColor: Theme.panelBg
-            curveRadius: Theme.panelRadius
-
-            onProgressChanged: {
-                if (pulloutPanel.progress > 0)
-                    return;
-
-                root.hoveredApp = null;
-                root.hoveredActivator = null;
-                root.displayedApp = null;
-                root.currentPopupHeight = root.minPopupHeight;
-                root.forcePopupClose = false;
-            }
+        DockAppPanel {
+            id: appPanel
 
             anchors {
                 top: parent.top
+                left: parent.left
                 right: parent.right
             }
-
-            Item {
-                anchors {
-                    fill: parent
-                    margins: root.pulloutPadding
-                }
-                clip: true
-
-                DockAppPanel {
-                    id: appPanel
-
-                    anchors {
-                        top: parent.top
-                        left: parent.left
-                        right: parent.right
-                    }
-                    appGroup: root.displayedApp ?? ({
-                            appId: "",
-                            toplevels: []
-                        })
-                    dataSource: DockData
-                    previewsActive: pulloutPanel.effectiveOpen && pulloutPanel.progress >= 0.95
-                    onImplicitHeightChanged: popupHeightSync.restart()
-                    onDismissRequested: root.dismissPopup()
-                }
-            }
+            maxBodyHeight: Math.max(120, root.popupMaxHeight - root.pulloutPadding * 2 - 44)
+            appGroup: root.displayedApp ?? ({
+                appId: "",
+                toplevels: [],
+                tray: null,
+                desktopEntry: null
+            })
+            dataSource: DockData
+            previewsActive: pulloutWindow.effectiveOpen && pulloutWindow.progress >= 0.95
+            onImplicitHeightChanged: popupHeightSync.restart()
+            onDismissRequested: root.dismissPopup()
         }
     }
 
@@ -234,12 +213,11 @@ Item {
         anchors.topMargin: Theme.gap
         anchors.bottomMargin: Theme.gap
         dataSource: DockData
-        popupScreen: root.popupScreen
-        popupRightMargin: root.popupRightMargin
         buttonSize: root.buttonSize
         spacing: root.dockGap
         hoverOverflow: root.hoverOverflow
+        activeGroupKey: root.activeGroupKey
+        activeTrayItem: root.activeTrayItem
         onPopupRequested: (appGroup, activator) => root.openForApp(appGroup, activator)
-        onTrayMenuRequested: root.dismissPopup()
     }
 }

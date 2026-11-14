@@ -14,6 +14,7 @@ Item {
     required property var dataSource
 
     property var trayItem: null
+    property bool menuOpen: false
     property int lastFocused: -1
     property alias activatorMouseArea: mouseArea
 
@@ -23,9 +24,8 @@ Item {
     readonly property bool activeApp: root.appGroup?.active ?? false
     readonly property bool pinned: root.appGroup?.pinned ?? false
     readonly property bool hovered: mouseArea.containsMouse
-    readonly property string iconSource: root.dataSource.iconSourceForApp(root.appGroup?.appId ?? "")
+    readonly property string iconSource: root.dataSource.iconSourceForGroup(root.appGroup)
 
-    signal trayMenuRequested(var item, var activator)
     signal popupRequested(var appGroup, var activatorMouseArea)
 
     width: 30
@@ -38,7 +38,7 @@ Item {
     function focusNextWindow() {
         if (root.windowCount <= 0) {
             if (root.trayItem?.onlyMenu)
-                root.trayMenuRequested(root.trayItem, mouseArea);
+                root.popupRequested(root.appGroup, mouseArea);
             else if (root.trayItem)
                 root.trayItem.activate();
             else
@@ -60,7 +60,13 @@ Item {
             rightMargin: -Theme.gap
         }
         radius: Theme.radius
-        color: root.hovered ? Theme.panelSurfaceHover : "transparent"
+        color: root.hovered || root.menuOpen ? Theme.panelSurfaceHover : "transparent"
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 120
+            }
+        }
     }
 
     Item {
@@ -68,9 +74,7 @@ Item {
 
         width: 26
         height: 24
-        anchors {
-            centerIn: parent
-        }
+        anchors.centerIn: parent
 
         IconImage {
             anchors.centerIn: parent
@@ -143,8 +147,6 @@ Item {
         onClicked: mouse => {
             if (mouse.button === Qt.MiddleButton && root.trayItem)
                 root.trayItem.secondaryActivate();
-            else if (mouse.button === Qt.RightButton && root.trayItem?.hasMenu && !(mouse.modifiers & Qt.ShiftModifier))
-                root.trayMenuRequested(root.trayItem, mouseArea);
             else if (mouse.button === Qt.RightButton)
                 root.popupRequested(root.appGroup, mouseArea);
             else

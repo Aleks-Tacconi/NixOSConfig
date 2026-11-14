@@ -11,28 +11,32 @@ Flickable {
     id: root
 
     required property var dataSource
-    property var popupScreen: null
-    property real popupRightMargin: Theme.gap * 2
     property real buttonSize: Theme.panelRowHeight - Theme.gap / 2
     property real spacing: Theme.gap
     property real hoverOverflow: Theme.gap
+    property string activeGroupKey: ""
+    property var activeTrayItem: null
     readonly property real fullWidth: items.implicitWidth + root.hoverOverflow * 2
-    readonly property int trayCount: tray.trayItems.length
+    readonly property int trayCount: SystemTray.items.values.length
     readonly property var trayEntries: SystemTray.items.values.map(item => ({
-        item, desktopEntry: TrayApps.desktopEntryForTray(item, DesktopEntries.applications.values)
+        item: item,
+        desktopEntry: TrayApps.desktopEntryForTray(item, DesktopEntries.applications.values)
     }))
-    readonly property var groups: root.dataSource.appGroups.map(group => ({
-        appId: group.appId,
-        pinned: group.pinned,
-        active: group.active,
-        toplevels: group.toplevels,
-        tray: root.trayEntries.find(entry => TrayApps.matchesGroup(entry, group.appId,
-            root.dataSource.desktopEntryForApp(group.appId))) ?? null
-    }))
+    readonly property var groups: root.dataSource.appGroups.map(group => {
+        const desktopEntry = root.dataSource.desktopEntryForApp(group.appId);
+        const tray = root.trayEntries.find(entry => TrayApps.matchesGroup(entry, group.appId, desktopEntry)) ?? null;
+        return {
+            appId: group.appId,
+            pinned: group.pinned,
+            active: group.active,
+            toplevels: group.toplevels,
+            tray: tray,
+            desktopEntry: desktopEntry ?? tray?.desktopEntry ?? null
+        };
+    })
     readonly property var remainingTrayEntries: root.trayEntries.filter(entry =>
         !root.groups.some(group => group.tray === entry))
     signal popupRequested(var appGroup, var activator)
-    signal trayMenuRequested
 
     clip: true
     boundsBehavior: Flickable.StopAtBounds
@@ -40,9 +44,16 @@ Flickable {
     contentHeight: height
     interactive: contentWidth > width
 
-    /** Dismiss the tray menu before showing a window picker. */
-    function closeTrayMenu() {
-        tray.closeMenu();
+    function trayGroupForEntry(entry) {
+        const appId = entry?.desktopEntry?.id ?? "";
+        return {
+            appId: appId,
+            pinned: appId.length > 0 ? root.dataSource.isPinned(appId) : false,
+            active: false,
+            toplevels: [],
+            tray: entry,
+            desktopEntry: entry?.desktopEntry ?? null
+        };
     }
 
     Row {
@@ -67,7 +78,8 @@ Flickable {
                 appGroup: appButton.modelData
                 dataSource: root.dataSource
                 trayItem: appButton.modelData.tray?.item ?? null
-                onTrayMenuRequested: (item, activator) => tray.openMenu(item, activator)
+                menuOpen: root.activeGroupKey.length > 0
+                    && root.dataSource.normalizedAppId(appButton.modelData.appId) === root.activeGroupKey
                 onPopupRequested: (appGroup, activator) => root.popupRequested(appGroup, activator)
             }
         }
@@ -77,9 +89,8 @@ Flickable {
 
             entries: root.remainingTrayEntries
             buttonSize: root.buttonSize
-            popupScreen: root.popupScreen
-            popupRightMargin: root.popupRightMargin
-            onMenuRequested: root.trayMenuRequested()
+            activeTrayItem: root.activeTrayItem
+            onPopupRequested: (entry, activator) => root.popupRequested(root.trayGroupForEntry(entry), activator)
         }
     }
 }

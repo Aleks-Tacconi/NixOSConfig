@@ -5,8 +5,10 @@ import QtQuick
 import Quickshell
 import Quickshell.DBusMenu
 import Quickshell.Hyprland
+import Quickshell.Services.SystemTray
 import Quickshell.Wayland
 import "../.." as ShellConfig
+import "../dock/tray-apps.js" as TrayApps
 import "app-menu-actions.js" as Actions
 
 /**
@@ -32,11 +34,23 @@ Scope {
             : Actions.snapshotIpcWindow(null);
     }
     readonly property int activePid: Number(root.ipcWindow.pid ?? 0)
-    readonly property var nativeMenu: {
+    readonly property var registrarMenu: {
         const revision = AppMenuRegistrar.revision;
         return ShellConfig.Config.appMenu.nativeMenus && root.activePid > 0 && revision >= 0
             ? AppMenuRegistrar.menuForPid(root.activePid)
             : null;
+    }
+    readonly property var nativeMenu: {
+        if (root.registrarMenu !== null)
+            return root.registrarMenu;
+        for (const item of SystemTray.items.values) {
+            if (!item.hasMenu || !item.menu)
+                continue;
+            const entry = TrayApps.desktopEntryForTray(item, DesktopEntries.applications.values);
+            if (TrayApps.matchesGroup({ item: item, desktopEntry: entry }, root.appId, root.desktopEntry))
+                return item.menu;
+        }
+        return null;
     }
     readonly property bool hasNativeMenu: root.nativeMenu !== null
     readonly property var desktopEntry: DesktopEntries.byId(root.appId)
@@ -89,7 +103,7 @@ Scope {
     }
 
     function queueNativeMenuProbe() {
-        if (ShellConfig.Config.appMenu.nativeMenus && root.activePid > 0 && root.nativeMenu === null)
+        if (ShellConfig.Config.appMenu.nativeMenus && root.activePid > 0 && root.registrarMenu === null)
             backend.probeNativeMenu(root.activePid);
     }
 
@@ -171,7 +185,7 @@ Scope {
         root.resolvedIpc = Object.freeze({ target: request.target, window: ipcWindow });
         const resolved = Object.freeze(Object.assign({}, request, { pid: ipcWindow.pid, address: ipcWindow.address }));
         root.actionRequest = resolved;
-        if (root.hasNativeMenu)
+        if (root.registrarMenu !== null)
             root.finalizeActionRequest(resolved, [], false);
         else
             backend.requestGtk(resolved);
