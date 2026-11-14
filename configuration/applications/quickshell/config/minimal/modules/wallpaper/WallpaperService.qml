@@ -9,7 +9,8 @@ import Quickshell.Io
 Scope {
     id: root
 
-    readonly property string fallback: `file://${Quickshell.env("HOME")}/.hyprland-assets/wallpaper.jpg`
+    readonly property string dataHome: Quickshell.env("XDG_DATA_HOME") || `${Quickshell.env("HOME")}/.local/share`
+    readonly property string fallback: `file://${root.dataHome}/wallpapers/cypberpunk.jpg`
     readonly property string stateHome: Quickshell.env("XDG_STATE_HOME") || `${Quickshell.env("HOME")}/.local/state`
     property string current: root.fallback
     property string previous: root.fallback

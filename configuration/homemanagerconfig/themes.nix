@@ -182,7 +182,4 @@ in
   '';
   home.file.".config/Kvantum/wallpaper".source =
     config.lib.file.mkOutOfStoreSymlink "${wallpaperThemeDir}/Kvantum/wallpaper";
-
-  home.file.".hyprland-assets/icon.png".source = ./.icon.png;
-  home.file.".hyprland-assets/wallpaper.jpg".source = ./wallpapers/cypberpunk.jpg;
 }
