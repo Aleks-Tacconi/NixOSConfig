@@ -69,7 +69,7 @@ lint: ## Run Nix, Python, shell, and QML linters and tests
 	if [ -n "$$sh_files" ]; then \
 		nix run nixpkgs#shellcheck -- $$sh_files; \
 	fi
-	@qs_wrapped="$$(nix eval --raw '.#nixosConfigurations.laptop.config.home-manager.users.aleks.home.packages' --apply 'pkgs: (builtins.head (builtins.filter (p: (p.pname or "") == "quickshell-wrapper") pkgs)).wrapped.outPath')"; \
+	@qs_wrapped="$$(nix eval --impure --raw --expr 'let flake = builtins.getFlake (toString ./.); pkgs = flake.inputs.nixpkgs.legacyPackages.$${builtins.currentSystem}; in (import ./configuration/applications/quickshell/quickshell-package.nix { inherit pkgs; inherit (flake.inputs) quickshell; }).wrapped.outPath')"; \
 	qt_dec="$$(nix eval --raw nixpkgs#qt6.qtdeclarative.outPath)"; \
 	qt_5c="$$(nix eval --raw nixpkgs#qt6.qt5compat.outPath)"; \
 	"$$qt_dec/bin/qmllint" \
