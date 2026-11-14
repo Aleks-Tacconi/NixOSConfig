@@ -1,4 +1,6 @@
 # Select optional utility and development groups here; remove an import to disable it.
+# Language-specific dev tools live in `blueprints/` as per-project flake.nix environments.
+# Only shared editor/system/infra tooling (build, cloud, data, lua, markup, nix) stays installed globally here.
 { ... }:
 
 {
@@ -9,16 +11,9 @@
     ./documents.nix
     ./development/build.nix
     ./development/cloud.nix
-    ./development/c-cpp.nix
-    ./development/go.nix
-    ./development/java.nix
-    ./development/lua.nix
-    ./development/rust.nix
-    ./development/web.nix
     ./development/data.nix
-    ./development/nix.nix
+    ./development/lua.nix
     ./development/markup.nix
-    ./development/php.nix
-    ./development/julia.nix
+    ./development/nix.nix
   ];
 }

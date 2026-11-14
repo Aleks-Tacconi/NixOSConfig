@@ -21,6 +21,17 @@
           packages = with pkgs; [
             nodejs
             oxlint
+            tailwindcss-language-server
+            vscode-langservers-extracted
+            prettier
+            htmlhint
+            typescript-language-server
+            typescript
+            eslint
+            eslint_d
+            stylelint
+            stylelint-lsp
+            bun
           ];
 
           shellHook = ''

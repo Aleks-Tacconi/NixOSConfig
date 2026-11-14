@@ -41,7 +41,6 @@
     # applications
     # ../configuration/applications/jellyfin/configuration.nix
     # ../configuration/applications/emulator/configuration.nix
-    # ../configuration/applications/android/configuration.nix
     ../configuration/applications/obsstudio/configuration.nix
     ../configuration/applications/agents/configuration.nix
     ../configuration/applications/docker/configuration.nix

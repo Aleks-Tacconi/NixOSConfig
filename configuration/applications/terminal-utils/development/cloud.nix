@@ -1,4 +1,6 @@
 # Kubernetes administration and container editor tooling.
+# Kept global because cluster management (kubectl, k9s, helm) and container/Compose LSPs
+# are used across infrastructure, ops, and multiple projects rather than a single stack.
 { pkgs, ... }:
 
 {
