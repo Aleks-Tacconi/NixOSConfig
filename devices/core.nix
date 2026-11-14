@@ -39,7 +39,6 @@
     ../configuration/nixconfig/bluetooth.nix
 
     # applications
-    # ../configuration/applications/jellyfin/configuration.nix
     # ../configuration/applications/emulator/configuration.nix
     ../configuration/applications/obsstudio/configuration.nix
     ../configuration/applications/agents/configuration.nix
@@ -47,7 +46,6 @@
     ../configuration/applications/tailscale/configuration.nix
     ../configuration/applications/vial/configuration.nix
     ../configuration/applications/chrome/configuration.nix
-    ../configuration/applications/firefox/configuration.nix
     ../configuration/applications/eza/configuration.nix
     ../configuration/applications/audiocontrol/configuration.nix
     ../configuration/applications/filemanager/configuration.nix
@@ -57,11 +55,9 @@
     ../configuration/applications/quickshell/configuration.nix
     ../configuration/applications/terminal-utils/configuration.nix
     ../configuration/applications/ghostty/configuration.nix
-    ../configuration/applications/grafana/configuration.nix
     ../configuration/applications/libreoffice/configuration.nix
     ../configuration/applications/mediaplayer/configuration.nix
     ../configuration/applications/nvim/configuration.nix
-    ../configuration/applications/notebook/configuration.nix
     ../configuration/applications/obsidian/configuration.nix
     ../configuration/applications/qbittorrent/configuration.nix
     ../configuration/applications/syncthing/configuration.nix
