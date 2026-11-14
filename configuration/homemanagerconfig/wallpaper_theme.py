@@ -1,5 +1,7 @@
 """Derive wallpaper accents and publish them to dark Qt, KDE, and native GTK apps."""
 
+from __future__ import annotations
+
 import argparse
 import colorsys
 import json
@@ -50,7 +52,8 @@ def wallpaper_accent(path: Path) -> tuple[int, int, int]:
         return (176, 176, 176)
     _, hue, saturation = max(chromatic)
     rgb = colorsys.hsv_to_rgb(hue, min(0.65, max(0.3, saturation)), 0.88)
-    return tuple(round(channel * 255) for channel in rgb)
+    r, g, b = (round(channel * 255) for channel in rgb)
+    return (r, g, b)
 
 
 def recolor_kde(template: str, accent: tuple[int, int, int]) -> str:

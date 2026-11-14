@@ -9,6 +9,7 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Sequence
+from contextvars import ContextVar
 from typing import Any
 
 from dbus_next import BusType, Message, MessageType
@@ -28,46 +29,45 @@ MAX_NODES = 96
 MAX_ACTIONS_PER_OBJECT = 128
 MAX_XML_BYTES = 256 * 1024
 OBJECT_PATH_RE = re.compile(r"/(?:[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*)?")
-CALL_SEMAPHORE = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
+CALL_SEMAPHORE: ContextVar[asyncio.Semaphore] = ContextVar("call_semaphore")
 
 
 class BridgeError(RuntimeError):
     """Represent a D-Bus bridge operation failure."""
 
 
+def get_semaphore() -> asyncio.Semaphore:
+    """Return the call concurrency semaphore for the active context."""
+    try:
+        return CALL_SEMAPHORE.get()
+    except LookupError:
+        CALL_SEMAPHORE.set(semaphore := asyncio.Semaphore(MAX_CONCURRENT_CALLS))
+        return semaphore
+
+
 async def call(bus: MessageBus, message: Message) -> list[Any]:
     """Call a D-Bus method with a short timeout."""
-    async with CALL_SEMAPHORE:
+    async with get_semaphore():
         reply = await asyncio.wait_for(bus.call(message), timeout=CALL_TIMEOUT)
     if reply.message_type == MessageType.ERROR:
         detail = str(reply.body[0]) if reply.body else "D-Bus method failed"
         raise BridgeError(f"{reply.error_name or 'D-Bus error'}: {detail}")
     if reply.message_type != MessageType.METHOD_RETURN:
         raise BridgeError("Unexpected D-Bus reply")
-    return reply.body
+    return list(reply.body)
 
 
 async def daemon_call(bus: MessageBus, member: str, signature: str = "", body: list[Any] | None = None) -> list[Any]:
     """Call a method on the session bus daemon."""
-    return await call(
-        bus,
-        Message(
-            destination=DBUS_SERVICE,
-            path=DBUS_PATH,
-            interface=DBUS_INTERFACE,
-            member=member,
-            signature=signature,
-            body=body or [],
-        ),
-    )
+    msg = Message(destination=DBUS_SERVICE, path=DBUS_PATH, interface=DBUS_INTERFACE, member=member, signature=signature, body=body or [])
+    return await call(bus, msg)
 
 
 async def connection_pid(bus: MessageBus, name: str) -> int | None:
     """Return the Unix PID for a bus name when accessible."""
     try:
-        body = await daemon_call(bus, "GetConnectionUnixProcessID", "s", [name])
-        return int(body[0])
-    except (BridgeError, asyncio.TimeoutError, IndexError, TypeError, ValueError):
+        return int((await daemon_call(bus, "GetConnectionUnixProcessID", "s", [name]))[0])
+    except (TimeoutError, BridgeError, IndexError, TypeError, ValueError):
         return None
 
 
@@ -76,31 +76,25 @@ async def connection_owner(bus: MessageBus, name: str) -> str | None:
     if name.startswith(":"):
         return name
     try:
-        body = await daemon_call(bus, "GetNameOwner", "s", [name])
-        return str(body[0])
-    except (BridgeError, asyncio.TimeoutError, IndexError):
+        return str((await daemon_call(bus, "GetNameOwner", "s", [name]))[0])
+    except (TimeoutError, BridgeError, IndexError):
         return None
 
 
 async def services_for_pid(bus: MessageBus, pid: int) -> list[tuple[str, str]]:
     """Find one preferred service name for each connection owned by a PID."""
-    body = await daemon_call(bus, "ListNames")
-    names = [str(name) for name in body[0]]
-    pids = await asyncio.gather(*(connection_pid(bus, name) for name in names))
-    owned_names = [name for name, owner_pid in zip(names, pids, strict=True) if owner_pid == pid]
-    owners = await asyncio.gather(*(connection_owner(bus, name) for name in owned_names))
-
-    aliases: dict[str, list[str]] = {}
-    for name, owner in zip(owned_names, owners, strict=True):
-        if owner is not None:
-            aliases.setdefault(owner, []).append(name)
-
-    services: list[tuple[str, str]] = []
-    for owner, connection_names in aliases.items():
-        well_known = sorted(name for name in connection_names if not name.startswith(":"))
-        services.append((well_known[0] if well_known else owner, owner))
-
-    services.sort(key=lambda item: (item[0].startswith(":"), item[0]))
+    names = [str(name) for name in (await daemon_call(bus, "ListNames"))[0] if str(name) != DBUS_SERVICE]
+    unique = [name for name in names if name.startswith(":")]
+    pids = await asyncio.gather(*(connection_pid(bus, name) for name in unique))
+    owned = {name: name for name, owner_pid in zip(unique, pids, strict=True) if owner_pid == pid}
+    if not owned:
+        return []
+    well_known = sorted(name for name in names if not name.startswith(":"))
+    owners = await asyncio.gather(*(connection_owner(bus, name) for name in well_known))
+    for name, owner in zip(well_known, owners, strict=True):
+        if owner in owned and owned[owner].startswith(":"):
+            owned[owner] = name
+    services = sorted(((service, owner) for owner, service in owned.items()), key=lambda item: (item[0].startswith(":"), item[0]))
     return services[:MAX_CONNECTIONS]
 
 
@@ -113,20 +107,11 @@ def child_path(parent: str, child: str) -> str | None:
 async def introspect(bus: MessageBus, service: str, path: str) -> ET.Element | None:
     """Return parsed introspection XML for an accessible object."""
     try:
-        body = await call(
-            bus,
-            Message(
-                destination=service,
-                path=path,
-                interface=INTROSPECT_INTERFACE,
-                member="Introspect",
-            ),
-        )
+        msg = Message(destination=service, path=path, interface=INTROSPECT_INTERFACE, member="Introspect")
+        body = await call(bus, msg)
         xml = str(body[0])
-        if len(xml.encode()) > MAX_XML_BYTES:
-            return None
-        return ET.fromstring(xml)
-    except (BridgeError, asyncio.TimeoutError, IndexError, ET.ParseError):
+        return None if len(xml.encode()) > MAX_XML_BYTES else ET.fromstring(xml)
+    except (TimeoutError, BridgeError, IndexError, ET.ParseError):
         return None
 
 
@@ -141,43 +126,21 @@ def friendly_title(action_id: str) -> str:
 async def describe_actions(bus: MessageBus, service: str, path: str) -> list[dict[str, str]]:
     """List enabled parameterless GTK actions on one object."""
     try:
-        body = await call(
-            bus,
-            Message(
-                destination=service,
-                path=path,
-                interface=GTK_ACTIONS_INTERFACE,
-                member="List",
-            ),
-        )
+        msg = Message(destination=service, path=path, interface=GTK_ACTIONS_INTERFACE, member="List")
+        body = await call(bus, msg)
         action_ids = [str(action) for action in body[0]][:MAX_ACTIONS_PER_OBJECT]
-    except (BridgeError, asyncio.TimeoutError, IndexError, TypeError):
+    except (TimeoutError, BridgeError, IndexError, TypeError):
         return []
 
     async def describe(action_id: str) -> dict[str, str] | None:
         """Describe one action and reject disabled or parameterized actions."""
         try:
-            body = await call(
-                bus,
-                Message(
-                    destination=service,
-                    path=path,
-                    interface=GTK_ACTIONS_INTERFACE,
-                    member="Describe",
-                    signature="s",
-                    body=[action_id],
-                ),
-            )
-            description = body[0]
+            msg = Message(destination=service, path=path, interface=GTK_ACTIONS_INTERFACE, member="Describe", signature="s", body=[action_id])
+            description = (await call(bus, msg))[0]
             if not bool(description[0]) or str(description[1]):
                 return None
-            return {
-                "service": service,
-                "path": path,
-                "action": action_id,
-                "title": friendly_title(action_id),
-            }
-        except (BridgeError, asyncio.TimeoutError, IndexError, TypeError):
+            return {"service": service, "path": path, "action": action_id, "title": friendly_title(action_id)}
+        except (TimeoutError, BridgeError, IndexError, TypeError):
             return None
 
     descriptions = await asyncio.gather(*(describe(action_id) for action_id in dict.fromkeys(action_ids)))
@@ -230,17 +193,8 @@ async def list_actions(bus: MessageBus, pid: int) -> list[dict[str, str]]:
 
 async def activate_action(bus: MessageBus, service: str, path: str, action: str) -> None:
     """Activate a parameterless GTK action."""
-    await call(
-        bus,
-        Message(
-            destination=service,
-            path=path,
-            interface=GTK_ACTIONS_INTERFACE,
-            member="Activate",
-            signature="sava{sv}",
-            body=[action, [], {}],
-        ),
-    )
+    msg = Message(destination=service, path=path, interface=GTK_ACTIONS_INTERFACE, member="Activate", signature="sava{sv}", body=[action, [], {}])
+    await call(bus, msg)
 
 
 def positive_pid(value: str) -> int:
@@ -266,6 +220,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 async def run(args: argparse.Namespace) -> None:
     """Run the selected bridge command on the session bus."""
+    CALL_SEMAPHORE.set(asyncio.Semaphore(MAX_CONCURRENT_CALLS))
     bus = await MessageBus(bus_type=BusType.SESSION).connect()
     try:
         if args.command == "list":
@@ -280,7 +235,7 @@ def main() -> int:
     """Run the CLI and convert D-Bus failures to a nonzero exit code."""
     try:
         asyncio.run(run(parse_args()))
-    except (BridgeError, asyncio.TimeoutError, OSError) as error:
+    except (TimeoutError, BridgeError, OSError) as error:
         print(f"quickshell-gtk-actions: {error}", file=sys.stderr)
         return 1
     return 0

@@ -1,10 +1,18 @@
 """Test the Quickshell NetworkManager helper's pure parsing behavior."""
 
+from __future__ import annotations
+
 import unittest
 from argparse import Namespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from network_control import connect_network, device_status, security_details, split_terse
+from network_control import (
+    connect_network,
+    device_status,
+    saved_wifi_profiles,
+    security_details,
+    split_terse,
+)
 
 
 class NetworkControlTest(unittest.TestCase):
@@ -27,12 +35,16 @@ class NetworkControlTest(unittest.TestCase):
         self.assertEqual(security_details("WEP"), ("WEP", False, False))
 
     @patch("network_control.run_nmcli")
-    def test_status_uses_the_connected_wifi_interface(self, run_nmcli) -> None:
+    def test_status_uses_the_connected_wifi_interface(
+        self, run_nmcli: MagicMock
+    ) -> None:
         """Prefer the connected adapter when several Wi-Fi devices exist."""
         run_nmcli.side_effect = [
-            "wlan0:wifi:disconnected:\n"
-            "wlan1:wifi:connected:Office\n"
-            "enp1s0:ethernet:disconnected:\n",
+            (
+                "wlan0:wifi:disconnected:\n"
+                "wlan1:wifi:connected:Office\n"
+                "enp1s0:ethernet:disconnected:\n"
+            ),
             "enabled\n",
         ]
         status = device_status()
@@ -40,11 +52,10 @@ class NetworkControlTest(unittest.TestCase):
         self.assertEqual(status["wifiInterface"], "wlan1")
 
     @patch("network_control.run_nmcli")
-    def test_status_prioritizes_connected_ethernet(self, run_nmcli) -> None:
+    def test_status_prioritizes_connected_ethernet(self, run_nmcli: MagicMock) -> None:
         """Prefer active Ethernet over Wi-Fi when both are connected."""
         run_nmcli.side_effect = [
-            "wlan0:wifi:connected:Office\n"
-            "enp1s0:ethernet:connected:Wired\n",
+            ("wlan0:wifi:connected:Office\nenp1s0:ethernet:connected:Wired\n"),
             "enabled\n",
         ]
         status = device_status()
@@ -54,11 +65,13 @@ class NetworkControlTest(unittest.TestCase):
         self.assertEqual(status["wifiInterface"], "wlan0")
 
     @patch("network_control.run_nmcli")
-    def test_status_recognizes_external_ethernet(self, run_nmcli) -> None:
+    def test_status_recognizes_external_ethernet(self, run_nmcli: MagicMock) -> None:
         """Recognize connected (externally) states for Ethernet."""
         run_nmcli.side_effect = [
-            "wlan0:wifi:disconnected:\n"
-            "enp1s0:ethernet:connected (externally):Wired\n",
+            (
+                "wlan0:wifi:disconnected:\n"
+                "enp1s0:ethernet:connected (externally):Wired\n"
+            ),
             "enabled\n",
         ]
         status = device_status()
@@ -67,7 +80,21 @@ class NetworkControlTest(unittest.TestCase):
         self.assertEqual(status["state"], "connected")
 
     @patch("network_control.run_nmcli")
-    def test_saved_connection_lets_nmcli_choose_compatible_profile(self, run_nmcli) -> None:
+    def test_saved_wifi_profiles_handles_empty_names_and_escaped_colons(
+        self, run_nmcli: MagicMock
+    ) -> None:
+        """Parse saved Wi-Fi profiles without shifting indices on empty names."""
+        run_nmcli.return_value = (
+            "uuid-empty:802-11-wireless:\n"
+            "uuid-eth:802-3-ethernet:Wired\n"
+            r"uuid-cafe:wifi:Cafe\:5G" + "\n"
+        )
+        self.assertEqual(saved_wifi_profiles(), {"Cafe:5G": "uuid-cafe"})
+
+    @patch("network_control.run_nmcli")
+    def test_saved_connection_lets_nmcli_choose_compatible_profile(
+        self, run_nmcli: MagicMock
+    ) -> None:
         """Select by BSSID instead of forcing a potentially stale saved UUID."""
         connect_network(
             Namespace(

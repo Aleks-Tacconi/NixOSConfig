@@ -44,12 +44,9 @@ def split_terse(line: str) -> list[str]:
     return fields
 
 
-def run_nmcli(
-    arguments: Sequence[str], *, input_text: str | None = None
-) -> str:
+def run_nmcli(arguments: Sequence[str], *, input_text: str | None = None) -> str:
     """Run nmcli with stable output and return stdout."""
-    environment = os.environ.copy()
-    environment["LC_ALL"] = "C"
+    environment = {**os.environ, "LC_ALL": "C"}
     try:
         result = subprocess.run(
             ["nmcli", *arguments],
@@ -67,59 +64,42 @@ def run_nmcli(
 
     message = result.stderr.strip() or result.stdout.strip() or "Network operation failed"
     lowered = message.lower()
-    secret_required = "secret" in lowered or "password" in lowered
-    raise NetworkError(message, secret_required=secret_required)
+    raise NetworkError(message, secret_required="secret" in lowered or "password" in lowered)
 
 
 def device_status() -> dict[str, Any]:
     """Return the preferred network device and Wi-Fi radio state."""
-    output = run_nmcli(
-        ["-t", "-e", "yes", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device", "status"]
-    )
+    output = run_nmcli(["-t", "-e", "yes", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device", "status"])
     devices = []
     for line in output.splitlines():
         parts = split_terse(line)
         if len(parts) < 4 or parts[0] == "lo":
             continue
-        dev_type = parts[1]
-        if dev_type in {"wired", "802-3-ethernet"}:
-            dev_type = "ethernet"
-        elif dev_type == "802-11-wireless":
-            dev_type = "wifi"
-
-        state = parts[2]
-        if state.startswith("connected"):
-            state = "connected"
-
-        devices.append(
-            {
-                "interfaceName": parts[0],
-                "type": dev_type,
-                "state": state,
-                "label": ":".join(parts[3:]) or parts[0],
-            }
-        )
+        dev_type = "ethernet" if parts[1] in {"wired", "802-3-ethernet"} else ("wifi" if parts[1] == "802-11-wireless" else parts[1])
+        state = "connected" if parts[2].startswith("connected") else parts[2]
+        devices.append({"interfaceName": parts[0], "type": dev_type, "state": state, "label": ":".join(parts[3:]) or parts[0]})
 
     connected = [device for device in devices if device["state"] == "connected"]
-    # Prioritize active Ethernet over Wi-Fi
-    preferred = next((device for device in connected if device["type"] == "ethernet"), None)
-    preferred = preferred or next(
-        (device for device in connected if device["type"] == "wifi"), None
+    preferred = (
+        next((device for device in connected if device["type"] == "ethernet"), None)
+        or next((device for device in connected if device["type"] == "wifi"), None)
+        or (connected[0] if connected else None)
+        or next((device for device in devices if device["type"] in {"ethernet", "wifi"}), None)
+        or {}
     )
-    preferred = preferred or (connected[0] if connected else None)
-    preferred = preferred or next(
-        (device for device in devices if device["type"] in {"ethernet", "wifi"}), None
+    wifi = (
+        next((device for device in connected if device["type"] == "wifi"), None)
+        or next((device for device in devices if device["type"] == "wifi"), None)
+        or {}
     )
-    wifi = next((device for device in connected if device["type"] == "wifi"), None)
-    wifi = wifi or next((device for device in devices if device["type"] == "wifi"), None)
     radio = run_nmcli(["-t", "-f", "WIFI", "radio"]).strip()
     return {
-        **(preferred or {}),
-        "interfaceName": (preferred or {}).get("interfaceName", ""),
-        "type": (preferred or {}).get("type", "none"),
-        "state": (preferred or {}).get("state", "unavailable"),
-        "label": (preferred or {}).get("label", "No network"),
-        "wifiInterface": (wifi or {}).get("interfaceName", ""),
+        **preferred,
+        "interfaceName": preferred.get("interfaceName", ""),
+        "type": preferred.get("type", "none"),
+        "state": preferred.get("state", "unavailable"),
+        "label": preferred.get("label", "No network"),
+        "wifiInterface": wifi.get("interfaceName", ""),
         "wifiEnabled": radio == "enabled",
     }
 
@@ -139,38 +119,15 @@ def security_details(security: str) -> tuple[str, bool, bool]:
 def saved_wifi_profiles() -> dict[str, str]:
     """Map saved Wi-Fi SSIDs to their NetworkManager profile UUIDs."""
     output = run_nmcli(["-t", "-e", "yes", "-f", "UUID,TYPE,NAME", "connection", "show"])
-    uuids: list[tuple[str, str]] = []
     profiles: dict[str, str] = {}
     for line in output.splitlines():
         parts = split_terse(line)
         if len(parts) < 3 or parts[1] not in {"wifi", "802-11-wireless"}:
             continue
-        uuids.append((parts[0], parts[2]))
-    if not uuids:
-        return {}
-    try:
-        raw_ssids = run_nmcli(
-            [
-                "-t",
-                "-e",
-                "yes",
-                "-g",
-                "connection.uuid,802-11-wireless.ssid",
-                "connection",
-                "show",
-                *[u[0] for u in uuids],
-            ]
-        )
-        lines = [line.strip() for line in raw_ssids.splitlines() if line.strip()]
-        for i in range(0, len(lines) - 1, 2):
-            uuid_val = lines[i]
-            ssid_val = lines[i + 1]
-            if ssid_val and ssid_val not in profiles:
-                profiles[ssid_val] = uuid_val
-    except Exception:
-        for uuid_val, name in uuids:
-            if name and name not in profiles:
-                profiles[name] = uuid_val
+        uuid_val = parts[0]
+        name = ":".join(parts[2:])
+        if name and name not in profiles:
+            profiles[name] = uuid_val
     return profiles
 
 
@@ -193,7 +150,7 @@ def wifi_networks(interface_name: str, rescan: bool) -> list[dict[str, Any]]:
         saved_uuid = saved.get(parts[1], "")
         if saved_uuid:
             supported = True
-        network = {
+        network: dict[str, Any] = {
             "active": parts[0] == "*",
             "ssid": parts[1],
             "bssid": parts[2],
@@ -203,11 +160,14 @@ def wifi_networks(interface_name: str, rescan: bool) -> list[dict[str, Any]]:
             "supported": supported,
             "savedUuid": saved_uuid,
         }
-        key = (network["ssid"], security_label)
+        key: tuple[str, str] = (str(network["ssid"]), security_label)
         current = networks.get(key)
         if current is None or network["active"] or network["signal"] > current["signal"]:
             networks[key] = network
-    return sorted(networks.values(), key=lambda item: (not item["active"], -item["signal"], item["ssid"].lower()))
+    return sorted(
+        networks.values(),
+        key=lambda item: (not bool(item["active"]), -int(item["signal"]), str(item["ssid"]).lower()),
+    )
 
 
 def connect_network(arguments: argparse.Namespace) -> None:
