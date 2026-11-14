@@ -29,14 +29,11 @@ pkgs.stdenv.mkDerivation {
   dontBuild = true;
 
   nativeBuildInputs = [
-    pkgs.makeWrapper
     pkgs.qt6.wrapQtAppsHook
   ];
 
   buildInputs = with pkgs; [
     qs
-    kdePackages.qtwayland
-    kdePackages.qtpositioning
     kdePackages.qtlocation
     kdePackages.syntax-highlighting
     gsettings-desktop-schemas
@@ -62,10 +59,16 @@ pkgs.stdenv.mkDerivation {
     mesa
   ];
 
+  qtWrapperArgs = [
+    "--prefix"
+    "XDG_DATA_DIRS"
+    ":"
+    "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}"
+  ];
+
   installPhase = ''
     mkdir -p $out/bin
-    makeWrapper ${qs}/bin/qs $out/bin/qs \
-      --prefix XDG_DATA_DIRS : ${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}
+    ln -s ${qs}/bin/qs $out/bin/qs
   '';
 
   passthru = qs.passthru // {

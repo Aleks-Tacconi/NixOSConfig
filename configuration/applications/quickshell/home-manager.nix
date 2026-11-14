@@ -54,13 +54,64 @@ let
   fileSearchExcludes = pkgs.writeText "quickshell-file-search-excludes" ''
     ${lib.concatStringsSep "\n" cfg.launcher.fileSearch.excludes}
   '';
+  fileSearch = pkgs.writeShellApplication {
+    name = "quickshell-file-search";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.fd
+      pkgs.fzf
+    ];
+    text = ''
+      query="''${1:-''${FILE_QUERY:-}}"
+      selected_dir="''${2:-''${FILE_DIR:-}}"
+      whitelist="''${FILE_WHITELIST:-${fileSearchPaths}}"
+      blacklist="''${FILE_BLACKLIST:-${fileSearchExcludes}}"
+      home="''${HOME:-${config.home.homeDirectory}}"
+
+      dirs=()
+      while IFS= read -r line || [ -n "$line" ]; do
+        [ -z "$line" ] && continue
+        case "$line" in
+          /*) dir="$line" ;;
+          ~/*) dir="$home/''${line#\~/}" ;;
+          *) dir="$home/$line" ;;
+        esac
+        [ -d "$dir" ] && dirs+=("$dir")
+      done < "$whitelist"
+
+      if [ -z "$selected_dir" ]; then
+        [ "''${#dirs[@]}" -eq 0 ] && exit 0
+        printf 'directory\t%s\0' "''${dirs[@]}" | fzf --read0 --print0 --filter "$query" || true
+        exit 0
+      fi
+
+      excludes=()
+      while IFS= read -r line || [ -n "$line" ]; do
+        [ -z "$line" ] && continue
+        excludes+=(--exclude "$line")
+      done < "$blacklist"
+
+      {
+        fd --type f --color never --absolute-path --print0 "''${excludes[@]}" . "$selected_dir" 2>/dev/null \
+          | fzf --read0 --print0 --filter "$query" \
+          | {
+              count=0
+              while IFS= read -r -d ''' path; do
+                printf 'file\t%s\0' "$path"
+                count=$((count + 1))
+                [ "$count" -lt 80 ] || break
+              done
+            }
+      } || true
+    '';
+  };
   configQml = pkgs.writeText "Config.qml" ''
     pragma Singleton
 
     import QtQuick
 
     QtObject {
-        readonly property QtObject launcher: QtObject {
+        component LauncherConfig: QtObject {
             readonly property bool applications: ${builtins.toJSON cfg.launcher.applications}
             readonly property bool files: ${builtins.toJSON cfg.launcher.files}
             readonly property bool emoji: ${builtins.toJSON cfg.launcher.emoji}
@@ -70,35 +121,42 @@ let
             readonly property string configDir: ${builtins.toJSON "${config.xdg.configHome}/quickshell/default/modules/launcher"}
         }
 
-        readonly property QtObject wallpapers: QtObject {
+        component WallpapersConfig: QtObject {
             readonly property string directory: ${builtins.toJSON "file://${config.home.homeDirectory}/.local/share/wallpapers"}
         }
 
-        readonly property QtObject notifications: QtObject {
+        component NotificationsConfig: QtObject {
             readonly property int popupTimeout: ${toString cfg.notifications.popupTimeout}
             readonly property int queueLimit: ${toString cfg.notifications.queueLimit}
         }
 
-        readonly property QtObject nightLight: QtObject {
+        component NightLightConfig: QtObject {
             readonly property bool enable: ${builtins.toJSON cfg.nightLight.enable}
             readonly property int temperature: ${toString cfg.nightLight.temperature}
         }
 
-        readonly property QtObject network: QtObject {
+        component NetworkConfig: QtObject {
             readonly property bool tailscale: ${builtins.toJSON cfg.network.tailscale}
         }
 
-        readonly property QtObject appMenu: QtObject {
+        component AppMenuConfig: QtObject {
             readonly property bool enable: ${builtins.toJSON cfg.appMenu.enable}
             readonly property bool nativeMenus: ${builtins.toJSON cfg.appMenu.nativeMenus}
         }
+
+        readonly property LauncherConfig launcher: LauncherConfig {}
+        readonly property WallpapersConfig wallpapers: WallpapersConfig {}
+        readonly property NotificationsConfig notifications: NotificationsConfig {}
+        readonly property NightLightConfig nightLight: NightLightConfig {}
+        readonly property NetworkConfig network: NetworkConfig {}
+        readonly property AppMenuConfig appMenu: AppMenuConfig {}
     }
   '';
   configTree = pkgs.runCommand "quickshell-default-config" { } ''
     mkdir -p "$out"
     cp -r ${./config/minimal}/. "$out/"
+    chmod -R u+w "$out"
     cp ${configQml} "$out/Config.qml"
-    chmod u+w "$out/modules/launcher"
     cp ${fileSearchPaths} "$out/modules/launcher/whitelist.txt"
     cp ${fileSearchExcludes} "$out/modules/launcher/blacklist.txt"
   '';
@@ -109,6 +167,7 @@ in
     gtkActions
     qtMenu
     networkControl
+    fileSearch
     pkgs.xdg-utils
   ]
   ++ lib.optionals cfg.launcher.clipboard [ pkgs.cliphist ]
@@ -131,28 +190,13 @@ in
     };
     Service = {
       Environment = "QUICKSHELL_CONFIG_GENERATION=${configTree}";
-      ExecStartPre = "-${quickshellPackage}/bin/qs kill --any-display -c minimal";
       ExecStart = "${quickshellPackage}/bin/qs";
       Restart = "on-failure";
     };
     Install.WantedBy = [ "graphical-session.target" ];
   };
 
-  home.activation.cleanupQuickshellConfigs = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    config_dir="${config.xdg.configHome}/quickshell"
-    if [ -d "$config_dir" ]; then
-      for config_path in "$config_dir"/*; do
-        [ -e "$config_path" ] || continue
-        [ "''${config_path##*/}" = "default" ] || $DRY_RUN_CMD ${pkgs.coreutils}/bin/rm -rf "$config_path"
-      done
-    fi
-
-    state_dir="${config.xdg.stateHome}/quickshell"
-    $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p \
-      "$state_dir"
-    if [ -f "$state_dir/minimal/dock-pins.json" ] && [ ! -e "$state_dir/dock-pins.json" ]; then
-      $DRY_RUN_CMD ${pkgs.coreutils}/bin/cp \
-        "$state_dir/minimal/dock-pins.json" "$state_dir/dock-pins.json"
-    fi
+  home.activation.ensureQuickshellStateDir = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    $DRY_RUN_CMD ${pkgs.coreutils}/bin/mkdir -p "${config.xdg.stateHome}/quickshell"
   '';
 }
