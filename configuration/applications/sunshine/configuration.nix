@@ -71,10 +71,11 @@ let
         --tmpfs /tmp --proc /proc \
         --ro-bind /dev/null /dev/uinput \
         --unshare-pid --die-with-parent --new-session \
-        --unsetenv DISPLAY --unsetenv WAYLAND_DISPLAY \
+        --unsetenv DISPLAY \
         ${pkgs.dbus}/bin/dbus-run-session -- \
-        ${pkgs.weston}/bin/weston --backend=headless --renderer=gl \
-        --width=1920 --height=1080 --idle-time=0 --no-config \
+        ${pkgs.weston}/bin/weston --backend=wayland --renderer=gl \
+        --shell=kiosk-shell.so --fullscreen --no-config \
+        --width=1920 --height=1080 --idle-time=0 \
         --socket=sunshine-wayland -- ${lib.getExe session}
     '';
   };
@@ -102,6 +103,18 @@ in
 
   # Controllers use UHID while keyboard and mouse remain confined to XTest.
   boot.kernelModules = [ "uhid" ];
+  # Hyprland otherwise limits hidden desktops to 15 FPS.
+  home-manager.users.aleks.wayland.windowManager.hyprland.settings.config.misc.render_unfocused_fps =
+    60;
+  # Keep every Sunshine app in one locally accessible desktop, even when hidden.
+  home-manager.users.aleks.wayland.windowManager.hyprland.settings.window_rule = [
+    {
+      match.initial_title = "^Weston Compositor - wayland-fullscreen$";
+      workspace = "10 silent";
+      fullscreen = true;
+      render_unfocused = true;
+    }
+  ];
   # The menu must start the isolated service, not a second desktop-capturing host.
   home-manager.users.aleks.xdg.desktopEntries."dev.lizardbyte.app.Sunshine" = {
     name = "Sunshine";
