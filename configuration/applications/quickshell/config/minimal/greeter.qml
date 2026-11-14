@@ -62,6 +62,7 @@ ShellRoot {
         function onReadyToLaunch() {
             const cmd = Quickshell.env("QUICKSHELL_GREETER_CMD") || "start-hyprland";
             Greetd.launch([cmd]);
+            Qt.callLater(Qt.quit);
         }
 
         function onError(error) {

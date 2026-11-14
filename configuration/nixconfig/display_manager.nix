@@ -13,15 +13,35 @@ let
   };
   greeterConfigDir = ../applications/quickshell/config/minimal;
   greeterWallpaper = ../homemanagerconfig/wallpapers/cypberpunk.jpg;
+  hyprlandSession = pkgs.writeShellScript "hyprland-session" ''
+    hm_vars="/etc/profiles/per-user/''${USER:-$(id -un)}/etc/profile.d/hm-session-vars.sh"
+    if [ -r "$hm_vars" ]; then
+      . "$hm_vars"
+    fi
+    exec ${pkgs.hyprland}/bin/start-hyprland
+  '';
   quickshellGreeter = pkgs.writeShellScriptBin "quickshell-greeter" ''
+    export QT_QPA_PLATFORM="wayland;xcb"
+    export QT_AUTO_SCREEN_SCALE_FACTOR="1"
     export QUICKSHELL_GREETER_USER="aleks"
     export QUICKSHELL_GREETER_WALLPAPER="file://${greeterWallpaper}"
-    export QUICKSHELL_GREETER_CMD="${pkgs.hyprland}/bin/start-hyprland"
+    export QUICKSHELL_GREETER_CMD="${hyprlandSession}"
     exec ${quickshellPackage}/bin/qs -p ${greeterConfigDir}/greeter.qml
   '';
   greeterHyprlandConfig = pkgs.writeText "hyprland-greeter.lua" ''
+    hl.monitor({
+      output = "",
+      mode = "preferred",
+      position = "auto",
+      scale = 1,
+    })
+
     hl.config({
+      cursor = {
+        no_hardware_cursors = 1,
+      },
       misc = {
+        background_color = "0x121212",
         disable_hyprland_logo = true,
         force_default_wallpaper = 0,
       },

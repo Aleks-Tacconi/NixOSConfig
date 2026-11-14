@@ -90,6 +90,7 @@ in
 
   # Home Manager maps qtct to qt5ct, but KDE Connect uses Qt 6.
   home.sessionVariables.QT_QPA_PLATFORMTHEME = lib.mkForce "qt6ct";
+  systemd.user.sessionVariables.QT_QPA_PLATFORMTHEME = lib.mkForce "qt6ct";
 
   home.file.".config/kdeglobals".source =
     config.lib.file.mkOutOfStoreSymlink "${wallpaperThemeDir}/kdeglobals";
