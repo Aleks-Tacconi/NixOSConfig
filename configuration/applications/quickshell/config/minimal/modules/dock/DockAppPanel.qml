@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Widgets
 import "../frame" as Frame
 import "../../theme"
@@ -125,14 +126,18 @@ ColumnLayout {
                 spacing: Theme.panelItemGap
 
                 Repeater {
-                    model: root.appGroup?.toplevels ?? []
+                    model: ScriptModel {
+                        values: root.appGroup?.toplevels ?? []
+                    }
 
                     DockWindowRow {
+                        id: windowRow
+
                         required property var modelData
 
                         width: windowsColumn.width
                         dataSource: root.dataSource
-                        toplevel: modelData
+                        toplevel: windowRow.modelData
                         previewsActive: root.previewsActive
                         onActivated: root.dismissRequested()
                     }

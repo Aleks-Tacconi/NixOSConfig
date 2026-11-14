@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import "../frame" as Frame
@@ -16,55 +17,48 @@ Item {
     implicitHeight: content.implicitHeight
 
     readonly property var defaultSink: Pipewire.defaultAudioSink
-    readonly property var outputDevices: Pipewire.nodes.values.filter(node => node.audio !== null && node.isSink && !node.isStream)
-    readonly property int volume: Math.round((defaultSink?.audio?.volume ?? 0) * 100)
-    readonly property bool muted: defaultSink?.audio?.muted ?? false
+    readonly property var audioSinks: Pipewire.nodes.values.filter(node => node.audio !== null && node.isSink && !node.isStream)
+    readonly property int volume: Math.round((root.defaultSink?.audio?.volume ?? 0) * 100)
+    readonly property bool muted: root.defaultSink?.audio?.muted ?? false
 
     property int selectedPlayerIndex: 0
     readonly property var players: Mpris.players.values
-    readonly property int playerCount: players.length
-    readonly property var selectedPlayer: playerCount > 0
-        ? players[Math.min(selectedPlayerIndex, playerCount - 1)]
+    readonly property int playerCount: root.players.length
+    readonly property var selectedPlayer: root.playerCount > 0
+        ? root.players[Math.min(root.selectedPlayerIndex, root.playerCount - 1)]
         : null
 
     onPlayerCountChanged: {
-        if (selectedPlayerIndex >= playerCount)
-            selectedPlayerIndex = Math.max(0, playerCount - 1)
+        if (root.selectedPlayerIndex >= root.playerCount)
+            root.selectedPlayerIndex = Math.max(0, root.playerCount - 1);
     }
 
-    PwObjectTracker {
-        objects: [root.defaultSink].concat(root.outputDevices)
-    }
+    PwObjectTracker { objects: [root.defaultSink].concat(root.audioSinks) }
 
     function deviceName(node) {
-        if (!node)
-            return "No output device"
-        if (node.description.length > 0)
-            return node.description
-        if (node.nickname.length > 0)
-            return node.nickname
-        return node.name
+        if (!node) return "No output device";
+        if (node.description.length > 0) return node.description;
+        if (node.nickname.length > 0) return node.nickname;
+        return node.name;
     }
 
     function setVolumePercent(percent) {
-        const audio = root.defaultSink?.audio
+        const audio = root.defaultSink?.audio;
         if (audio)
-            audio.volume = Math.max(0, Math.min(1.5, percent / 100))
+            audio.volume = Math.max(0, Math.min(1.5, percent / 100));
     }
 
-    function adjustVolume(delta) {
-        root.setVolumePercent(root.volume + delta)
-    }
+    function adjustVolume(delta) { root.setVolumePercent(root.volume + delta); }
 
     function toggleMute() {
-        const audio = root.defaultSink?.audio
+        const audio = root.defaultSink?.audio;
         if (audio)
-            audio.muted = !audio.muted
+            audio.muted = !audio.muted;
     }
 
     function cyclePlayer(direction = 1) {
         if (root.playerCount > 1)
-            root.selectedPlayerIndex = (root.selectedPlayerIndex + direction + root.playerCount) % root.playerCount
+            root.selectedPlayerIndex = (root.selectedPlayerIndex + direction + root.playerCount) % root.playerCount;
     }
 
     ColumnLayout {
@@ -73,16 +67,8 @@ Item {
         anchors.fill: parent
         spacing: Theme.panelItemGap
 
-        Frame.PanelSectionHeader {
-            Layout.fillWidth: true
-            title: "Audio"
-        }
-
-        Frame.PanelGroupLabel {
-            Layout.fillWidth: true
-            title: "Volume"
-            detail: root.muted ? "Muted" : `${root.volume}%`
-        }
+        Frame.PanelSectionHeader { Layout.fillWidth: true; title: "Audio" }
+        Frame.PanelGroupLabel { Layout.fillWidth: true; title: "Volume"; detail: root.muted ? "Muted" : `${root.volume}%` }
 
         RowLayout {
             Layout.fillWidth: true
@@ -115,40 +101,19 @@ Item {
                     onClicked: mouse => root.setVolumePercent(mouse.x / width * 100)
                     onPositionChanged: mouse => {
                         if (pressed)
-                            root.setVolumePercent(mouse.x / width * 100)
+                            root.setVolumePercent(mouse.x / width * 100);
                     }
                     onWheel: wheel => root.adjustVolume(wheel.angleDelta.y > 0 ? 5 : -5)
                 }
             }
 
-            MediaControlButton {
-                controlSize: 32
-                icon: "−"
-                onClicked: root.adjustVolume(-5)
-            }
-
-            MediaControlButton {
-                controlSize: 32
-                icon: "+"
-                onClicked: root.adjustVolume(5)
-            }
-
-            MediaControlButton {
-                controlSize: 32
-                icon: root.muted ? "󰝟" : "󰝞"
-                primary: root.muted
-                onClicked: root.toggleMute()
-            }
+            MediaControlButton { controlSize: 32; icon: "−"; onClicked: root.adjustVolume(-5) }
+            MediaControlButton { controlSize: 32; icon: "+"; onClicked: root.adjustVolume(5) }
+            MediaControlButton { controlSize: 32; icon: root.muted ? "󰝟" : "󰝞"; primary: root.muted; onClicked: root.toggleMute() }
         }
 
-        Item {
-            Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap
-        }
-
-        Frame.PanelGroupLabel {
-            Layout.fillWidth: true
-            title: "Output device"
-        }
+        Item { Layout.preferredHeight: Theme.panelSectionGap - Theme.panelItemGap }
+        Frame.PanelGroupLabel { Layout.fillWidth: true; title: "Output device" }
 
         Item {
             Layout.fillWidth: true
@@ -158,10 +123,7 @@ Item {
             Flickable {
                 id: deviceScroll
 
-                anchors {
-                    fill: parent
-                    rightMargin: Theme.gap * 2
-                }
+                anchors { fill: parent; rightMargin: Theme.gap * 2 }
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 contentWidth: width
@@ -175,27 +137,25 @@ Item {
                     spacing: Theme.gap
 
                     Repeater {
-                        model: root.outputDevices
+                        model: ScriptModel { values: root.audioSinks }
 
                         Rectangle {
+                            id: sinkDelegate
+
                             required property var modelData
 
                             width: deviceList.width
                             height: Theme.panelRowHeight
                             radius: Theme.surfaceRadius
-                            color: modelData === root.defaultSink ? Theme.panelSurfaceHover : (deviceMouse.containsMouse ? Theme.panelSurface : "transparent")
+                            color: sinkDelegate.modelData === root.defaultSink ? Theme.panelSurfaceHover : (deviceMouse.containsMouse ? Theme.panelSurface : "transparent")
 
                             RowLayout {
-                                anchors {
-                                    fill: parent
-                                    leftMargin: Theme.gap * 2
-                                    rightMargin: Theme.gap * 2
-                                }
+                                anchors { fill: parent; leftMargin: Theme.gap * 2; rightMargin: Theme.gap * 2 }
                                 spacing: Theme.gap * 2
 
                                 Text {
                                     Layout.fillWidth: true
-                                    text: root.deviceName(modelData)
+                                    text: root.deviceName(sinkDelegate.modelData)
                                     elide: Text.ElideRight
                                     color: Theme.fg
                                     font.family: Theme.fontFamily
@@ -203,7 +163,7 @@ Item {
                                 }
 
                                 Text {
-                                    visible: modelData === root.defaultSink
+                                    visible: sinkDelegate.modelData === root.defaultSink
                                     text: "✓"
                                     color: Theme.red
                                     font.family: Theme.fontFamily
@@ -213,17 +173,16 @@ Item {
 
                             MouseArea {
                                 id: deviceMouse
-
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                                onClicked: Pipewire.preferredDefaultAudioSink = sinkDelegate.modelData
                             }
                         }
                     }
 
                     Text {
-                        visible: root.outputDevices.length === 0
+                        visible: root.audioSinks.length === 0
                         text: "No output devices"
                         color: Theme.muted
                         font.family: Theme.fontFamily
@@ -233,12 +192,7 @@ Item {
             }
 
             Frame.PanelScrollIndicator {
-                anchors {
-                    top: parent.top
-                    right: parent.right
-                    bottom: parent.bottom
-                    rightMargin: 1
-                }
+                anchors { top: parent.top; right: parent.right; bottom: parent.bottom; rightMargin: 1 }
                 flickable: deviceScroll
             }
         }

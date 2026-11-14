@@ -27,9 +27,10 @@ Scope {
 
             required property var modelData
 
+            readonly property var screenModel: bar.modelData
             readonly property real sideWidth: Math.max(0, (bar.width - workspaceViewport.width) / 2 - Theme.gap * 8)
 
-            screen: modelData
+            screen: bar.screenModel
 
             anchors {
                 top: true
@@ -37,14 +38,16 @@ Scope {
                 right: true
             }
 
+            // qmllint disable unqualified unresolved-type
             margins {
                 left: 0
                 right: 0
                 top: 0
             }
+            // qmllint enable unqualified unresolved-type
 
             implicitHeight: Theme.barHeight
-            implicitWidth: modelData.width
+            implicitWidth: bar.screenModel.width
             color: "transparent"
 
             WlrLayershell.namespace: "quickshell:topBar"

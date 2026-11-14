@@ -4,5 +4,6 @@ Init 1.0 Init.qml
 Media 1.0 Media.qml
 MediaControlButton 1.0 MediaControlButton.qml
 Network 1.0 Network.qml
+NetworkStatusCard 1.0 NetworkStatusCard.qml
 NowPlaying 1.0 NowPlaying.qml
 PowerProfileButton 1.0 PowerProfileButton.qml

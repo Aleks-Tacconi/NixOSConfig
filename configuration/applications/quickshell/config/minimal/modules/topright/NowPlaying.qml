@@ -32,10 +32,10 @@ Item {
     }
 
     function formatTime(seconds) {
-        const totalSeconds = Math.floor(seconds)
-        const minutes = Math.floor(totalSeconds / 60)
-        const remainingSeconds = totalSeconds % 60
-        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
+        const totalSeconds = Math.floor(seconds);
+        const minutes = Math.floor(totalSeconds / 60);
+        const remainingSeconds = totalSeconds % 60;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
     }
 
     ColumnLayout {
@@ -58,17 +58,8 @@ Item {
                 visible: root.playerCount > 1
                 spacing: Theme.gap
 
-                MediaControlButton {
-                    controlSize: 26
-                    icon: ""
-                    onClicked: root.previousPlayer()
-                }
-
-                MediaControlButton {
-                    controlSize: 26
-                    icon: ""
-                    onClicked: root.nextPlayer()
-                }
+                MediaControlButton { controlSize: 26; icon: ""; onClicked: root.previousPlayer() }
+                MediaControlButton { controlSize: 26; icon: ""; onClicked: root.nextPlayer() }
             }
         }
 
@@ -81,10 +72,7 @@ Item {
             border.color: Theme.popupInnerEdge
 
             RowLayout {
-                anchors {
-                    fill: parent
-                    margins: Theme.gap * 2
-                }
+                anchors { fill: parent; margins: Theme.gap * 2 }
                 spacing: Theme.gap * 3
 
                 Rectangle {
@@ -96,7 +84,6 @@ Item {
 
                     Image {
                         id: artwork
-
                         anchors.fill: parent
                         source: root.player?.trackArtUrl ?? ""
                         fillMode: Image.PreserveAspectCrop
@@ -182,21 +169,17 @@ Item {
                 }
 
                 MouseArea {
-                    anchors {
-                        fill: parent
-                        topMargin: -8
-                        bottomMargin: -8
-                    }
+                    anchors { fill: parent; topMargin: -8; bottomMargin: -8 }
                     enabled: root.player?.canSeek ?? false
                     hoverEnabled: true
                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                     onClicked: mouse => {
                         if (root.player.positionSupported && root.player.lengthSupported && root.trackLengthSec > 0)
-                            root.player.position = mouse.x / width * root.trackLengthSec
+                            root.player.position = mouse.x / width * root.trackLengthSec;
                     }
                     onPositionChanged: mouse => {
                         if (pressed && root.player.positionSupported && root.player.lengthSupported && root.trackLengthSec > 0)
-                            root.player.position = Math.max(0, Math.min(root.trackLengthSec, mouse.x / width * root.trackLengthSec))
+                            root.player.position = Math.max(0, Math.min(root.trackLengthSec, mouse.x / width * root.trackLengthSec));
                     }
                     onWheel: wheel => root.player.seek(wheel.angleDelta.y > 0 ? 5 : -5)
                 }
@@ -205,23 +188,9 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
 
-                Text {
-                    text: root.formatTime(root.trackPositionSec)
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelCaptionSize
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                Text {
-                    text: root.formatTime(root.trackLengthSec)
-                    color: Theme.muted
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.panelCaptionSize
-                }
+                Text { text: root.formatTime(root.trackPositionSec); color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: Theme.panelCaptionSize }
+                Item { Layout.fillWidth: true }
+                Text { text: root.formatTime(root.trackLengthSec); color: Theme.muted; font.family: Theme.fontFamily; font.pixelSize: Theme.panelCaptionSize }
             }
         }
 
@@ -230,9 +199,7 @@ Item {
             Layout.topMargin: -Theme.gap
             spacing: Theme.gap * 2
 
-            Item {
-                Layout.fillWidth: true
-            }
+            Item { Layout.fillWidth: true }
 
             MediaControlButton {
                 controlSize: 36
@@ -256,9 +223,7 @@ Item {
                 onClicked: root.player.next()
             }
 
-            Item {
-                Layout.fillWidth: true
-            }
+            Item { Layout.fillWidth: true }
         }
     }
 }

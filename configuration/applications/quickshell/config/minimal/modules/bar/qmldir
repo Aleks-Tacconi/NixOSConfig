@@ -1,0 +1,8 @@
+singleton AppMenuService 1.0 AppMenuService.qml
+Init 1.0 Init.qml
+AppMenu 1.0 AppMenu.qml
+AppMenuBackend 1.0 AppMenuBackend.qml
+AppMenuPopup 1.0 AppMenuPopup.qml
+Clock 1.0 Clock.qml
+WindowDetails 1.0 WindowDetails.qml
+Workspaces 1.0 Workspaces.qml

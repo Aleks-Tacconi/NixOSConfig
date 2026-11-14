@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import "../../theme"
 
 /** Group agenda events beneath one date label, without nested cards or badges. */
@@ -42,15 +43,18 @@ Column {
     }
 
     Repeater {
-        model: root.day.events
+        model: ScriptModel {
+            values: root.day.events
+        }
 
         CalendarAgendaEvent {
+            id: eventRow
             required property var modelData
             width: root.width
             height: implicitHeight
-            event: modelData
+            event: eventRow.modelData
             now: root.now
-            onActivated: root.eventOpenRequested(modelData)
+            onActivated: root.eventOpenRequested(eventRow.modelData)
         }
     }
 }

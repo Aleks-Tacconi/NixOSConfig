@@ -4,7 +4,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import "tray-apps.js" as TrayApps
-import "../bar" as Bar
 import "../../theme"
 
 /** Scrollable dock row containing window groups, pins, and tray icons. */
@@ -55,21 +54,25 @@ Flickable {
         spacing: root.spacing
 
         Repeater {
-            model: root.groups
+            model: ScriptModel {
+                values: root.groups
+            }
 
             DockAppButton {
+                id: appButton
+
                 required property var modelData
                 width: root.buttonSize
                 height: root.buttonSize
-                appGroup: modelData
+                appGroup: appButton.modelData
                 dataSource: root.dataSource
-                trayItem: modelData.tray?.item ?? null
+                trayItem: appButton.modelData.tray?.item ?? null
                 onTrayMenuRequested: (item, activator) => tray.openMenu(item, activator)
                 onPopupRequested: (appGroup, activator) => root.popupRequested(appGroup, activator)
             }
         }
 
-        Bar.Tray {
+        DockTray {
             id: tray
 
             entries: root.remainingTrayEntries

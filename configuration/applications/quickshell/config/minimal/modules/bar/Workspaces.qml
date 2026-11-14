@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Hyprland
 import "../../theme"
 
@@ -46,16 +47,18 @@ RowLayout {
     }
 
     Repeater {
-        model: root.visibleWorkspaceIds
+        model: ScriptModel {
+            values: root.visibleWorkspaceIds
+        }
 
         Rectangle {
             id: button
 
             required property var modelData
 
-            property int workspaceId: Number(modelData)
-            property var workspace: Hyprland.workspaces.values.find(w => w.id === workspaceId)
-            property bool active: Hyprland.focusedWorkspace?.id === workspaceId
+            property int workspaceId: Number(button.modelData)
+            property var workspace: Hyprland.workspaces.values.find(w => w.id === button.workspaceId)
+            property bool active: Hyprland.focusedWorkspace?.id === button.workspaceId
             property bool hovered: workspaceMouse.containsMouse
 
             z: button.hovered ? 1 : 0

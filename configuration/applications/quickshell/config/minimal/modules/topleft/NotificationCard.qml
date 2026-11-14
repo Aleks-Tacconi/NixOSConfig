@@ -198,14 +198,18 @@ Rectangle {
             spacing: Theme.gap
 
             Repeater {
-                model: root.actions
+                model: ScriptModel {
+                    values: root.actions
+                }
 
                 NotificationActionButton {
+                    id: actionButton
+
                     required property var modelData
 
                     width: Math.min(actionFlow.width, implicitWidth)
-                    action: modelData
-                    primary: modelData.identifier === "default"
+                    action: actionButton.modelData
+                    primary: actionButton.modelData.identifier === "default"
                     onInvoked: action => root.actionRequested(root.notification, action)
                 }
             }

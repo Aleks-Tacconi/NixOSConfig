@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import "../../theme"
-import "../frame" as Frame
 
 /** Month navigation and keyboard-accessible dates with compact selection marks. */
 Column {
@@ -185,7 +184,7 @@ Column {
                         anchors.centerIn: parent
                         anchors.verticalCenterOffset: dayCell.hasEvents ? -3 : 0
                         text: dayCell.validDay ? dayCell.day : ""
-                        color: dayCell.selected ? "#121212" : (dayCell.today || (dayMouse.containsMouse && dayCell.validDay) || dayCell.hasEvents ? Theme.fg : Theme.muted)
+                        color: dayCell.selected ? Theme.onAccent : (dayCell.today || (dayMouse.containsMouse && dayCell.validDay) || dayCell.hasEvents ? Theme.fg : Theme.muted)
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.panelMetaSize
                         font.bold: dayCell.today || dayCell.selected
@@ -199,7 +198,7 @@ Column {
                         width: 4
                         height: 4
                         radius: 2
-                        color: dayCell.selected ? "#121212" : Theme.fg
+                        color: dayCell.selected ? Theme.onAccent : Theme.fg
                     }
                 }
 

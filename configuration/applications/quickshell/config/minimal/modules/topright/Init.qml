@@ -1,9 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
 import Quickshell.Services.Pipewire
-import Quickshell.Wayland
 import "../frame" as Frame
 import "../../theme"
 
@@ -27,524 +25,164 @@ Item {
     readonly property bool batteryOpen: root.openPopup === "battery"
     readonly property int audioPercent: Math.round((Pipewire.defaultAudioSink?.audio?.volume ?? 0) * 100)
     readonly property bool audioMuted: Pipewire.defaultAudioSink?.audio?.muted ?? false
-    readonly property string networkIcon: iconForNetwork()
+    readonly property string networkIcon: root.iconForNetwork()
     readonly property var laptopBattery: BatteryService.laptopBattery
-    readonly property bool hasBattery: laptopBattery !== null || BatteryService.sysfsBatteryPresent
-    readonly property int batteryPercent: Math.round(laptopBattery !== null ? laptopBattery.percentage * 100 : BatteryService.sysfsBatteryPercentValue)
+    readonly property bool hasBattery: root.laptopBattery !== null || BatteryService.sysfsBatteryPresent
+    readonly property int batteryPercent: Math.round(root.laptopBattery !== null ? root.laptopBattery.percentage * 100 : BatteryService.sysfsBatteryPercentValue)
     readonly property string batteryIcon: ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"][Math.max(0, Math.min(10, Math.floor(root.batteryPercent / 10)))]
     readonly property real batteryPanelHeight: batteryContent.implicitHeight + Theme.panelPadding * 2
+    readonly property real mediaPopupRightOffset: Math.max(0, statusContent.width - mediaButton.x - mediaButton.width)
+    readonly property real networkPopupRightOffset: Math.max(0, statusContent.width - networkButton.x - networkButton.width)
 
     onNetworkOpenChanged: {
         if (root.networkOpen)
             root.networkService.requestScan(root.networkService.networks.length === 0);
     }
 
-    PwObjectTracker {
-        objects: [Pipewire.defaultAudioSink]
-    }
+    PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
 
     function iconForNetwork() {
         if (root.networkService.networkType === "ethernet")
             return root.networkService.networkState === "connected" ? "󰈀" : "󰈂";
-
         if (root.networkService.networkState !== "connected")
             return "󰤭";
-
         const networks = root.networkService.networks ?? [];
         const activeNetwork = networks.find(net => net.active) ?? networks.find(net => net.ssid === root.networkService.networkLabel);
         const signal = (activeNetwork && typeof activeNetwork.signal === "number") ? activeNetwork.signal : 100;
-
-        if (signal >= 75)
-            return "󰤨";
-        if (signal >= 50)
-            return "󰤥";
-        if (signal >= 25)
-            return "󰤢";
+        if (signal >= 75) return "󰤨";
+        if (signal >= 50) return "󰤥";
+        if (signal >= 25) return "󰤢";
         return "󰤟";
     }
 
-    function formatPercent(percent) {
-        return `${Math.max(0, Math.min(999, percent))}%`;
-    }
-
+    function formatPercent(percent) { return `${Math.max(0, Math.min(999, percent))}%`; }
     function setAudioPercent(percent) {
         const audio = Pipewire.defaultAudioSink?.audio;
-
-        if (!audio)
-            return;
-
-        audio.volume = Math.max(0, Math.min(1.5, percent / 100));
+        if (audio) audio.volume = Math.max(0, Math.min(1.5, percent / 100));
     }
-
-    function adjustAudioPercent(delta) {
-        root.setAudioPercent(root.audioPercent + delta);
-    }
-
-    function segmentRightMargin(item) {
-        const position = item.mapToItem(statusFrame, 0, 0);
-
-        return root.popupRightMargin + Math.max(0, statusFrame.width - position.x - item.width);
-    }
-
-    function togglePopup(name) {
-        root.openPopup = root.openPopup === name ? "" : name;
-    }
-
-    function closePopup(name) {
-        if (root.openPopup === name)
-            root.openPopup = "";
-    }
+    function adjustAudioPercent(delta) { root.setAudioPercent(root.audioPercent + delta); }
+    function togglePopup(name) { root.openPopup = root.openPopup === name ? "" : name; }
+    function closePopup(name) { if (root.openPopup === name) root.openPopup = ""; }
 
     Item {
         id: statusFrame
-
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            horizontalCenter: parent.horizontalCenter
-        }
+        anchors { top: parent.top; bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
         width: statusContent.implicitWidth
 
         Row {
             id: statusContent
-
-            anchors {
-                top: parent.top
-                bottom: parent.bottom
-            }
+            anchors { top: parent.top; bottom: parent.bottom }
             spacing: Theme.gap / 2
 
-            Item {
-                id: audioSegment
-
-                anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                }
-                z: audioTrigger.containsMouse ? 1 : 0
+            Frame.BarPillButton {
+                id: mediaButton
                 width: Theme.panelRowHeight + Theme.gap
-
-                Rectangle {
-                    anchors {
-                        verticalCenter: parent.verticalCenter
-                        left: parent.left
-                        right: parent.right
-                    }
-                    height: Theme.panelRowHeight
-                    color: audioTrigger.containsMouse || root.audioOpen ? Theme.panelSurfaceHover : "transparent"
-                    radius: Theme.radius
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 120
-                        }
-                    }
+                active: root.audioOpen
+                onClicked: root.togglePopup("audio")
+                onWheel: wheel => {
+                    root.adjustAudioPercent(wheel.angleDelta.y > 0 ? 5 : -5);
+                    wheel.accepted = true;
                 }
 
                 Text {
                     anchors.centerIn: parent
-                    text: audioTrigger.containsMouse || root.audioOpen
-                        ? root.formatPercent(root.audioPercent)
-                        : (root.audioMuted ? "󰖁" : "")
+                    text: mediaButton.hovered || root.audioOpen ? root.formatPercent(root.audioPercent) : (root.audioMuted ? "󰖁" : "")
                     color: root.audioMuted ? Theme.muted : Theme.fg
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize + 1
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: audioTrigger
-
-                    anchors {
-                        top: parent.top
-                        bottom: parent.bottom
-                        bottomMargin: -Theme.popupGap
-                        left: parent.left
-                        right: parent.right
-                    }
-                    acceptedButtons: Qt.LeftButton
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.togglePopup("audio")
-
-                    onWheel: wheel => {
-                        root.adjustAudioPercent(wheel.angleDelta.y > 0 ? 5 : -5);
-                        wheel.accepted = true;
-                    }
+                    font { family: Theme.fontFamily; pixelSize: Theme.fontSize + 1; bold: true }
                 }
             }
 
-            Item {
-                id: networkSegment
-
-                anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                }
-                z: networkTrigger.containsMouse ? 1 : 0
+            Frame.BarPillButton {
+                id: networkButton
                 width: Theme.panelRowHeight
+                active: root.networkOpen
+                onClicked: root.togglePopup("network")
 
-                Rectangle {
-                    anchors {
-                        verticalCenter: parent.verticalCenter
-                        left: parent.left
-                        right: parent.right
-                    }
-                    height: Theme.panelRowHeight
-                    color: networkTrigger.containsMouse || root.networkOpen ? Theme.panelSurfaceHover : "transparent"
-                    radius: Theme.radius
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 120
-                        }
-                    }
-                }
-
-                Row {
-                    id: networkRow
-
+                Text {
                     anchors.centerIn: parent
-                    spacing: Theme.gap * 2
-
-                    Text {
-                        text: root.networkIcon
-                        color: Theme.red
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 1
-                        font.bold: true
-                    }
-                }
-
-                MouseArea {
-                    id: networkTrigger
-
-                    anchors {
-                        top: parent.top
-                        bottom: parent.bottom
-                        bottomMargin: -Theme.popupGap
-                        left: parent.left
-                        right: parent.right
-                    }
-                    acceptedButtons: Qt.LeftButton
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.togglePopup("network")
+                    text: root.networkIcon
+                    color: Theme.red
+                    font { family: Theme.fontFamily; pixelSize: Theme.fontSize + 1; bold: true }
                 }
             }
 
-            Item {
-                id: batterySegment
-
-                anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                }
-                z: batteryTrigger.containsMouse ? 1 : 0
+            Frame.BarPillButton {
+                id: batteryButton
                 visible: root.hasBattery
                 width: visible ? Theme.panelRowHeight + Theme.gap : 0
-
-                Rectangle {
-                    anchors {
-                        verticalCenter: parent.verticalCenter
-                        left: parent.left
-                        right: parent.right
-                    }
-                    height: Theme.panelRowHeight
-                    color: batteryTrigger.containsMouse || root.batteryOpen ? Theme.panelSurfaceHover : "transparent"
-                    radius: Theme.radius
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 120
-                        }
-                    }
-                }
+                active: root.batteryOpen
+                onClicked: root.togglePopup("battery")
 
                 Text {
                     anchors.centerIn: parent
-                    text: batteryTrigger.containsMouse
-                        ? root.formatPercent(root.batteryPercent)
-                        : root.batteryIcon
+                    text: batteryButton.hovered ? root.formatPercent(root.batteryPercent) : root.batteryIcon
                     color: root.batteryPercent < 10 ? Theme.batteryCritical : Theme.fg
-                    font.family: Theme.fontFamily
-                    font.pixelSize: batteryTrigger.containsMouse ? Theme.fontSize + 1 : Theme.iconSize + Theme.gap / 2
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: batteryTrigger
-
-                    anchors {
-                        top: parent.top
-                        bottom: parent.bottom
-                        bottomMargin: -Theme.popupGap
-                        left: parent.left
-                        right: parent.right
-                    }
-                    acceptedButtons: Qt.LeftButton
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.togglePopup("battery")
+                    font { family: Theme.fontFamily; pixelSize: batteryButton.hovered ? Theme.fontSize + 1 : Theme.iconSize + Theme.gap / 2; bold: true }
                 }
             }
         }
     }
 
-    PanelWindow {
-        id: audioPopupWindow
+    Frame.BarPopupWindow {
+        id: mediaWindow
+        popupScreen: root.popupScreen
+        requestedOpen: root.audioOpen
+        namespace: "quickshell:topRightAudioPullout"
+        alignEdge: "right"
+        edgeMargin: root.popupRightMargin
+        panelWidth: 360
+        panelDepth: root.audioPopupHeight
+        activatorMouseArea: mediaButton.mouseArea
+        hoverBridgeActivator: mediaButton
+        hoverBridgeX: Math.max(0, width - root.mediaPopupRightOffset - mediaButton.width)
+        onDismissRequested: root.closePopup("audio")
 
-        screen: root.popupScreen
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        visible: root.audioOpen || audioPanel.progress > 0
-        implicitWidth: audioPanel.length + audioPanel.curveRadius
-        implicitHeight: Theme.barHeight + Theme.popupGap + audioPanel.depth + audioPanel.curveRadius
-        mask: Region {
-            Region { item: audioPanel }
-            Region { item: audioHoverBridge }
-        }
-
-        WlrLayershell.namespace: "quickshell:topRightAudioPullout"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.audioOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-        anchors {
-            top: true
-            right: true
-        }
-
-        margins {
-            top: 0
-            right: root.segmentRightMargin(audioSegment)
-        }
-
-        Item {
-            id: audioPopupHost
-
-            anchors.fill: parent
-            clip: false
-            visible: audioPopupWindow.visible
-
-            Frame.PopupHoverBridge {
-                id: audioHoverBridge
-                activator: audioTrigger
-                x: parent.width - audioTrigger.width
-                onActivated: root.closePopup("audio")
-            }
-
-            Frame.PulloutPanel {
-                id: audioPanel
-
-                corner: "topRight"
-                requestedOpen: root.audioOpen
-                activatorMouseArea: audioTrigger
-                bridgeHovered: audioHoverBridge.hovered
-                clickDismiss: true
-                onDismissRequested: root.closePopup("audio")
-
-                length: 360
-                depth: root.audioPopupHeight
-                duration: 180
-
-                backgroundColor: Theme.panelBg
-                curveRadius: Theme.panelRadius
-
-                anchors {
-                    top: parent.top
-                    topMargin: Theme.barHeight + Theme.popupGap
-                    right: parent.right
-                }
-
-                Item {
-                    anchors {
-                        fill: parent
-                        topMargin: Theme.panelPadding
-                        leftMargin: Theme.panelPadding
-                        rightMargin: Theme.panelPadding
-                        bottomMargin: Theme.panelPadding
-                    }
-                    clip: true
-
-                    Media {
-                        id: audioView
-
-                        anchors.fill: parent
-                    }
-                }
-            }
-        }
+        Media { id: audioView; anchors.fill: parent }
     }
 
-    PanelWindow {
-        id: networkPopupWindow
+    Frame.BarPopupWindow {
+        id: networkWindow
+        popupScreen: root.popupScreen
+        requestedOpen: root.networkOpen
+        namespace: "quickshell:topRightNetworkPullout"
+        alignEdge: "right"
+        edgeMargin: root.popupRightMargin
+        panelWidth: 360
+        panelDepth: root.networkPopupHeight
+        activatorMouseArea: networkButton.mouseArea
+        hoverBridgeActivator: networkButton
+        hoverBridgeX: Math.max(0, width - root.networkPopupRightOffset - networkButton.width)
+        onDismissRequested: root.closePopup("network")
 
-        screen: root.popupScreen
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        visible: root.networkOpen || networkPanel.progress > 0
-        implicitWidth: networkPanel.length + networkPanel.curveRadius
-        implicitHeight: Theme.barHeight + Theme.popupGap + networkPanel.depth + networkPanel.curveRadius
-        mask: Region {
-            Region { item: networkPanel }
-            Region { item: networkHoverBridge }
-        }
-
-        WlrLayershell.namespace: "quickshell:topRightNetworkPullout"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.networkOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-        anchors {
-            top: true
-            right: true
-        }
-
-        margins {
-            top: 0
-            right: root.segmentRightMargin(networkSegment)
-        }
-
-        Item {
-            id: networkPopupHost
-
-            anchors.fill: parent
-            clip: false
-            visible: networkPopupWindow.visible
-
-            Frame.PopupHoverBridge {
-                id: networkHoverBridge
-                activator: networkTrigger
-                x: parent.width - networkTrigger.width
-                onActivated: root.closePopup("network")
-            }
-
-            Frame.PulloutPanel {
-                id: networkPanel
-
-                corner: "topRight"
-                requestedOpen: root.networkOpen
-                activatorMouseArea: networkTrigger
-                bridgeHovered: networkHoverBridge.hovered
-                clickDismiss: true
-                onDismissRequested: root.closePopup("network")
-
-                length: 360
-                depth: root.networkPopupHeight
-                duration: 180
-
-                backgroundColor: Theme.panelBg
-                curveRadius: Theme.panelRadius
-
-                anchors {
-                    top: parent.top
-                    topMargin: Theme.barHeight + Theme.popupGap
-                    right: parent.right
-                }
-
-                Item {
-                    anchors {
-                        fill: parent
-                        topMargin: Theme.panelPadding
-                        leftMargin: Theme.panelPadding
-                        rightMargin: Theme.panelPadding
-                        bottomMargin: Theme.panelPadding
-                    }
-                    clip: true
-
-                    Network {
-                        id: networkView
-
-                        anchors.fill: parent
-                        open: root.networkOpen
-                        service: root.networkService
-                    }
-                }
-            }
-        }
+        Network { id: networkView; anchors.fill: parent; open: root.networkOpen; service: root.networkService }
     }
 
-    PanelWindow {
-        id: batteryPopupWindow
+    Frame.BarPopupWindow {
+        id: batteryWindow
+        popupScreen: root.popupScreen
+        requestedOpen: root.hasBattery && root.batteryOpen
+        forceClose: !root.hasBattery
+        namespace: "quickshell:topRightBatteryPullout"
+        alignEdge: "right"
+        edgeMargin: root.popupRightMargin
+        panelWidth: 340
+        panelDepth: root.batteryPanelHeight
+        activatorMouseArea: batteryButton.mouseArea
+        hoverBridgeActivator: batteryButton
+        hoverBridgeX: Math.max(0, width - batteryButton.width)
+        onDismissRequested: root.closePopup("battery")
 
-        screen: root.popupScreen
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        visible: root.hasBattery && (root.batteryOpen || batteryPanel.progress > 0)
-        implicitWidth: batteryPanel.length + batteryPanel.curveRadius
-        implicitHeight: Theme.barHeight + Theme.popupGap + batteryPanel.depth + batteryPanel.curveRadius
-        mask: Region {
-            Region { item: batteryPanel }
-            Region { item: batteryHoverBridge }
-        }
-
-        WlrLayershell.namespace: "quickshell:topRightBatteryPullout"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: root.batteryOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-        anchors {
-            top: true
-            right: true
-        }
-
-        margins {
-            top: 0
-            right: root.segmentRightMargin(batterySegment)
-        }
-
-        Item {
-            id: batteryPopupHost
-
+        Column {
+            id: batteryContent
             anchors.fill: parent
-            clip: false
-            visible: batteryPopupWindow.visible
 
-            Frame.PopupHoverBridge {
-                id: batteryHoverBridge
-                activator: batteryTrigger
-                x: parent.width - batteryTrigger.width
-                onActivated: root.closePopup("battery")
-            }
-
-            Frame.PulloutPanel {
-                id: batteryPanel
-
-                corner: "topRight"
-                requestedOpen: root.batteryOpen
-                activatorMouseArea: batteryTrigger
-                bridgeHovered: batteryHoverBridge.hovered
-                clickDismiss: true
-                onDismissRequested: root.closePopup("battery")
-
-                length: 340
-                depth: root.batteryPanelHeight
-                duration: 180
-
-                backgroundColor: Theme.panelBg
-                curveRadius: Theme.panelRadius
-
-                anchors {
-                    top: parent.top
-                    topMargin: Theme.barHeight + Theme.popupGap
-                    right: parent.right
-                }
-
-                Column {
-                    id: batteryContent
-
-                    anchors {
-                        fill: parent
-                        topMargin: Theme.panelPadding
-                        leftMargin: Theme.panelPadding
-                        rightMargin: Theme.panelPadding
-                        bottomMargin: Theme.panelPadding
-                    }
-
-                    Battery {
-                        width: parent.width
-                        device: root.laptopBattery
-                        fallbackPercent: BatteryService.sysfsBatteryPercentValue
-                        fallbackState: BatteryService.sysfsBatteryState
-                        fallbackSecondsRemaining: BatteryService.sysfsBatterySecondsRemainingValue
-                        fallbackRateWatts: BatteryService.sysfsBatteryRateWattsValue
-                    }
-                }
+            Battery {
+                width: parent.width
+                device: root.laptopBattery
+                fallbackPercent: BatteryService.sysfsBatteryPercentValue
+                fallbackState: BatteryService.sysfsBatteryState
+                fallbackSecondsRemaining: BatteryService.sysfsBatterySecondsRemainingValue
+                fallbackRateWatts: BatteryService.sysfsBatteryRateWattsValue
             }
         }
     }

@@ -66,7 +66,7 @@ Rectangle {
 
         color: Theme.fg
         selectionColor: Theme.red
-        selectedTextColor: "#000000"
+        selectedTextColor: Theme.onAccent
         font.family: Theme.fontFamily
         font.pixelSize: Theme.panelBodySize
         verticalAlignment: TextInput.AlignVCenter

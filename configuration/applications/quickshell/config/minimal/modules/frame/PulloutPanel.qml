@@ -13,7 +13,6 @@ FocusScope {
 
     default property alias content: contentHost.data
 
-    property string edge: "top"
     property string corner: ""
     property bool requestedOpen: false
     property bool forceClose: false

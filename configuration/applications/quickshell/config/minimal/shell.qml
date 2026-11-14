@@ -1,4 +1,5 @@
 //@ pragma UseQApplication
+pragma ComponentBehavior: Bound
 
 import Quickshell
 import "./modules/bar" as Bar
@@ -9,11 +10,11 @@ import "./modules/topleft" as TopLeft
 
 ShellRoot {
     Network.NetworkService {
-        id: networkService
+        id: networkBackend
     }
 
     TopLeft.NotificationCenter {
-        id: notificationCenter
+        id: notificationService
     }
 
     Wallpaper.Init {}
@@ -21,7 +22,7 @@ ShellRoot {
     Bar.Init {
         id: bar
 
-        notificationCenter: notificationCenter
-        networkService: networkService
+        notificationCenter: notificationService
+        networkService: networkBackend
     }
 }

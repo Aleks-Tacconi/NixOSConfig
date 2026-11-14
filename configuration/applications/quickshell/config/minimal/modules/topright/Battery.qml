@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.UPower
 import "../frame" as Frame
 import "../../theme"
@@ -19,8 +20,8 @@ Item {
     property real fallbackSecondsRemaining: 0
     property real fallbackRateWatts: 0
     readonly property bool usingFallback: root.device === null
-    readonly property int percent: Math.round(root.usingFallback ? root.fallbackPercent : (device?.percentage ?? 0) * 100)
-    readonly property real secondsRemaining: root.usingFallback ? root.fallbackSecondsRemaining : upowerSecondsRemaining()
+    readonly property int percent: Math.round(root.usingFallback ? root.fallbackPercent : (root.device?.percentage ?? 0) * 100)
+    readonly property real secondsRemaining: root.usingFallback ? root.fallbackSecondsRemaining : root.upowerSecondsRemaining()
     readonly property var availableProfiles: [{
         label: "Saver",
         icon: "󰌪",
@@ -36,58 +37,58 @@ Item {
     }] : [])
 
     function upowerSecondsRemaining() {
-        const timeToEmpty = device?.timeToEmpty ?? 0
-        const timeToFull = device?.timeToFull ?? 0
+        const timeToEmpty = root.device?.timeToEmpty ?? 0;
+        const timeToFull = root.device?.timeToFull ?? 0;
 
-        return timeToEmpty > 0 ? timeToEmpty : timeToFull
+        return timeToEmpty > 0 ? timeToEmpty : timeToFull;
     }
 
     function stateText() {
         if (root.usingFallback)
-            return root.fallbackState.length > 0 ? root.fallbackState : "Unavailable"
+            return root.fallbackState.length > 0 ? root.fallbackState : "Unavailable";
 
         if (!root.device)
-            return "Unavailable"
+            return "Unavailable";
 
-        return UPowerDeviceState.toString(root.device.state)
+        return UPowerDeviceState.toString(root.device.state);
     }
 
     function remainingText() {
         if (["Full", "Fully Charged"].includes(root.stateText()))
-            return "fully charged"
+            return "fully charged";
 
         if (root.secondsRemaining <= 0)
-            return "time unknown"
+            return "time unknown";
 
-        const hours = Math.floor(root.secondsRemaining / 3600)
-        const minutes = Math.round((root.secondsRemaining % 3600) / 60)
+        const hours = Math.floor(root.secondsRemaining / 3600);
+        const minutes = Math.round((root.secondsRemaining % 3600) / 60);
 
         if (hours <= 0)
-            return `${minutes}m remaining`
+            return `${minutes}m remaining`;
 
-        return `${hours}h ${minutes}m remaining`
+        return `${hours}h ${minutes}m remaining`;
     }
 
     function rateText() {
         if (root.usingFallback) {
-            const rate = root.fallbackRateWatts
+            const rate = root.fallbackRateWatts;
 
             if (rate < 0.1)
-                return ["Full", "Fully Charged"].includes(root.stateText()) ? "charged" : "idle"
+                return ["Full", "Fully Charged"].includes(root.stateText()) ? "charged" : "idle";
 
-            return `${rate.toFixed(1)} W ${root.stateText() === "Charging" ? "in" : "out"}`
+            return `${rate.toFixed(1)} W ${root.stateText() === "Charging" ? "in" : "out"}`;
         }
 
-        const rate = root.device?.changeRate ?? 0
+        const rate = root.device?.changeRate ?? 0;
 
         if (Math.abs(rate) < 0.1)
-            return "idle"
+            return "idle";
 
-        return `${Math.abs(rate).toFixed(1)} W ${rate > 0 ? "in" : "out"}`
+        return `${Math.abs(rate).toFixed(1)} W ${rate > 0 ? "in" : "out"}`;
     }
 
     function degradationText() {
-        return PowerProfiles.degradationReason === 0 ? "" : "Performance limited"
+        return PowerProfiles.degradationReason === 0 ? "" : "Performance limited";
     }
 
     ColumnLayout {
@@ -195,19 +196,22 @@ Item {
             spacing: Theme.gap
 
             Repeater {
-                model: root.availableProfiles
+                model: ScriptModel {
+                    values: root.availableProfiles
+                }
 
                 PowerProfileButton {
+                    id: profileDelegate
+
                     required property var modelData
 
                     Layout.fillWidth: true
-                    label: modelData.label
-                    icon: modelData.icon
-                    active: PowerProfiles.profile === modelData.profile
-                    onClicked: PowerProfiles.profile = modelData.profile
+                    label: profileDelegate.modelData.label
+                    icon: profileDelegate.modelData.icon
+                    active: PowerProfiles.profile === profileDelegate.modelData.profile
+                    onClicked: PowerProfiles.profile = profileDelegate.modelData.profile
                 }
             }
         }
-
     }
 }

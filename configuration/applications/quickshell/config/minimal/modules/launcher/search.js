@@ -30,8 +30,8 @@ function filterItems(items, text, rankApplications, history = {}, now = Date.now
     const query = text.trim().toLowerCase();
     const tokens = query ? query.split(/\s+/) : [];
     const matches = items.filter(item => {
-        const text = (item.search ?? `${item.title} ${item.subtitle}`).toLowerCase();
-        return tokens.every(token => text.includes(token));
+        const normalizedText = (item.search ?? `${item.title} ${item.subtitle}`).toLowerCase();
+        return tokens.every(token => normalizedText.includes(token));
     });
     if (rankApplications)
         matches.sort((a, b) => (query ? rank(a, query) - rank(b, query) : 0)

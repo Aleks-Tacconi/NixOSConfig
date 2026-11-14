@@ -1,0 +1,8 @@
+singleton DockData 1.0 DockData.qml
+Init 1.0 Init.qml
+DockAppButton 1.0 DockAppButton.qml
+DockAppPanel 1.0 DockAppPanel.qml
+DockItems 1.0 DockItems.qml
+DockTray 1.0 DockTray.qml
+DockTrayButton 1.0 DockTrayButton.qml
+DockWindowRow 1.0 DockWindowRow.qml

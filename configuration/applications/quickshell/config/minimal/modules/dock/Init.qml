@@ -32,7 +32,7 @@ Item {
     property var pendingOpenActivator: null
     property bool forcePopupClose: false
 
-    readonly property int appCount: dockData.appGroups.length + dockItems.trayCount
+    readonly property int appCount: DockData.appGroups.length + dockItems.trayCount
     readonly property real fullWidth: dockItems.fullWidth
 
     width: Math.min(root.maxWidth, root.fullWidth)
@@ -40,16 +40,18 @@ Item {
     visible: root.appCount > 0 && root.maxWidth > 0
     clip: false
 
-    DockData {
-        id: dockData
+    Connections {
+        target: DockData
 
-        onAppGroupsChanged: root.refreshDisplayedApp()
+        function onAppGroupsChanged() {
+            root.refreshDisplayedApp();
+        }
     }
 
     function appGroupById(appId) {
-        const key = dockData.normalizedAppId(appId)
+        const key = DockData.normalizedAppId(appId)
 
-        return dockData.appGroups.find(group => dockData.normalizedAppId(group.appId) === key) ?? null
+        return DockData.appGroups.find(group => DockData.normalizedAppId(group.appId) === key) ?? null
     }
 
     function displayGroup(appGroup) {
@@ -157,10 +159,12 @@ Item {
             right: true
         }
 
+        // qmllint disable unqualified unresolved-type
         margins {
             top: Theme.barHeight + Theme.popupGap
             right: root.popupRightMargin
         }
+        // qmllint enable unqualified unresolved-type
 
         Frame.PulloutPanel {
             id: pulloutPanel
@@ -214,7 +218,7 @@ Item {
                             appId: "",
                             toplevels: []
                         })
-                    dataSource: dockData
+                    dataSource: DockData
                     previewsActive: pulloutPanel.effectiveOpen && pulloutPanel.progress >= 0.95
                     onImplicitHeightChanged: popupHeightSync.restart()
                     onDismissRequested: root.dismissPopup()
@@ -229,7 +233,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: Theme.gap
         anchors.bottomMargin: Theme.gap
-        dataSource: dockData
+        dataSource: DockData
         popupScreen: root.popupScreen
         popupRightMargin: root.popupRightMargin
         buttonSize: root.buttonSize

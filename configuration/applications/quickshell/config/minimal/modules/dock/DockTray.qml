@@ -4,7 +4,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Wayland
-import "../dock" as Dock
 import "../frame" as Frame
 import "../../theme"
 
@@ -53,15 +52,19 @@ Row {
     }
 
     Repeater {
-        model: root.entries
+        model: ScriptModel {
+            values: root.entries
+        }
 
-        Dock.DockTrayButton {
+        DockTrayButton {
+            id: trayButton
+
             required property var modelData
             width: root.buttonSize
             height: root.buttonSize
-            trayItem: modelData.item
-            desktopEntry: modelData.desktopEntry
-            menuOpen: root.activeItem === modelData.item
+            trayItem: trayButton.modelData.item
+            desktopEntry: trayButton.modelData.desktopEntry
+            menuOpen: root.activeItem === trayButton.modelData.item
             onMenuRequested: (item, activator) => root.openMenu(item, activator)
         }
     }
@@ -80,10 +83,13 @@ Row {
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.keyboardFocus: root.menuOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         anchors { top: true; right: true }
+
+        // qmllint disable unqualified unresolved-type
         margins {
             top: Theme.barHeight + Theme.popupGap
             right: root.popupRightMargin
         }
+        // qmllint enable unqualified unresolved-type
 
         Frame.PulloutPanel {
             id: trayPanel
@@ -130,9 +136,9 @@ Row {
                 }
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                contentWidth: width
+                contentWidth: menuScroll.width
                 contentHeight: menuView.implicitHeight
-                interactive: contentHeight > height
+                interactive: menuScroll.contentHeight > menuScroll.height
 
                 Frame.PanelMenuView {
                     id: menuView

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../../theme"
 
 /**
@@ -14,36 +15,41 @@ ColumnLayout {
     required property string pid
     required property string className
     required property string workspace
+    readonly property var rows: [{
+        label: "Title",
+        value: root.windowTitle,
+        middleElide: false
+    }, {
+        label: "PID",
+        value: root.pid,
+        middleElide: false
+    }, {
+        label: "Class",
+        value: root.className,
+        middleElide: true
+    }, {
+        label: "Workspace",
+        value: root.workspace,
+        middleElide: false
+    }]
 
     spacing: Theme.gap
 
     Repeater {
-        model: [{
-            label: "Title",
-            value: root.windowTitle,
-            middleElide: false
-        }, {
-            label: "PID",
-            value: root.pid,
-            middleElide: false
-        }, {
-            label: "Class",
-            value: root.className,
-            middleElide: true
-        }, {
-            label: "Workspace",
-            value: root.workspace,
-            middleElide: false
-        }]
+        model: ScriptModel {
+            values: root.rows
+        }
 
         delegate: RowLayout {
+            id: detailRow
+
             required property var modelData
 
             Layout.fillWidth: true
             spacing: Theme.panelItemGap
 
             Text {
-                text: modelData.label
+                text: detailRow.modelData.label
                 color: Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelMetaSize
@@ -51,12 +57,12 @@ ColumnLayout {
 
             Text {
                 Layout.fillWidth: true
-                text: modelData.value
+                text: detailRow.modelData.value
                 color: Theme.fg
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelMetaSize
                 horizontalAlignment: Text.AlignRight
-                elide: modelData.middleElide ? Text.ElideMiddle : Text.ElideRight
+                elide: detailRow.modelData.middleElide ? Text.ElideMiddle : Text.ElideRight
                 textFormat: Text.PlainText
             }
         }

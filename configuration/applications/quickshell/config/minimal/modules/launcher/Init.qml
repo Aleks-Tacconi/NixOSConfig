@@ -1,4 +1,5 @@
 pragma ComponentBehavior: Bound
+// qmllint disable import
 
 import QtQuick
 import Quickshell
@@ -75,12 +76,14 @@ Scope {
         }
     }
 
+    // qmllint disable unresolved-type
     GlobalShortcut {
         name: "appLauncher"
         description: "Open the Quickshell application launcher"
 
         onPressed: root.toggle()
     }
+    // qmllint enable unresolved-type
 
     Variants {
         model: Quickshell.screens
@@ -114,12 +117,14 @@ Scope {
                     bottom: true
                 }
 
+                // qmllint disable unqualified unresolved-type
                 margins {
                     top: 0
                     left: 0
                     right: 0
                     bottom: 0
                 }
+                // qmllint enable unqualified unresolved-type
 
                 Item {
                     id: launcherHost
@@ -144,7 +149,6 @@ Scope {
                     Frame.PulloutPanel {
                         id: launcherPanel
 
-                        edge: "bottom"
                         requestedOpen: screenRoot.wantsOpen
                         autoClose: false
                         duration: root.revealDuration
