@@ -41,7 +41,8 @@ Item {
 
         Text {
             Layout.fillWidth: true
-            text: WallpaperService.error || (WallpaperService.busy ? "Applying wallpaper…" : "Choose a new view. Applies to every screen.")
+            visible: text.length > 0
+            text: WallpaperService.error || (WallpaperService.busy ? "Applying wallpaper…" : "")
             color: Theme.muted
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelMetaSize
