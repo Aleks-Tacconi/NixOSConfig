@@ -8,7 +8,6 @@
 
 let
   hyprlandPkg = pkgs.hyprland;
-  pommy = pkgs.callPackage ../../../packages/pommy { };
 in
 {
   programs.zsh = {
@@ -22,10 +21,9 @@ in
       v = "nvim";
       ls = "eza --group-directories-first --git";
       ll = "ls -lah";
-      cat = "bat --theme=ansi";
+      cat = "bat";
       cd = "z";
       open = "xdg-open";
-      pommy = "${pommy}/bin/pommy";
       nix-shell = ''nix-shell --run "$SHELL"'';
     };
 
@@ -69,9 +67,6 @@ in
       if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
         exec ${pkgs.coreutils}/bin/env -u LD_LIBRARY_PATH ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all ${hyprlandPkg}/bin/start-hyprland
       fi
-
-      autoload -Uz compinit
-      compinit
 
       eval "$(zoxide init zsh)"
       setopt appendhistory
