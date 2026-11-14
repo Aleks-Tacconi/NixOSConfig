@@ -18,6 +18,18 @@ Scope {
     property string error: ""
     readonly property bool busy: root.pending.length > 0 || themeProcess.running
 
+    /** Mirror the active wallpaper to a greeter-readable cache path. */
+    function syncGreeterWallpaper(source) {
+        if (!source || !source.startsWith("file://"))
+            return;
+        const path = decodeURIComponent(source.replace(/^file:\/\//, ""));
+        greeterWallpaperProcess.exec([
+            "sh", "-c",
+            "dir=/var/cache/greeter-wallpaper; [ -d \"$dir\" ] && [ -w \"$dir\" ] || exit 0; tmp=\"$dir/.current.tmp.$$\"; cp -f \"$1\" \"$tmp\" && chmod 644 \"$tmp\" && mv -f \"$tmp\" \"$dir/current\"",
+            "sh", path
+        ]);
+    }
+
     /** Load before changing the desktop so broken images leave it intact. */
     function apply(source) {
         if (root.busy || source === root.current)
@@ -40,6 +52,7 @@ Scope {
                 root.pending = "";
                 savedState.wallpaper = root.current;
                 stateFile.writeAdapter();
+                root.syncGreeterWallpaper(root.current);
                 themeProcess.exec(["quickshell-wallpaper-theme", decodeURIComponent(root.current.replace(/^file:\/\//, ""))]);
             } else if (probe.status === Image.Error) {
                 root.error = "Could not load this wallpaper. Choose another image.";
@@ -56,6 +69,10 @@ Scope {
         }
     }
 
+    Process {
+        id: greeterWallpaperProcess
+    }
+
     FileView {
         id: stateFile
         path: `${root.stateHome}/quickshell/wallpaper.json`
@@ -65,6 +82,7 @@ Scope {
                 root.previous = savedState.wallpaper;
                 root.current = savedState.wallpaper;
             }
+            root.syncGreeterWallpaper(root.current);
         }
         onSaveFailed: root.error = "Wallpaper applied, but the selection could not be saved."
         adapter: JsonAdapter {

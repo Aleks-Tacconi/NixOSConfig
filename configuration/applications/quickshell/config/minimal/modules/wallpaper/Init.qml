@@ -14,7 +14,7 @@ Scope {
             id: desktop
             required property var modelData
             screen: desktop.modelData
-            color: Theme.onAccent
+            color: incoming.initialLoad ? "transparent" : Theme.onAccent
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.layer: WlrLayer.Background
             WlrLayershell.namespace: "quickshell:wallpaper"

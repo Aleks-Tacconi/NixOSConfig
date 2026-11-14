@@ -32,6 +32,13 @@ let
   };
   modKey = key: lua ''mod .. " + ${key}"'';
   quickshellCfg = osConfig.desktop.quickshell;
+  wallpaperPreload = pkgs.writeShellScript "hyprland-wallpaper-preload" ''
+    img="/var/cache/greeter-wallpaper/current"
+    if [ ! -r "$img" ]; then
+      img="${../../homemanagerconfig/wallpapers/cypberpunk.jpg}"
+    fi
+    exec ${pkgs.swaybg}/bin/swaybg -i "$img" -m fill
+  '';
   quickshellBlurLayers = [
     "quickshell:topBar"
     "quickshell:systemTray"
@@ -327,6 +334,9 @@ in
 
     extraConfig = ''
       hl.on("hyprland.start", function()
+        ${lib.optionalString quickshellCfg.enable ''
+          hl.exec_cmd("${wallpaperPreload}")
+        ''}
         ${lib.optionalString (quickshellCfg.enable && quickshellCfg.launcher.clipboard) ''
           hl.exec_cmd("wl-paste --type text --watch cliphist store")
           hl.exec_cmd("wl-paste --type image --watch cliphist store")

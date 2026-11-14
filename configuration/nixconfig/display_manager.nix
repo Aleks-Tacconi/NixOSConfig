@@ -24,7 +24,11 @@ let
     export QT_QPA_PLATFORM="wayland;xcb"
     export QT_AUTO_SCREEN_SCALE_FACTOR="1"
     export QUICKSHELL_GREETER_USER="aleks"
-    export QUICKSHELL_GREETER_WALLPAPER="file://${greeterWallpaper}"
+    if [ -r /var/cache/greeter-wallpaper/current ]; then
+      export QUICKSHELL_GREETER_WALLPAPER="file:///var/cache/greeter-wallpaper/current"
+    else
+      export QUICKSHELL_GREETER_WALLPAPER="file://${greeterWallpaper}"
+    fi
     export QUICKSHELL_GREETER_CMD="${hyprlandSession}"
     exec ${quickshellPackage}/bin/qs -p ${greeterConfigDir}/greeter.qml
   '';
@@ -55,6 +59,9 @@ let
     end)
   '';
   greeterSession = pkgs.writeShellScript "greeter-session" ''
+    if [ -t 1 ]; then
+      printf '\033[2J\033[H\033[?25l'
+    fi
     export XCURSOR_THEME="Bibata-Modern-Classic"
     export XCURSOR_SIZE="24"
     export XCURSOR_PATH="${pkgs.bibata-cursors}/share/icons"
@@ -62,6 +69,10 @@ let
   '';
 in
 {
+  systemd.tmpfiles.rules = [
+    "d /var/cache/greeter-wallpaper 0755 aleks users -"
+  ];
+
   services.greetd = {
     enable = true;
     settings = {
