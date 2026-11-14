@@ -47,7 +47,7 @@ Scope {
             // qmllint enable unqualified unresolved-type
 
             implicitHeight: Theme.barHeight
-            implicitWidth: bar.screenModel.width
+            implicitWidth: bar.screenModel?.width ?? 0
             color: "transparent"
 
             WlrLayershell.namespace: "quickshell:topBar"
@@ -82,16 +82,6 @@ Scope {
                             bottom: parent.bottom
                         }
                     }
-
-                    AppMenu {
-                        id: appMenu
-
-                        popupScreen: bar.modelData
-                        parentWindow: bar
-                        popupLeftMargin: leftCluster.x + appMenu.x - Theme.gap * 2
-                        maxWidth: Math.max(0, bar.sideWidth - leftStatus.width - leftCluster.spacing)
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
                 }
 
                 Flickable {
@@ -110,6 +100,7 @@ Scope {
                         id: workspaces
                         x: Theme.gap
                         anchors.verticalCenter: parent.verticalCenter
+                        refreshEnabled: Quickshell.screens.length === 0 || bar.screenModel === Quickshell.screens[0]
                     }
                 }
 

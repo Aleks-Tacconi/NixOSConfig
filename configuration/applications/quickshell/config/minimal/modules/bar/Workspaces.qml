@@ -10,19 +10,20 @@ import "../../theme"
 RowLayout {
     id: root
 
-    property bool hovered: hoverHandler.hovered
+    property bool refreshEnabled: true
+
     readonly property var visibleWorkspaceIds: {
         const ids = new Set();
         const focusedId = Hyprland.focusedWorkspace?.id ?? -1;
 
-        if (focusedId > 0)
+        if (focusedId > 0 && focusedId !== 10)
             ids.add(focusedId);
 
         for (const workspace of Hyprland.workspaces.values) {
             const workspaceId = workspace?.id ?? -1;
             const windowCount = workspace?.lastIpcObject?.windows ?? 0;
 
-            if (workspaceId > 0 && windowCount > 0)
+            if (workspaceId > 0 && workspaceId !== 10 && windowCount > 0)
                 ids.add(workspaceId);
         }
 
@@ -32,12 +33,9 @@ RowLayout {
 
     spacing: Theme.gap
 
-    HoverHandler {
-        id: hoverHandler
-    }
-
     Connections {
         target: Hyprland
+        enabled: root.refreshEnabled
 
         function onRawEvent(event) {
             const workspaceEvents = ["openwindow", "closewindow", "movewindow", "movewindowv2", "workspace", "workspacev2", "createworkspace", "destroyworkspace", "moveworkspace", "moveworkspacev2"];
@@ -57,7 +55,6 @@ RowLayout {
             required property var modelData
 
             property int workspaceId: Number(button.modelData)
-            property var workspace: Hyprland.workspaces.values.find(w => w.id === button.workspaceId)
             property bool active: Hyprland.focusedWorkspace?.id === button.workspaceId
             property bool hovered: workspaceMouse.containsMouse
 
