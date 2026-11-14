@@ -54,13 +54,19 @@ let
       hl.exec_cmd("${quickshellGreeter}/bin/quickshell-greeter; ${pkgs.hyprland}/bin/hyprctl dispatch exit")
     end)
   '';
+  greeterSession = pkgs.writeShellScript "greeter-session" ''
+    export XCURSOR_THEME="Bibata-Modern-Classic"
+    export XCURSOR_SIZE="24"
+    export XCURSOR_PATH="${pkgs.bibata-cursors}/share/icons"
+    exec ${pkgs.hyprland}/bin/start-hyprland -- --config ${greeterHyprlandConfig}
+  '';
 in
 {
   services.greetd = {
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.hyprland}/bin/start-hyprland -- --config ${greeterHyprlandConfig}";
+        command = "${greeterSession}";
         user = "greeter";
       };
     };
