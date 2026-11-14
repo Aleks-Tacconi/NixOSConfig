@@ -23,6 +23,9 @@ let
     ];
   };
   mkExecBind = keys: command: mkBind keys "hl.dsp.exec_cmd(${builtins.toJSON command})";
+  mkScreenshotCmd =
+    mode:
+    "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m ${mode}; fi'";
   mkMouseBind = keys: dispatcher: {
     _args = [
       keys
@@ -32,6 +35,27 @@ let
   };
   modKey = key: lua ''mod .. " + ${key}"'';
   quickshellCfg = osConfig.desktop.quickshell;
+  quickshellBlurLayers = [
+    "quickshell:topBar"
+    "quickshell:systemTray"
+    "quickshell:appMenuActions"
+    "quickshell:appLauncher"
+    "quickshell:appLauncherPreview"
+    "quickshell:topLeftNotificationsPullout"
+    "quickshell:topLeftCalendarPullout"
+    "quickshell:topLeftNotification"
+    "quickshell:topRightAudioPullout"
+    "quickshell:topRightNetworkPullout"
+    "quickshell:topRightBatteryPullout"
+    "quickshell:topBarDockPullout"
+    "quickshell:powerMenu"
+  ];
+  floatCenterTitles = [
+    ".*Bitwarden.*"
+    "^_crx_nngceckbapebfimnlniiiahkandclblb$" # bitwarden chrome extension popup
+    "^Save File$"
+    ".*wants to save$"
+  ];
   workspaceRules = builtins.genList (
     i:
     let
@@ -53,7 +77,6 @@ in
     hyprpicker
     hyprsunset
     hyprsysteminfo
-    hyprpolkitagent
   ];
   services.swayosd = {
     enable = true;
@@ -97,9 +120,9 @@ in
         (mkExecBind "XF86MonBrightnessUp" "swayosd-client --brightness raise")
         (mkExecBind "XF86MonBrightnessDown" "swayosd-client --brightness lower")
 
-        (mkExecBind "Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m region; fi'")
-        (mkExecBind "CTRL + SHIFT + 4" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m region; fi'")
-        (mkExecBind "SHIFT + Print" "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m window; fi'")
+        (mkExecBind "Print" (mkScreenshotCmd "region"))
+        (mkExecBind "CTRL + SHIFT + 4" (mkScreenshotCmd "region"))
+        (mkExecBind "SHIFT + Print" (mkScreenshotCmd "window"))
 
         (mkBind (modKey "h") ''hl.dsp.focus({ direction = "l" })'')
         (mkBind (modKey "l") ''hl.dsp.focus({ direction = "r" })'')
@@ -141,163 +164,27 @@ in
           no_anim = true;
         }
         {
-          match.namespace = "quickshell:topBar";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topBar";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:systemTray";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:systemTray";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:appMenuActions";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:appMenuActions";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:appLauncher";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:appLauncher";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:appLauncherPreview";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:appLauncherPreview";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:topLeftNotificationsPullout";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topLeftNotificationsPullout";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:topLeftCalendarPullout";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topLeftCalendarPullout";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:topLeftNotification";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topLeftNotification";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:topRightAudioPullout";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topRightAudioPullout";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:topRightNetworkPullout";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topRightNetworkPullout";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:topRightBatteryPullout";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topRightBatteryPullout";
-          ignore_alpha = 0.05;
-        }
-        {
-          match.namespace = "quickshell:topBarDockPullout";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:topBarDockPullout";
-          ignore_alpha = 0.05;
-        }
-        {
           match.namespace = "quickshell:topBarDockPullout";
           no_anim = true;
         }
         {
-          match.namespace = "quickshell:powerMenu";
-          blur = true;
-        }
-        {
-          match.namespace = "quickshell:powerMenu";
-          ignore_alpha = 0.05;
-        }
-        {
           match.namespace = "quickshell:overview";
           no_anim = true;
-        }
-        {
-          match.namespace = "quickshell:overview";
           blur = true;
-        }
-        {
-          match.namespace = "quickshell:overview";
           ignore_alpha = 0.3;
         }
-      ];
+      ]
+      ++ map (ns: {
+        match.namespace = ns;
+        blur = true;
+        ignore_alpha = 0.05;
+      }) quickshellBlurLayers;
 
-      window_rule = [
-        {
-          match.title = ".*Bitwarden.*";
-          float = true;
-        }
-        {
-          match.title = ".*Bitwarden.*";
-          center = true;
-        }
-        {
-          # bitwarden chrome extension popup
-          match.title = "^_crx_nngceckbapebfimnlniiiahkandclblb$";
-          float = true;
-        }
-        {
-          # bitwarden chrome extension popup
-          match.title = "^_crx_nngceckbapebfimnlniiiahkandclblb$";
-          center = true;
-        }
-        {
-          match.title = "^Save File$";
-          float = true;
-        }
-        {
-          match.title = "^Save File$";
-          center = true;
-        }
-        {
-          match.title = ".*wants to save$";
-          float = true;
-        }
-        {
-          match.title = ".*wants to save$";
-          center = true;
-        }
-      ];
+      window_rule = map (title: {
+        match.title = title;
+        float = true;
+        center = true;
+      }) floatCenterTitles;
 
       monitor = [
         {
@@ -317,8 +204,6 @@ in
       workspace_rule = workspaceRules;
 
       config = {
-        animations.enabled = true;
-
         cursor.no_hardware_cursors = 1;
 
         decoration = {
@@ -332,7 +217,6 @@ in
             enabled = true;
             size = 8;
             passes = 3;
-            new_optimizations = true;
             xray = false;
             ignore_opacity = true;
           };
@@ -356,7 +240,6 @@ in
             inactive_border = "rgba(f2f2f233)";
           };
           layout = "dwindle";
-          allow_tearing = false;
           resize_on_border = true;
           extend_border_grab_area = 60;
           hover_icon_on_border = true;
@@ -368,10 +251,6 @@ in
 
         input = {
           kb_layout = "gb";
-          kb_variant = "";
-          kb_model = "";
-          kb_options = "";
-          kb_rules = "";
           repeat_rate = 30;
           repeat_delay = 500;
           follow_mouse = 1;
@@ -384,6 +263,7 @@ in
         };
 
         misc = {
+          background_color = "0x121212";
           force_default_wallpaper = 0;
           disable_hyprland_logo = true;
           focus_on_activate = true;
@@ -455,7 +335,6 @@ in
           hl.exec_cmd("clean-run wl-paste --type text --watch cliphist store")
           hl.exec_cmd("clean-run wl-paste --type image --watch cliphist store")
         ''}
-        hl.exec_cmd("hyprctl setcursor Bibata-Modern-Classic 24")
         hl.exec_cmd("clean-run blueman-applet")
         hl.exec_cmd("[workspace 1] clean-run ghostty")
         hl.exec_cmd("[workspace 2 silent] clean-run google-chrome-stable")
@@ -463,19 +342,4 @@ in
     '';
 
   };
-
-  services.hyprpaper = {
-    enable = !quickshellCfg.enable;
-    settings = {
-      splash = false;
-      wallpaper = [
-        {
-          monitor = "";
-          path = "~/.hyprland-assets/wallpaper.jpg";
-          fit_mode = "cover";
-        }
-      ];
-    };
-  };
-
 }
