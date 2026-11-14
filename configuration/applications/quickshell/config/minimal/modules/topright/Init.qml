@@ -19,7 +19,7 @@ Item {
     property real popupRightMargin: Theme.gap * 2
     property string openPopup: ""
     readonly property real audioPopupHeight: audioView.playerCount > 0 ? 540 + Theme.panelSectionGap : 360
-    readonly property real networkPopupHeight: Math.min(540, networkView.implicitHeight + Theme.panelPadding * 2)
+    readonly property real networkPopupHeight: Math.min(540, Math.max(220, networkView.implicitHeight + Theme.panelPadding * 2))
     readonly property bool audioOpen: root.openPopup === "audio"
     readonly property bool networkOpen: root.openPopup === "network"
     readonly property bool batteryOpen: root.openPopup === "battery"
@@ -154,7 +154,12 @@ Item {
         hoverBridgeX: Math.max(0, width - root.networkPopupRightOffset - networkButton.width)
         onDismissRequested: root.closePopup("network")
 
-        Network { id: networkView; anchors.fill: parent; open: root.networkOpen; service: root.networkService }
+        Network {
+            id: networkView
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            open: root.networkOpen
+            service: root.networkService
+        }
     }
 
     Frame.BarPopupWindow {

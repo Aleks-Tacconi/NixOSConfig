@@ -54,6 +54,36 @@ function matchesGroup(tray, appId, desktopEntry) {
     return groupKeys.includes(trayId) || (trayTitle.length > 0 && groupKeys.includes(trayTitle));
 }
 
+/** Map an action id or title to a distinct Nerd Font icon. */
+function actionIcon(actionId, title) {
+    const text = `${String(actionId || "")} ${String(title || "")}`.toLowerCase();
+    if (/\b(new[- ]?window|open[- ]?window)\b/.test(text))
+        return "󰝜";
+    if (/\b(new[- ]?tab|open[- ]?tab)\b/.test(text))
+        return "󰓩";
+    if (/\b(incognito|private)\b/.test(text))
+        return "󰗹";
+    if (/\b(reload|refresh|restart)\b/.test(text))
+        return "󰑓";
+    if (/\b(config|settings|preferences)\b/.test(text))
+        return "󰒓";
+    if (/\b(quit|exit)\b/.test(text))
+        return "󰩈";
+    if (/\bclose\b/.test(text))
+        return "󰅖";
+    if (/\b(split|pane)\b/.test(text))
+        return "󰯌";
+    if (/\b(inspector|debug|dev)\b/.test(text))
+        return "󰍉";
+    if (/\b(copy|clipboard)\b/.test(text))
+        return "󰆏";
+    if (/\bpaste\b/.test(text))
+        return "󰆒";
+    if (/\b(about|help)\b/.test(text))
+        return "󰋖";
+    return "󰘔";
+}
+
 /** Deduplicate GTK GAction entries, preferring application-level object paths. */
 function parseGtkActions(output) {
     let parsed = [];
@@ -72,7 +102,7 @@ function parseGtkActions(output) {
             continue;
         const isAppPath = !String(item?.path ?? "").includes("/window/");
         if (!byAction.has(id) || isAppPath)
-            byAction.set(id, { title, service: String(item.service ?? ""), path: String(item.path ?? ""), action: id });
+            byAction.set(id, { title, icon: actionIcon(id, title), service: String(item.service ?? ""), path: String(item.path ?? ""), action: id });
     }
     return Array.from(byAction.values());
 }

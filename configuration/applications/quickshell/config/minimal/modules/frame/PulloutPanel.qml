@@ -211,7 +211,7 @@ FocusScope {
 
         anchors.fill: parent
         clip: true
-        visible: root.progress > 0
+        visible: root.effectiveOpen || root.progress > 0
 
         HoverHandler {
             id: panelHover

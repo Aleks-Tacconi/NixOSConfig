@@ -153,6 +153,7 @@ Scope {
             })
             .map(action => ({
                 title: String(action.name).trim(),
+                icon: TrayApps.actionIcon("", String(action.name).trim()),
                 iconSource: action?.icon ? Quickshell.iconPath(String(action.icon), true) : "",
                 action: action
             }));

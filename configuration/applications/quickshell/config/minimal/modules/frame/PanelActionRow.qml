@@ -26,6 +26,7 @@ Rectangle {
     property bool showTrailing: false
     property bool reserveIconSpace: false
     property bool monochromeIcon: false
+    property real rowHeight: Theme.panelRowHeight
     property real horizontalPadding: Theme.gap * 2
 
     readonly property bool hovered: mouseArea.containsMouse
@@ -41,7 +42,7 @@ Rectangle {
 
     signal clicked
 
-    implicitHeight: Theme.panelRowHeight
+    implicitHeight: root.rowHeight
     height: implicitHeight
     radius: Theme.surfaceRadius
     color: root.backgroundEnabled
@@ -64,21 +65,25 @@ Rectangle {
 
         spacing: Theme.gap * 2
 
-        IconImage {
-            id: rowIconImage
-
+        Item {
             visible: root.iconSource.length > 0
-            Layout.preferredWidth: Theme.fontSize + 10
-            Layout.preferredHeight: Theme.fontSize + 10
-            source: root.iconSource
-            layer.enabled: root.monochromeIcon && root.iconSource.length > 0
-            layer.effect: MultiEffect {
-                saturation: -1.0
+            Layout.preferredWidth: Theme.iconSize + 6
+            Layout.preferredHeight: Theme.iconSize + 6
+
+            IconImage {
+                anchors.centerIn: parent
+                width: Theme.iconSize
+                height: Theme.iconSize
+                source: root.iconSource
+                layer.enabled: root.monochromeIcon && root.iconSource.length > 0
+                layer.effect: MultiEffect {
+                    saturation: -1.0
+                }
             }
         }
 
         Text {
-            Layout.preferredWidth: Theme.fontSize + 10
+            Layout.preferredWidth: Theme.iconSize + 6
             visible: root.iconSource.length === 0 && (root.icon.length > 0 || root.reserveIconSpace)
             horizontalAlignment: Text.AlignHCenter
             color: !root.enabled ? Theme.muted : (root.active || root.hovered ? root.accentColor : Theme.muted)

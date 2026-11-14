@@ -32,35 +32,29 @@ Item {
         required property bool showRow
         property bool expanded: false
         property bool reserveIconSpace: false
-        property real separatorHeight: 5
+        property real separatorHeight: 6
         signal triggered
 
         Layout.fillWidth: true
-        Layout.preferredHeight: entryItem.entry.isSeparator ? entryItem.separatorHeight : rowButton.implicitHeight
+        Layout.preferredHeight: (entryItem.entry?.isSeparator ?? false) ? entryItem.separatorHeight : rowButton.implicitHeight
         implicitHeight: Layout.preferredHeight
         visible: entryItem.showRow
-
-        Rectangle {
-            visible: entryItem.entry.isSeparator
-            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: Theme.gap; rightMargin: Theme.gap }
-            height: 1
-            color: Theme.popupBorder
-        }
 
         PanelActionRow {
             id: rowButton
 
             anchors.fill: parent
-            visible: !entryItem.entry.isSeparator && entryItem.entry.text.length > 0
-            enabled: entryItem.entry.enabled
+            rowHeight: 28
+            visible: !(entryItem.entry?.isSeparator ?? false) && (entryItem.entry?.text?.length ?? 0) > 0
+            enabled: entryItem.entry?.enabled ?? false
             active: entryItem.expanded
-                || (entryItem.entry.buttonType !== QsMenuButtonType.None && entryItem.entry.checkState === Qt.Checked)
-            label: root.cleanText(entryItem.entry.text)
+                || ((entryItem.entry?.buttonType ?? QsMenuButtonType.None) !== QsMenuButtonType.None && entryItem.entry?.checkState === Qt.Checked)
+            label: root.cleanText(entryItem.entry?.text ?? "")
             icon: root.entryIcon(entryItem.entry)
             iconSource: root.resolveIcon(entryItem.entry)
             monochromeIcon: true
             reserveIconSpace: entryItem.reserveIconSpace
-            showTrailing: entryItem.entry.hasChildren
+            showTrailing: entryItem.entry?.hasChildren ?? false
             trailingFontFamily: Theme.iconFontFamily
             trailingText: entryItem.expanded ? "󰅀" : "󰅂"
             onClicked: entryItem.triggered()
@@ -119,6 +113,8 @@ Item {
     }
 
     function entryIcon(entry) {
+        if (!entry)
+            return root.fallbackIcon;
         if (entry.buttonType === QsMenuButtonType.CheckBox)
             return entry.checkState === Qt.Checked ? "󰄲" : "󰄱";
         if (entry.buttonType === QsMenuButtonType.RadioButton)
@@ -127,7 +123,7 @@ Item {
     }
 
     function resolveIcon(entry) {
-        if (entry.buttonType !== QsMenuButtonType.None)
+        if (!entry || entry.buttonType !== QsMenuButtonType.None)
             return "";
         const value = String(entry.icon ?? "");
         if (value.length === 0)
