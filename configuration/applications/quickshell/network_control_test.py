@@ -80,6 +80,24 @@ class NetworkControlTest(unittest.TestCase):
         self.assertEqual(status["state"], "connected")
 
     @patch("network_control.run_nmcli")
+    def test_device_status_ignores_virtual_interfaces_for_connected_state(
+        self, run_nmcli: MagicMock
+    ) -> None:
+        """Ignore tailscale0 and bridge interfaces when reporting uplink status."""
+        run_nmcli.side_effect = [
+            (
+                "tailscale0:tun:connected:tailscale0\n"
+                "br-1234:bridge:connected (externally):br-1234\n"
+                "wlp9s0f3u2:wifi:disconnected:\n"
+            ),
+            "enabled\n",
+        ]
+        status = device_status()
+        self.assertEqual(status["interfaceName"], "wlp9s0f3u2")
+        self.assertEqual(status["type"], "wifi")
+        self.assertEqual(status["state"], "disconnected")
+
+    @patch("network_control.run_nmcli")
     def test_saved_wifi_profiles_handles_empty_names_and_escaped_colons(
         self, run_nmcli: MagicMock
     ) -> None:

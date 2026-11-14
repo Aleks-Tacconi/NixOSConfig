@@ -80,11 +80,11 @@ def device_status() -> dict[str, Any]:
         devices.append({"interfaceName": parts[0], "type": dev_type, "state": state, "label": ":".join(parts[3:]) or parts[0]})
 
     connected = [device for device in devices if device["state"] == "connected"]
+    physical_types = {"ethernet", "wifi"}
     preferred = (
         next((device for device in connected if device["type"] == "ethernet"), None)
         or next((device for device in connected if device["type"] == "wifi"), None)
-        or (connected[0] if connected else None)
-        or next((device for device in devices if device["type"] in {"ethernet", "wifi"}), None)
+        or next((device for device in devices if device["type"] in physical_types), None)
         or {}
     )
     wifi = (
