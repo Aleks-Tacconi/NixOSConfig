@@ -26,7 +26,7 @@ Frame.BarPillButton {
     readonly property bool indicatorActive: root.menuOpen || menuWindow.progress > 0
     readonly property var menuActions: [
         { label: "Shutdown", icon: "⏻", command: ["systemctl", "poweroff"] },
-        { label: "Lock", icon: "", command: ["hyprlock"] },
+        { label: "Lock", icon: "", command: ["qs", "ipc", "--any-display", "call", "lockscreen", "lock"] },
         { label: "Suspend", icon: "󰒲", command: ["systemctl", "suspend"] },
         { label: "Reboot", icon: "󰜉", command: ["systemctl", "reboot"] },
         { label: "Logout", icon: "󰍃", command: ["hyprctl", "dispatch", "exit"] },
