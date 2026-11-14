@@ -32,8 +32,6 @@ Rectangle {
     function detail() {
         if (root.pending)
             return "Connecting...";
-        if (root.network.active)
-            return "Connected";
         if (!root.network.supported)
             return "Enterprise · Setup in settings";
         if (root.network.savedUuid.length > 0)
@@ -42,8 +40,6 @@ Rectangle {
     }
 
     function actionIndicator() {
-        if (root.network.active)
-            return root.hovered ? "Disconnect" : "";
         if (!root.network.supported)
             return "↗";
         if (root.network.requiresPassword && root.network.savedUuid.length === 0)
@@ -73,7 +69,7 @@ Rectangle {
         Text {
             Layout.preferredWidth: Theme.fontSize + 10
             text: root.signalIcon()
-            color: root.network.active || root.hovered ? Theme.fg : Theme.muted
+            color: root.hovered ? Theme.fg : Theme.muted
             font.family: Theme.iconFontFamily
             font.pixelSize: Theme.iconSize
             horizontalAlignment: Text.AlignHCenter
@@ -95,7 +91,7 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 text: root.detail()
-                color: root.network.active ? Theme.fg : Theme.muted
+                color: Theme.muted
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.panelCaptionSize
                 elide: Text.ElideRight
@@ -120,9 +116,9 @@ Rectangle {
         Text {
             visible: !root.pending && root.actionIndicator().length > 0
             text: root.actionIndicator()
-            color: (root.network.active && root.hovered) ? Theme.red : (root.hovered ? Theme.fg : Theme.muted)
+            color: root.hovered ? Theme.fg : Theme.muted
             font.family: Theme.iconFontFamily
-            font.pixelSize: (root.network.active && root.hovered) ? Theme.panelCaptionSize : Theme.panelMetaSize
+            font.pixelSize: Theme.panelMetaSize
         }
 
         Text {

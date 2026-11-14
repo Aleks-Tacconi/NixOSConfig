@@ -162,7 +162,7 @@ def wifi_networks(interface_name: str, rescan: bool) -> list[dict[str, Any]]:
         }
         key: tuple[str, str] = (str(network["ssid"]), security_label)
         current = networks.get(key)
-        if current is None or network["active"] or network["signal"] > current["signal"]:
+        if current is None or (network["active"], network["signal"]) > (current["active"], current["signal"]):
             networks[key] = network
     return sorted(
         networks.values(),
@@ -170,29 +170,27 @@ def wifi_networks(interface_name: str, rescan: bool) -> list[dict[str, Any]]:
     )
 
 
+def connect_args(password_stdin: bool) -> tuple[list[str], str | None]:
+    """Build nmcli wait/ask flags and optional stdin password."""
+    if password_stdin:
+        return (["--ask", "--wait", "30"], sys.stdin.readline().rstrip("\n") + "\n")
+    return (["--wait", "30"], None)
+
+
 def connect_network(arguments: argparse.Namespace) -> None:
     """Activate a visible Wi-Fi network, optionally reading its password from stdin."""
-    command = ["--wait", "30"]
-    password = None
-    if arguments.password_stdin:
-        command.insert(0, "--ask")
-        password = sys.stdin.readline().rstrip("\n") + "\n"
+    command, password = connect_args(arguments.password_stdin)
     try:
         run_nmcli([*command, "device", "wifi", "connect", arguments.bssid, "ifname", arguments.interface], input_text=password)
-    except NetworkError:
-        if arguments.uuid and not arguments.password_stdin:
-            run_nmcli([*command, "connection", "up", "uuid", arguments.uuid])
-        else:
+    except NetworkError as error:
+        if error.secret_required or not arguments.uuid or arguments.password_stdin or isinstance(error.__cause__, subprocess.TimeoutExpired):
             raise
+        run_nmcli(["--wait", "15", "connection", "up", "uuid", arguments.uuid])
 
 
 def connect_hidden(arguments: argparse.Namespace) -> None:
     """Activate an open or WPA Personal hidden Wi-Fi network."""
-    command = ["--wait", "30"]
-    password = None
-    if arguments.password_stdin:
-        command.insert(0, "--ask")
-        password = sys.stdin.readline().rstrip("\n") + "\n"
+    command, password = connect_args(arguments.password_stdin)
     run_nmcli([*command, "device", "wifi", "connect", arguments.ssid, "ifname", arguments.interface, "hidden", "yes"], input_text=password)
 
 

@@ -20,12 +20,7 @@ Item {
     property var selectedNetwork: null
     property string validationError: ""
     readonly property bool editing: root.mode !== "list"
-    readonly property var availableNetworks: {
-        const list = root.service.networks ?? [];
-        if (root.service.networkState === "connected" && root.service.networkType === "wifi")
-            return list.filter(net => !net.active && net.ssid !== root.service.networkLabel);
-        return list.filter(net => !net.active);
-    }
+    readonly property var availableNetworks: (root.service.networks ?? []).filter(net => !net.active)
 
     implicitHeight: content.implicitHeight
 
@@ -54,11 +49,7 @@ Item {
         root.service.clearError();
     }
     function handleNetworkClick(network) {
-        if (network.active) {
-            root.selectedNetwork = network;
-            root.validationError = "";
-            root.mode = "confirm_disconnect";
-        } else if (!network.supported) {
+        if (!network.supported) {
             root.service.openSettings();
             root.service.errorText = `Configuring ${network.ssid} in network settings...`;
         } else if (root.service.networkState === "connected" && root.service.networkType === "wifi") {
@@ -75,13 +66,8 @@ Item {
     }
     function confirmNetworkAction() {
         const target = root.selectedNetwork;
-        if (root.mode === "confirm_disconnect") {
-            root.closeEditor();
-            root.service.disconnectWifi(target);
-        } else {
-            root.mode = "list";
-            root.proceedWithConnect(target);
-        }
+        root.mode = "list";
+        root.proceedWithConnect(target);
     }
     function submitCredentials(ssid, secured, password) {
         if (ssid.length === 0) root.validationError = "Enter a network name";

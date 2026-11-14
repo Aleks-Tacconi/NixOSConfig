@@ -33,13 +33,11 @@ Item {
             root.selectedPlayerIndex = Math.max(0, root.playerCount - 1);
     }
 
-    PwObjectTracker { objects: [root.defaultSink].concat(root.audioSinks) }
+    PwObjectTracker { objects: [root.defaultSink, ...root.audioSinks].filter(Boolean) }
 
     function deviceName(node) {
         if (!node) return "No output device";
-        if (node.description.length > 0) return node.description;
-        if (node.nickname.length > 0) return node.nickname;
-        return node.name;
+        return node.description || node.nickname || node.name || "Output device";
     }
 
     function setVolumePercent(percent) {
@@ -98,10 +96,10 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: mouse => root.setVolumePercent(mouse.x / width * 100)
+                    onClicked: mouse => root.setVolumePercent(Math.max(0, Math.min(100, mouse.x / width * 100)))
                     onPositionChanged: mouse => {
                         if (pressed)
-                            root.setVolumePercent(mouse.x / width * 100);
+                            root.setVolumePercent(Math.max(0, Math.min(100, mouse.x / width * 100)));
                     }
                     onWheel: wheel => root.adjustVolume(wheel.angleDelta.y > 0 ? 5 : -5)
                 }
@@ -117,7 +115,6 @@ Item {
 
         Item {
             Layout.fillWidth: true
-            Layout.fillHeight: true
             Layout.preferredHeight: Math.min(184, Math.max(Theme.panelRowHeight, deviceList.implicitHeight))
 
             Flickable {

@@ -60,8 +60,9 @@ Item {
         if (root.secondsRemaining <= 0)
             return "time unknown";
 
-        const hours = Math.floor(root.secondsRemaining / 3600);
-        const minutes = Math.round((root.secondsRemaining % 3600) / 60);
+        const totalMinutes = Math.round(root.secondsRemaining / 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
 
         if (hours <= 0)
             return `${minutes}m remaining`;

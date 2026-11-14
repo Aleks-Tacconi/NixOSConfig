@@ -28,11 +28,11 @@ Item {
         interval: 1000
         repeat: true
         running: (root.player?.isPlaying ?? false) && root.visible
-        onTriggered: root.player.positionChanged()
+        onTriggered: root.player?.positionChanged()
     }
 
     function formatTime(seconds) {
-        const totalSeconds = Math.floor(seconds);
+        const totalSeconds = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
         const minutes = Math.floor(totalSeconds / 60);
         const remainingSeconds = totalSeconds % 60;
         return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
@@ -174,14 +174,17 @@ Item {
                     hoverEnabled: true
                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                     onClicked: mouse => {
-                        if (root.player.positionSupported && root.player.lengthSupported && root.trackLengthSec > 0)
-                            root.player.position = mouse.x / width * root.trackLengthSec;
-                    }
-                    onPositionChanged: mouse => {
-                        if (pressed && root.player.positionSupported && root.player.lengthSupported && root.trackLengthSec > 0)
+                        if (root.player?.positionSupported && root.player?.lengthSupported && root.trackLengthSec > 0)
                             root.player.position = Math.max(0, Math.min(root.trackLengthSec, mouse.x / width * root.trackLengthSec));
                     }
-                    onWheel: wheel => root.player.seek(wheel.angleDelta.y > 0 ? 5 : -5)
+                    onPositionChanged: mouse => {
+                        if (pressed && root.player?.positionSupported && root.player?.lengthSupported && root.trackLengthSec > 0)
+                            root.player.position = Math.max(0, Math.min(root.trackLengthSec, mouse.x / width * root.trackLengthSec));
+                    }
+                    onWheel: wheel => {
+                        root.player?.seek(wheel.angleDelta.y > 0 ? 5 : -5);
+                        wheel.accepted = true;
+                    }
                 }
             }
 
@@ -205,7 +208,7 @@ Item {
                 controlSize: 36
                 icon: "󰒮"
                 enabled: root.player?.canGoPrevious ?? false
-                onClicked: root.player.previous()
+                onClicked: root.player?.previous()
             }
 
             MediaControlButton {
@@ -213,14 +216,14 @@ Item {
                 icon: root.player?.isPlaying ? "󰏤" : "󰐊"
                 primary: true
                 enabled: root.player?.canTogglePlaying ?? false
-                onClicked: root.player.togglePlaying()
+                onClicked: root.player?.togglePlaying()
             }
 
             MediaControlButton {
                 controlSize: 36
                 icon: "󰒭"
                 enabled: root.player?.canGoNext ?? false
-                onClicked: root.player.next()
+                onClicked: root.player?.next()
             }
 
             Item { Layout.fillWidth: true }

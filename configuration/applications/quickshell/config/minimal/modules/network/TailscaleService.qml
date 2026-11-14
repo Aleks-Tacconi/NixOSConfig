@@ -13,14 +13,27 @@ Scope {
 
     property bool connected: false
     property bool pending: false
+    property bool pollingActive: false
     property string errorText: ""
 
     Timer {
         interval: 5000
         repeat: true
-        running: ShellConfig.Config.network.tailscale
+        running: ShellConfig.Config.network.tailscale && root.pollingActive
         triggeredOnStart: true
         onTriggered: root.refresh()
+    }
+
+    Timer {
+        id: toggleTimeout
+        interval: 15000
+        onTriggered: {
+            if (!toggleProcess.running)
+                return;
+            toggleProcess.running = false;
+            root.pending = false;
+            root.errorText = "Tailscale request timed out. Run 'tailscale up' in a terminal if login is required.";
+        }
     }
 
     Process {
@@ -32,6 +45,8 @@ Scope {
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0)
                 root.applyStatus(statusOutput.text);
+            else
+                root.connected = false;
         }
     }
 
@@ -41,6 +56,10 @@ Scope {
         stderr: StdioCollector { id: toggleError }
 
         onExited: (exitCode, exitStatus) => {
+            const timedOut = !root.pending;
+            toggleTimeout.stop();
+            if (timedOut)
+                return;
             root.errorText = exitCode === 0 ? "" : (toggleError.text.trim() || "Could not change VPN state. Check Tailscale permissions and try again.");
             root.pending = false;
             root.refresh();
@@ -65,6 +84,7 @@ Scope {
             return;
         root.errorText = "";
         root.pending = true;
+        toggleTimeout.restart();
         toggleProcess.exec(["tailscale", root.connected ? "down" : "up"]);
     }
 }

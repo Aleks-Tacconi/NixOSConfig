@@ -18,7 +18,7 @@ Item {
     property var popupScreen: null
     property real popupRightMargin: Theme.gap * 2
     property string openPopup: ""
-    readonly property real audioPopupHeight: audioView.playerCount > 0 ? 540 + Theme.panelSectionGap : 360
+    readonly property real audioPopupHeight: Math.min(540 + Theme.panelSectionGap, Math.max(220, audioView.implicitHeight + Theme.panelPadding * 2))
     readonly property real networkPopupHeight: Math.min(540, Math.max(220, networkView.implicitHeight + Theme.panelPadding * 2))
     readonly property bool audioOpen: root.openPopup === "audio"
     readonly property bool networkOpen: root.openPopup === "network"
@@ -88,7 +88,7 @@ Item {
                     anchors.centerIn: parent
                     text: mediaButton.hovered || root.audioOpen ? root.formatPercent(root.audioPercent) : (root.audioMuted ? "󰖁" : "")
                     color: root.audioMuted ? Theme.muted : Theme.fg
-                    font { family: Theme.fontFamily; pixelSize: Theme.fontSize + 1; bold: true }
+                    font { family: Theme.iconFontFamily; pixelSize: Theme.fontSize + 1; bold: true }
                 }
             }
 
@@ -101,8 +101,8 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: root.networkIcon
-                    color: Theme.red
-                    font { family: Theme.fontFamily; pixelSize: Theme.fontSize + 1; bold: true }
+                    color: root.networkService.networkState === "connected" ? Theme.fg : Theme.muted
+                    font { family: Theme.iconFontFamily; pixelSize: Theme.fontSize + 1; bold: true }
                 }
             }
 
@@ -117,7 +117,7 @@ Item {
                     anchors.centerIn: parent
                     text: batteryButton.hovered ? root.formatPercent(root.batteryPercent) : root.batteryIcon
                     color: root.batteryPercent < 10 ? Theme.batteryCritical : Theme.fg
-                    font { family: Theme.fontFamily; pixelSize: batteryButton.hovered ? Theme.fontSize + 1 : Theme.iconSize + Theme.gap / 2; bold: true }
+                    font { family: Theme.iconFontFamily; pixelSize: batteryButton.hovered ? Theme.fontSize + 1 : Theme.iconSize + Theme.gap / 2; bold: true }
                 }
             }
         }

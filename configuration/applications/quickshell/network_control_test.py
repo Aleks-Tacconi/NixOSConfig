@@ -12,6 +12,7 @@ from network_control import (
     saved_wifi_profiles,
     security_details,
     split_terse,
+    wifi_networks,
 )
 
 
@@ -135,6 +136,21 @@ class NetworkControlTest(unittest.TestCase):
             ],
             input_text=None,
         )
+
+    @patch("network_control.saved_wifi_profiles", return_value={})
+    @patch("network_control.run_nmcli")
+    def test_wifi_networks_preserves_active_ap_over_stronger_inactive_ap(
+        self, run_nmcli: MagicMock, _saved: MagicMock
+    ) -> None:
+        """Never overwrite an active AP with a stronger inactive AP of the same SSID and security."""
+        run_nmcli.return_value = (
+            "*:Office:AA\\:BB\\:CC\\:DD\\:EE\\:01:45:WPA2\n"
+            " :Office:AA\\:BB\\:CC\\:DD\\:EE\\:02:90:WPA2\n"
+        )
+        nets = wifi_networks("wlan0", False)
+        self.assertEqual(len(nets), 1)
+        self.assertTrue(nets[0]["active"])
+        self.assertEqual(nets[0]["bssid"], "AA:BB:CC:DD:EE:01")
 
 
 if __name__ == "__main__":

@@ -45,7 +45,7 @@ Scope {
         active: root.trafficViewers.length > 0
     }
 
-    TailscaleService { id: tailscale }
+    TailscaleService { id: tailscale; pollingActive: root.trafficViewers.length > 0 }
     Process { id: settingsProcess }
 
     Timer {
@@ -57,17 +57,13 @@ Scope {
         id: statusProcess
         stdout: StdioCollector { id: statusOutput }
         onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0)
-                root.applyStatus(statusOutput.text);
-            if (!root.scanAfterStatus)
-                return;
+            if (exitCode === 0) root.applyStatus(statusOutput.text);
+            if (!root.scanAfterStatus) return;
             const force = root.queuedRescan;
             root.scanAfterStatus = false;
             root.queuedRescan = false;
-            if (root.wifiInterface.length > 0)
-                root.requestScan(force);
-            else
-                root.networks = [];
+            if (root.wifiInterface.length > 0) root.requestScan(force);
+            else root.networks = [];
         }
     }
 
@@ -95,9 +91,11 @@ Scope {
     Process {
         id: actionProcess
         property var request: null
+        property bool cancelled: false
         stdinEnabled: true
         stderr: StdioCollector { id: actionError }
         onExited: (exitCode, exitStatus) => {
+            if (actionProcess.cancelled) { actionProcess.cancelled = false; return; }
             const request = actionProcess.request;
             actionProcess.request = null;
             root.actionPending = false;
@@ -131,6 +129,7 @@ Scope {
             root.networkState = status.state ?? "unavailable";
             root.networkLabel = status.label ?? "No network";
             root.wifiEnabled = status.wifiEnabled ?? false;
+            if (!root.wifiEnabled) root.networks = [];
         } catch (error) {
             console.warn("Unable to parse NetworkManager status", error);
         }
@@ -173,6 +172,7 @@ Scope {
         root.actionNetworkBssid = request ? (request.network?.bssid ?? "") : "";
         root.errorText = "";
         actionProcess.request = request;
+        actionProcess.cancelled = false;
         actionProcess.exec(["quickshell-network-control", ...args]);
         if (password && password.length > 0)
             actionProcess.write(password + "\n");
@@ -181,6 +181,7 @@ Scope {
     function cancelAction() {
         if (!actionProcess.running)
             return;
+        actionProcess.cancelled = true;
         actionProcess.running = false;
         actionProcess.request = null;
         root.actionPending = false;
