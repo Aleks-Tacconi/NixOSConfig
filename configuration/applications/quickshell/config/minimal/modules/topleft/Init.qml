@@ -1,7 +1,9 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import "../frame" as Frame
 import "../../theme"
 
@@ -29,9 +31,9 @@ Item {
         && (root.notificationsOpen || root.calendarOpen || notificationsWindow.progress > 0 || calendarWindow.progress > 0)
     readonly property bool ownsNotificationPopup: root.notificationCenter !== null
         && root.notificationCenter.notificationPopupScreenKey === root.currentScreenKey
-    readonly property var activeNotification: root.notificationCenter?.activeNotification ?? null
+    readonly property var activeNotifications: root.notificationCenter?.activeNotifications ?? []
     readonly property bool toastShouldShow: root.ownsNotificationPopup
-        && root.activeNotification !== null && (root.notificationCenter?.notificationPopupOpen ?? false)
+        && root.activeNotifications.length > 0 && (root.notificationCenter?.notificationPopupOpen ?? false)
     readonly property real panelDepth: Math.max(0, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap * 2)
     readonly property real notificationsWidth: 390
     readonly property real notificationsPopupLeftMargin: Theme.gap * 2
@@ -131,7 +133,7 @@ Item {
         id: notificationsWindow
         popupScreen: root.popupScreen; alignEdge: "left"
         namespace: "quickshell:topLeftNotificationsPullout"
-        requestedOpen: root.notificationsOpen && !root.colorPickerActive && toastWindow.progress <= 0
+        requestedOpen: root.notificationsOpen && !root.colorPickerActive
         forceClose: root.colorPickerActive
         activatorMouseArea: notificationsButton.mouseArea; hoverBridgeActivator: notificationsButton.mouseArea
         hoverBridgeX: root.barLeftMargin + statusContent.x + notificationsButton.x + notificationsButton.mouseArea.x - Theme.gap * 2
@@ -169,25 +171,60 @@ Item {
         }
     }
 
-    Frame.BarPopupWindow {
+    PanelWindow {
         id: toastWindow
-        popupScreen: root.popupScreen; alignEdge: "left"
-        namespace: "quickshell:topLeftNotification"
-        requestedOpen: root.toastShouldShow; forceClose: root.calendarOpen || root.notificationsOpen
-        autoClose: false; clickDismiss: false; edgeMargin: root.notificationsPopupLeftMargin
-        panelWidth: root.notificationsWidth; duration: 180
-        panelDepth: Math.max(118, toastCard.implicitHeight + Theme.panelPadding * 2)
 
-        NotificationCard {
-            id: toastCard
-            anchors.centerIn: parent; width: parent.width; notification: root.activeNotification; toast: true
-            onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
-            onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
-            onActivated: notification => {
-                if (!root.notificationCenter?.activateNotification(notification))
-                    root.openPopup = "notifications";
+        screen: root.popupScreen
+        visible: root.toastShouldShow && !root.calendarOpen && !root.notificationsOpen
+        anchors { top: true; left: true }
+        // qmllint disable unqualified unresolved-type
+        margins { top: Theme.barHeight + Theme.popupGap; left: root.notificationsPopupLeftMargin }
+        // qmllint enable unqualified unresolved-type
+        WlrLayershell.namespace: "quickshell:topLeftNotification"
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        implicitWidth: root.notificationsWidth
+        implicitHeight: Math.max(1, toastColumn.implicitHeight)
+        mask: Region { item: toastColumn }
+
+        Column {
+            id: toastColumn
+
+            width: parent.width
+            spacing: Theme.gap * 2
+            move: Transition { NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic } }
+
+            Repeater {
+                model: ScriptModel { values: root.activeNotifications }
+
+                Frame.PanelSurface {
+                    id: toastSurface
+
+                    required property var modelData
+
+                    width: toastColumn.width
+                    implicitHeight: toastCard.implicitHeight + Theme.gap * 2
+                    height: implicitHeight
+                    opacity: (root.notificationCenter?.isToastFading(toastSurface.modelData) ?? false) ? 0 : 1
+                    Behavior on opacity { NumberAnimation { duration: 180 } }
+
+                    NotificationCard {
+                        id: toastCard
+
+                        anchors { fill: parent; margins: Theme.gap }
+                        notification: toastSurface.modelData
+                        toast: true
+                        onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
+                        onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
+                        onActivated: notification => {
+                            if (!root.notificationCenter?.activateNotification(notification))
+                                root.openPopup = "notifications";
+                        }
+                        onInteractionChanged: interacting => root.notificationCenter?.setActiveNotificationHovered(interacting)
+                    }
+                }
             }
-            onInteractionChanged: interacting => root.notificationCenter?.setActiveNotificationHovered(interacting)
         }
     }
 }

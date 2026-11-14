@@ -19,10 +19,8 @@ Scope {
     property string notificationPopupScreenKey: ""
     property var notificationServer: notificationService
     property var notificationQueue: []
-    property var activeNotification: null
-    property int activeNotificationRemaining: notificationPopupTimeout
-    property double activeNotificationDeadline: 0
-    property bool discardActiveAfterExit: false
+    property var toastEntries: []
+    property bool toastHovered: false
     property var openMenuKeys: ({})
     property var centerOpenKeys: ({})
 
@@ -34,6 +32,8 @@ Scope {
     readonly property var notifications: root.notificationServer?.trackedNotifications ?? null
     readonly property var notificationValues: root.notifications?.values ?? []
     readonly property var newestNotifications: root.notificationValues.slice().reverse()
+    readonly property var activeNotifications: root.toastEntries.map(entry => entry.notification)
+    readonly property var activeNotification: root.activeNotifications[0] ?? null
     readonly property bool hasNotifications: root.notificationValues.length > 0
     readonly property int notificationCount: root.notificationValues.length
     readonly property bool menuOpen: openMenuCount > 0
@@ -66,90 +66,101 @@ Scope {
             root.notificationPopupScreenKey = "";
     }
 
+    function isToastFading(notification) {
+        return root.toastEntries.some(entry => entry.notification === notification && entry.fading);
+    }
+
     function enqueueNotification(notification) {
         if (root.dndEnabled || root.centerOpen) return;
-        const next = root.notificationQueue.slice();
-        next.push(notification);
+        if (root.menuOpen) {
+            const next = root.notificationQueue.slice();
+            next.push(notification);
+            while (next.length > root.notificationQueueLimit) next.shift();
+            root.notificationQueue = next;
+            return;
+        }
+        root.pushToast(notification);
+    }
+
+    function pushToast(notification) {
+        if (!notification) return;
+        const now = Date.now();
+        const next = root.toastEntries.filter(entry => entry.notification !== notification);
+        next.push({
+            notification: notification,
+            remaining: root.notificationPopupTimeout,
+            deadline: now + root.notificationPopupTimeout,
+            fading: false,
+            fadeDeadline: 0
+        });
         while (next.length > root.notificationQueueLimit) next.shift();
-        root.notificationQueue = next;
-        root.showNextNotification();
-    }
-
-    function showNextNotification() {
-        if (root.dndEnabled || root.menuOpen || root.activeNotification !== null || notificationExitTimer.running) return;
-        const next = root.notificationQueue.slice();
-        let notification = null;
-        while (next.length > 0 && notification === null) notification = next.shift() ?? null;
-        root.notificationQueue = next;
-        if (notification === null) return;
-        root.activeNotification = notification;
-        root.activeNotificationRemaining = root.notificationPopupTimeout;
+        root.toastEntries = next;
         root.notificationPulse += 1;
-        root.resumeActiveNotification();
-    }
-
-    function resumeActiveNotification() {
-        if (root.activeNotification === null || root.dndEnabled || root.menuOpen) return;
-        const remaining = Math.max(1, root.activeNotificationRemaining);
-        root.activeNotificationDeadline = Date.now() + remaining;
         root.notificationPopupOpen = true;
-        if (root.activeNotification.urgency === NotificationUrgency.Critical) return;
-        notificationDwellTimer.interval = remaining;
-        notificationDwellTimer.restart();
     }
 
-    function pauseActiveNotification() {
-        if (root.activeNotification === null || !root.notificationPopupOpen || !notificationDwellTimer.running) return;
-        root.activeNotificationRemaining = Math.max(1, root.activeNotificationDeadline - Date.now());
-        notificationDwellTimer.stop();
+    function flushQueuedToasts() {
+        if (root.dndEnabled || root.menuOpen || root.centerOpen || root.notificationQueue.length === 0) return;
+        const queued = root.notificationQueue.slice();
+        root.notificationQueue = [];
+        for (const notification of queued) root.pushToast(notification);
     }
 
     function setActiveNotificationHovered(hovered) {
-        if (hovered) root.pauseActiveNotification();
-        else if (root.notificationPopupOpen && !notificationDwellTimer.running) root.resumeActiveNotification();
+        if (root.toastHovered === hovered) return;
+        root.toastHovered = hovered;
+        const now = Date.now();
+        root.toastEntries = root.toastEntries.map(entry => hovered
+            ? Object.assign({}, entry, { remaining: Math.max(1, entry.deadline - now) })
+            : Object.assign({}, entry, { deadline: now + entry.remaining }));
     }
 
-    function hideActiveNotification(discard) {
-        const wasVisible = root.notificationPopupOpen;
-        notificationDwellTimer.stop();
-        if (!discard && wasVisible)
-            root.activeNotificationRemaining = Math.max(0, root.activeNotificationDeadline - Date.now());
-        root.notificationPopupOpen = false;
-        if (notificationExitTimer.running) {
-            root.discardActiveAfterExit = root.discardActiveAfterExit || discard;
-            return;
-        }
-        root.discardActiveAfterExit = discard;
-        if (wasVisible) notificationExitTimer.restart();
-        else root.finishNotificationExit();
+    function removeToast(notification) {
+        const next = root.toastEntries.filter(entry => entry.notification !== notification);
+        root.toastEntries = next;
+        if (next.length === 0) root.notificationPopupOpen = false;
     }
 
-    function finishNotificationExit() {
-        if (root.discardActiveAfterExit) {
-            root.activeNotification = null;
-            root.activeNotificationDeadline = 0;
-            root.activeNotificationRemaining = root.notificationPopupTimeout;
+    function tickToasts() {
+        const now = Date.now();
+        let changed = false;
+        const next = [];
+        for (const entry of root.toastEntries) {
+            if (!root.notificationValues.includes(entry.notification)) {
+                changed = true;
+                continue;
+            }
+            if (entry.fading) {
+                if (now >= entry.fadeDeadline) { changed = true; continue; }
+                next.push(entry);
+                continue;
+            }
+            if (entry.notification.urgency !== NotificationUrgency.Critical && now >= entry.deadline) {
+                changed = true;
+                next.push(Object.assign({}, entry, { fading: true, fadeDeadline: now + root.notificationExitDuration }));
+                continue;
+            }
+            next.push(entry);
         }
-        root.discardActiveAfterExit = false;
-        if (root.dndEnabled || root.menuOpen) return;
-        if (root.activeNotification !== null) root.resumeActiveNotification();
-        else root.showNextNotification();
+        if (!changed) return;
+        root.toastEntries = next;
+        if (next.length === 0) root.notificationPopupOpen = false;
     }
 
     function dismissActiveNotification(notification) {
-        if (root.activeNotification !== null && (notification === undefined || notification === root.activeNotification))
-            root.hideActiveNotification(true);
+        if (notification) root.removeToast(notification);
+        else if (root.activeNotification) root.removeToast(root.activeNotification);
     }
 
     function dismissNotification(notification) {
         if (!notification) return;
-        if (notification === root.activeNotification) root.hideActiveNotification(true);
+        root.removeToast(notification);
         notification.dismiss();
     }
 
     function invokeNotificationAction(notification, action) {
         if (!notification || !action) return;
-        if (notification === root.activeNotification) root.hideActiveNotification(true);
+        root.removeToast(notification);
         const resident = notification.resident;
         action.invoke();
         if (resident) notification.dismiss();
@@ -165,7 +176,8 @@ Scope {
 
     function suppressNotificationPopups() {
         root.notificationQueue = [];
-        if (root.activeNotification !== null) root.hideActiveNotification(true);
+        root.toastEntries = [];
+        root.notificationPopupOpen = false;
     }
 
     function clearNotifications() {
@@ -183,13 +195,16 @@ Scope {
     function toggleHyprsunset() { tools.toggleHyprsunset(); }
     function toggleNightLight() { tools.toggleHyprsunset(); }
 
-    onDndEnabledChanged: root.dndEnabled ? root.suppressNotificationPopups() : root.showNextNotification()
+    onDndEnabledChanged: root.dndEnabled ? root.suppressNotificationPopups() : root.flushQueuedToasts()
     onCenterOpenChanged: { if (root.centerOpen) root.suppressNotificationPopups(); }
     onMenuOpenChanged: {
         if (root.menuOpen) {
-            if (root.activeNotification !== null && root.notificationPopupOpen) root.hideActiveNotification(false);
-        } else if (!notificationExitTimer.running) {
-            root.finishNotificationExit();
+            root.setActiveNotificationHovered(true);
+            root.notificationPopupOpen = false;
+        } else {
+            root.setActiveNotificationHovered(false);
+            if (root.toastEntries.length > 0 && !root.dndEnabled && !root.centerOpen) root.notificationPopupOpen = true;
+            root.flushQueuedToasts();
         }
     }
 
@@ -212,11 +227,11 @@ Scope {
         }
     }
 
-    Timer { id: notificationDwellTimer; onTriggered: root.hideActiveNotification(true) }
-    Timer { id: notificationExitTimer; interval: root.notificationExitDuration; onTriggered: root.finishNotificationExit() }
-
-    Connections {
-        target: root.activeNotification; enabled: root.activeNotification !== null; ignoreUnknownSignals: true
-        function onClosed() { root.dismissActiveNotification(); }
+    Timer {
+        id: toastTickTimer
+        interval: 80
+        repeat: true
+        running: root.toastEntries.length > 0 && !root.toastHovered && !root.dndEnabled && !root.menuOpen
+        onTriggered: root.tickToasts()
     }
 }
