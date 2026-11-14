@@ -20,8 +20,4 @@
   ];
 
   systemd.tmpfiles.rules = [ "w /sys/class/leds/tpacpi::kbd_backlight/brightness - - - - 2" ];
-
-  environment.systemPackages = with pkgs; [
-    codex
-  ];
 }

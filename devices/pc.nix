@@ -14,8 +14,6 @@
     libxcb
     eden
     claude-code
-    codex
-    sunshine
     moonlight-qt
   ];
 
