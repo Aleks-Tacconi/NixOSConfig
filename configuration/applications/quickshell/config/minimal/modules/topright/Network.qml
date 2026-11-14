@@ -150,7 +150,7 @@ Item {
 
             Item {
                 visible: root.service.wifiEnabled
-                Layout.fillWidth: true; Layout.preferredHeight: visible ? 184 : 0; implicitHeight: Layout.preferredHeight
+                Layout.fillWidth: true; Layout.preferredHeight: visible ? Math.min(200, Math.max(44, networkColumn.implicitHeight)) : 0; implicitHeight: Layout.preferredHeight
 
                 Flickable {
                     id: networksScroll
@@ -176,7 +176,7 @@ Item {
 
                         Item {
                             visible: root.availableNetworks.length === 0
-                            width: parent.width; height: 184
+                            width: parent.width; height: 44
                             Text { anchors.centerIn: parent; text: root.service.scanPending ? "Scanning..." : "No visible networks"; color: Theme.muted; font { family: Theme.fontFamily; pixelSize: Theme.panelMetaSize } }
                         }
                     }
