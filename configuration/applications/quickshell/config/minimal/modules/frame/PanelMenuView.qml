@@ -44,7 +44,6 @@ Item {
             id: rowButton
 
             anchors.fill: parent
-            rowHeight: 28
             visible: !(entryItem.entry?.isSeparator ?? false) && (entryItem.entry?.text?.length ?? 0) > 0
             enabled: entryItem.entry?.enabled ?? false
             active: entryItem.expanded
@@ -62,7 +61,7 @@ Item {
     }
 
     function closeEntry(entry) { if (entry) entry.closed(); }
-    function openEntry(entry) { entry.opened(); if (typeof entry.updateLayout === "function") entry.updateLayout(); }
+    function openEntry(entry) { if (entry) { entry.opened(); if (typeof entry.updateLayout === "function") entry.updateLayout(); } }
 
     function reset() {
         root.closeEntry(root.expandedEntry);
@@ -140,10 +139,12 @@ Item {
 
     /** Show a separator only between real items, collapsing runs and edges. */
     function shouldShowEntry(entries, index, entry) {
+        if (!entries || !entry)
+            return false;
         if (!entry.isSeparator)
-            return entry.text.length > 0;
-        const isItem = item => !item.isSeparator && item.text.length > 0;
-        const previous = entries.slice(0, index).filter(item => item.isSeparator || isItem(item)).pop();
+            return (entry.text?.length ?? 0) > 0;
+        const isItem = item => item && !item.isSeparator && (item.text?.length ?? 0) > 0;
+        const previous = entries.slice(0, index).filter(item => item?.isSeparator || isItem(item)).pop();
         return previous !== undefined && isItem(previous) && entries.slice(index + 1).some(isItem);
     }
 
@@ -156,7 +157,7 @@ Item {
         id: menuContent
 
         width: parent.width
-        spacing: Theme.gap / 2
+        spacing: Theme.gap
 
         PanelActionRow {
             visible: root.showRootBack || !root.atRoot

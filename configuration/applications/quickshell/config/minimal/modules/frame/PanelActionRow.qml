@@ -124,7 +124,6 @@ Rectangle {
             font.family: root.trailingFontFamily
             font.pixelSize: Theme.fontSize
             verticalAlignment: Text.AlignVCenter
-            opacity: root.enabled ? 1 : 0.45
             text: root.trailingText
         }
     }

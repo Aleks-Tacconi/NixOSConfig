@@ -13,7 +13,6 @@ Item {
 
     implicitWidth: 72
     implicitHeight: 1
-    width: parent?.width ?? implicitWidth
     height: 1
 
     Rectangle {

@@ -59,7 +59,7 @@ PanelWindow {
     WlrLayershell.namespace: root.namespace
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: (!root.forceClose && root.requestedOpen && root.clickDismiss)
-        ? WlrKeyboardFocus.Exclusive
+        ? WlrKeyboardFocus.OnDemand
         : WlrKeyboardFocus.None
 
     anchors {
@@ -94,7 +94,6 @@ PanelWindow {
         PulloutPanel {
             id: pulloutPanel
 
-            corner: root.alignEdge === "left" ? "topLeft" : "topRight"
             requestedOpen: root.requestedOpen
             forceClose: root.forceClose
             activatorMouseArea: root.activatorMouseArea

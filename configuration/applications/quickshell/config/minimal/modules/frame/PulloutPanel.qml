@@ -13,7 +13,6 @@ FocusScope {
 
     default property alias content: contentHost.data
 
-    property string corner: ""
     property bool requestedOpen: false
     property bool forceClose: false
     property var activatorMouseArea: null
@@ -47,10 +46,8 @@ FocusScope {
     }
 
     HyprlandFocusGrab {
-        active: root.clickDismiss && root.effectiveOpen
-        windows: root.activatorMouseArea
-            ? [root.QsWindow.window, root.activatorMouseArea.QsWindow.window]
-            : [root.QsWindow.window]
+        active: root.clickDismiss && root.effectiveOpen && root.progress > 0
+        windows: [root.QsWindow.window, root.activatorMouseArea?.QsWindow.window ?? null].filter(w => w !== null)
         onCleared: {
             if (root.clickDismiss && root.effectiveOpen && !root.interactionHovered)
                 root.dismissRequested();
@@ -176,6 +173,8 @@ FocusScope {
             }
 
             root.heldOpen = false;
+            if (root.dismissOnExit && root.requestedOpen)
+                root.dismissRequested();
         }
     }
 

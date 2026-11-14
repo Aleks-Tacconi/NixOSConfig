@@ -54,7 +54,6 @@ Item {
         anchors {
             top: parent.top
             bottom: parent.bottom
-            bottomMargin: -Theme.popupGap
             left: parent.left
             right: parent.right
             leftMargin: root.pillLeftMargin
