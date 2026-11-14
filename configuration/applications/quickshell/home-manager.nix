@@ -118,7 +118,6 @@ let
             readonly property bool clipboard: ${builtins.toJSON cfg.launcher.clipboard}
             readonly property var enabledModes: ${builtins.toJSON launcherModes}
             readonly property var fileSearchPaths: ${builtins.toJSON launcherFileSearchPaths}
-            readonly property string configDir: ${builtins.toJSON "${config.xdg.configHome}/quickshell/default/modules/launcher"}
         }
 
         component WallpapersConfig: QtObject {
@@ -157,8 +156,6 @@ let
     cp -r ${./config/minimal}/. "$out/"
     chmod -R u+w "$out"
     cp ${configQml} "$out/Config.qml"
-    cp ${fileSearchPaths} "$out/modules/launcher/whitelist.txt"
-    cp ${fileSearchExcludes} "$out/modules/launcher/blacklist.txt"
   '';
 in
 {

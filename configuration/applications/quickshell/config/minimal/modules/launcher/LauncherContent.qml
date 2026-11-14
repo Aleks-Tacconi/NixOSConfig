@@ -38,6 +38,7 @@ Item {
     readonly property int resultsHeight: root.visibleResultRows * root.rowHeight + Math.max(0, root.visibleResultRows - 1) * Theme.panelItemGap
     readonly property string placeholder: root.mode === "applications" ? "Launch an application"
         : (root.mode === "emoji" ? "Search emoji" : (root.mode === "files" ? "Search files" : "Search copied text"))
+    readonly property bool canNavigateBack: root.mode === "files" && backend.selectedFileDir.length > 0 && backend.selectedFileDir !== backend.initialFileDirectory()
 
     signal requestClose
     signal requestModeCycle(int direction)
@@ -89,6 +90,8 @@ Item {
 
     /** Rank name matches first, then favor frequent recent application launches. */
     function filterItems() {
+        if (root.mode === "files")
+            return root.sourceItems;
         return Search.filterItems(root.sourceItems, searchBox.text, root.mode === "applications", LaunchHistory.apps, root.rankingTime);
     }
 
@@ -184,6 +187,11 @@ Item {
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             root.selectItem(root.selectedItem());
             event.accepted = true;
+        } else if (event.key === Qt.Key_Backspace && searchBox.text.length === 0 && root.canNavigateBack) {
+            backend.selectedFileDir = backend.initialFileDirectory();
+            root.selectedIndex = 0;
+            backend.refreshFiles();
+            event.accepted = true;
         }
     }
 
@@ -192,7 +200,13 @@ Item {
         anchors.fill: parent
         spacing: Theme.panelItemGap
 
-        LauncherModeHeading { width: parent.width; mode: root.mode }
+        LauncherModeHeading {
+            width: parent.width
+            mode: root.mode
+            fileDir: root.mode === "files" ? backend.selectedFileDir : ""
+            canGoBack: root.canNavigateBack
+            showNextHint: root.enabledModes.length > 1
+        }
 
         LauncherSearchBox {
             id: searchBox

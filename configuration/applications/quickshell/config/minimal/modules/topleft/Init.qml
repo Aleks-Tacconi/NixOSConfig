@@ -159,7 +159,9 @@ Item {
         onDismissRequested: root.closePopup("calendar")
 
         CalendarMonth {
-            anchors.fill: parent; events: root.notificationCenter?.calendarEvents ?? []
+            anchors.fill: parent
+            events: root.notificationCenter?.calendarEvents ?? []
+            agendaError: root.notificationCenter?.agendaError ?? ""
             onEventOpenRequested: event => {
                 root.closePopup("calendar");
                 root.notificationCenter?.openCalendarEvent(event);

@@ -61,8 +61,10 @@ Scope {
         path: `${root.stateHome}/quickshell/wallpaper.json`
         printErrors: false
         onLoaded: {
-            if (savedState.wallpaper.length > 0)
-                root.apply(savedState.wallpaper);
+            if (savedState.wallpaper.length > 0) {
+                root.previous = savedState.wallpaper;
+                root.current = savedState.wallpaper;
+            }
         }
         onSaveFailed: root.error = "Wallpaper applied, but the selection could not be saved."
         adapter: JsonAdapter {

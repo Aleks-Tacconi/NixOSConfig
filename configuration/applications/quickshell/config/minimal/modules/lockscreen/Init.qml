@@ -78,6 +78,10 @@ Scope {
             root.busy = false;
             root.pendingPassword = "";
             root.errorMessage = "Authentication error";
+            if (root.locked) {
+                pam.active = false;
+                pam.active = true;
+            }
         }
     }
 

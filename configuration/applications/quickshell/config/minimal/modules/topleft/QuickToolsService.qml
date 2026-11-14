@@ -141,10 +141,16 @@ Scope {
     Process {
         id: calendarProcess
 
-        stdout: StdioCollector {
-            id: calendarOutput
-
-            onStreamFinished: root.applyAgenda(calendarOutput.text)
+        stdout: StdioCollector { id: calendarOutput }
+        stderr: StdioCollector { id: calendarErrorOutput }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0) {
+                root.applyAgenda(calendarOutput.text);
+            } else {
+                root.agendaState = "error";
+                root.agendaError = "Agenda unavailable";
+                root.calendarPreview = "Agenda unavailable";
+            }
         }
     }
 

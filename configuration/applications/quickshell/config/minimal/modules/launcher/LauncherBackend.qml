@@ -89,12 +89,6 @@ Scope {
         root.activeFileRequest = request;
         root.fileSearchLoading = true;
         root.fileSearchError = "";
-        fileSearchProcess.environment = ({
-            FILE_QUERY: query,
-            FILE_DIR: selectedDirectory,
-            FILE_WHITELIST: `${ShellConfig.Config.launcher.configDir}/whitelist.txt`,
-            FILE_BLACKLIST: `${ShellConfig.Config.launcher.configDir}/blacklist.txt`
-        });
         fileSearchProcess.exec(["quickshell-file-search", query, selectedDirectory]);
     }
 

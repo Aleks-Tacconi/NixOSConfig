@@ -18,10 +18,12 @@ Item {
 
     signal closeRequested
 
-    Wallpaper.WallpaperPicker {
+    Loader {
         anchors.fill: parent
-        visible: root.wallpaperPickerOpen
-        onBackRequested: root.wallpaperPickerOpen = false
+        active: root.wallpaperPickerOpen
+        sourceComponent: Wallpaper.WallpaperPicker {
+            onBackRequested: root.wallpaperPickerOpen = false
+        }
     }
 
     Column {

@@ -11,6 +11,7 @@ Item {
     id: root
 
     property var events: []
+    property string agendaError: ""
     property date visibleMonth: new Date()
     property string selectedKey: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
     property date clockNow: new Date()
@@ -169,7 +170,10 @@ Item {
     Text {
         anchors.centerIn: agendaList
         visible: root.agendaDays.length === 0
-        text: "No events this month"
+        width: agendaList.width
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        text: root.agendaError.length > 0 ? root.agendaError : "No events this month"
         color: Theme.muted
         font.family: Theme.fontFamily
         font.pixelSize: Theme.panelMetaSize

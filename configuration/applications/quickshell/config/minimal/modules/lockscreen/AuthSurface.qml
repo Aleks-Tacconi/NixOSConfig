@@ -20,14 +20,11 @@ Item {
 
     signal submitted(string password)
 
-    function clearInput(): void {
-        passwordInput.text = "";
-    }
-
     function focusInput(): void {
         passwordInput.forceActiveFocus();
     }
 
+    onBusyChanged: if (!root.busy) root.focusInput()
     Component.onCompleted: root.focusInput()
 
     Timer {
@@ -60,6 +57,11 @@ Item {
             anchors.fill: parent
             color: Qt.rgba(0, 0, 0, 0.4)
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        onClicked: root.focusInput()
     }
 
     ColumnLayout {
