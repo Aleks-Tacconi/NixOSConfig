@@ -9,9 +9,6 @@
 
 let
   hyprlandPkg = pkgs.hyprland;
-  cleanRun = pkgs.writeShellScriptBin "clean-run" ''
-    exec ${pkgs.util-linux}/bin/setpriv --inh-caps=-all --ambient-caps=-all "$@"
-  '';
   appLauncher = pkgs.writeShellScriptBin "app-launcher" ''
     exec qs ipc --any-display call appLauncher toggle
   '';
@@ -25,7 +22,7 @@ let
   mkExecBind = keys: command: mkBind keys "hl.dsp.exec_cmd(${builtins.toJSON command})";
   mkScreenshotCmd =
     mode:
-    "clean-run bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m ${mode}; fi'";
+    "bash -c 'if pgrep hyprshot > /dev/null; then pkill slurp; else hyprshot --silent -m ${mode}; fi'";
   mkMouseBind = keys: dispatcher: {
     _args = [
       keys
@@ -73,7 +70,6 @@ in
 {
   home.packages = with pkgs; [
     appLauncher
-    cleanRun
     hyprpicker
     hyprsunset
     hyprsysteminfo
@@ -102,14 +98,14 @@ in
       mod._var = "SUPER";
 
       bind = [
-        (mkExecBind (modKey "Q") "clean-run ghostty")
-        (mkExecBind (modKey "E") "clean-run nautilus")
+        (mkExecBind (modKey "Q") "ghostty")
+        (mkExecBind (modKey "E") "nautilus")
         (mkBind (modKey "C") "hl.dsp.window.close()")
-        (mkExecBind (modKey "W") "clean-run google-chrome-stable")
-        (mkExecBind (modKey "N") "clean-run qs ipc --any-display call notifications toggle")
+        (mkExecBind (modKey "W") "google-chrome-stable")
+        (mkExecBind (modKey "N") "qs ipc --any-display call notifications toggle")
         (mkBind (modKey "V") ''hl.dsp.window.float({ action = "toggle" })'')
 
-        (mkExecBind (modKey "Space") "clean-run app-launcher")
+        (mkExecBind (modKey "Space") "app-launcher")
         (mkExecBind "ALT + Space" "playerctl play-pause")
 
         (mkExecBind "XF86AudioRaiseVolume" "swayosd-client --output-volume raise")
@@ -332,12 +328,12 @@ in
     extraConfig = ''
       hl.on("hyprland.start", function()
         ${lib.optionalString (quickshellCfg.enable && quickshellCfg.launcher.clipboard) ''
-          hl.exec_cmd("clean-run wl-paste --type text --watch cliphist store")
-          hl.exec_cmd("clean-run wl-paste --type image --watch cliphist store")
+          hl.exec_cmd("wl-paste --type text --watch cliphist store")
+          hl.exec_cmd("wl-paste --type image --watch cliphist store")
         ''}
-        hl.exec_cmd("clean-run blueman-applet")
-        hl.exec_cmd("[workspace 1] clean-run ghostty")
-        hl.exec_cmd("[workspace 2 silent] clean-run google-chrome-stable")
+        hl.exec_cmd("blueman-applet")
+        hl.exec_cmd("[workspace 1] ghostty")
+        hl.exec_cmd("[workspace 2 silent] google-chrome-stable")
       end)
     '';
 
