@@ -39,18 +39,28 @@ Scope {
 
                 Image {
                     id: incoming
+                    property bool initialLoad: true
                     anchors.fill: parent
                     source: WallpaperService.current
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     opacity: 0
                     onSourceChanged: {
+                        if (incoming.initialLoad)
+                            return;
                         reveal.stop();
                         incoming.opacity = 0;
                     }
                     onStatusChanged: {
-                        if (incoming.status === Image.Ready)
+                        if (incoming.status !== Image.Ready)
+                            return;
+                        if (incoming.initialLoad) {
+                            incoming.initialLoad = false;
+                            incoming.opacity = 1;
+                            incoming.scale = 1;
+                        } else {
                             reveal.restart();
+                        }
                     }
 
                     ParallelAnimation {
