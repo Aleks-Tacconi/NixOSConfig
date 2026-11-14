@@ -5,9 +5,7 @@ import QtQuick.Layouts
 import "../frame" as Frame
 import "../../theme"
 
-/**
- * Keyboard-friendly credentials form for visible and hidden Wi-Fi networks.
- */
+/** Keyboard-friendly credentials form for visible and hidden Wi-Fi networks. */
 ColumnLayout {
     id: root
 
@@ -23,11 +21,14 @@ ColumnLayout {
 
     spacing: Theme.panelItemGap
 
+    component FieldLabel: Text {
+        color: Theme.muted
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.panelCaptionSize
+    }
+
     function focusInput() {
-        if (root.hiddenMode)
-            ssidInput.forceActiveFocus();
-        else
-            passwordInput.forceActiveFocus();
+        (root.hiddenMode ? ssidInput : passwordInput).forceActiveFocus();
     }
 
     function clear() {
@@ -42,11 +43,11 @@ ColumnLayout {
     }
 
     onVisibleChanged: {
-        if (visible)
+        if (root.visible)
             Qt.callLater(() => root.focusInput());
     }
     onBusyChanged: {
-        if (visible && !root.busy)
+        if (root.visible && !root.busy)
             Qt.callLater(() => root.focusInput());
     }
 
@@ -56,13 +57,7 @@ ColumnLayout {
         detail: root.hiddenMode ? "Manual" : root.networkName
     }
 
-    Text {
-        visible: root.hiddenMode
-        text: "Network name"
-        color: Theme.muted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.panelCaptionSize
-    }
+    FieldLabel { visible: root.hiddenMode; text: "Network name" }
 
     Rectangle {
         visible: root.hiddenMode
@@ -73,16 +68,11 @@ ColumnLayout {
 
         TextInput {
             id: ssidInput
-
-            anchors {
-                fill: parent
-                leftMargin: Theme.gap * 3
-                rightMargin: Theme.gap * 3
-            }
+            anchors { fill: parent; leftMargin: Theme.gap * 3; rightMargin: Theme.gap * 3 }
             enabled: !root.busy
             color: Theme.fg
             selectionColor: Theme.red
-            selectedTextColor: "#000000"
+            selectedTextColor: Theme.onAccent
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelBodySize
             verticalAlignment: TextInput.AlignVCenter
@@ -103,13 +93,7 @@ ColumnLayout {
         }
     }
 
-    Text {
-        visible: root.hiddenMode
-        text: "Security"
-        color: Theme.muted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.panelCaptionSize
-    }
+    FieldLabel { visible: root.hiddenMode; text: "Security" }
 
     RowLayout {
         visible: root.hiddenMode
@@ -118,28 +102,24 @@ ColumnLayout {
         spacing: Theme.gap * 2
 
         Repeater {
-            model: [{
-                label: "WPA Personal",
-                secured: true
-            }, {
-                label: "Open",
-                secured: false
-            }]
+            model: [
+                { label: "WPA Personal", secured: true },
+                { label: "Open", secured: false }
+            ]
 
             delegate: Rectangle {
+                id: securityOption
                 required property var modelData
-
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 radius: Theme.surfaceRadius
-                color: root.secured === modelData.secured ? Theme.panelSurfaceHover : Theme.panelSurface
+                color: root.secured === securityOption.modelData.secured ? Theme.panelSurfaceHover : Theme.panelSurface
                 opacity: root.busy ? 0.45 : 1
 
                 Text {
                     anchors.centerIn: parent
-                    visible: !(root.busy && modelData.submit)
-                    text: modelData.label
-                    color: root.secured === modelData.secured ? Theme.fg : Theme.muted
+                    text: securityOption.modelData.label
+                    color: root.secured === securityOption.modelData.secured ? Theme.fg : Theme.muted
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelCaptionSize
                 }
@@ -148,19 +128,13 @@ ColumnLayout {
                     anchors.fill: parent
                     enabled: !root.busy
                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    onClicked: root.secured = modelData.secured
+                    onClicked: root.secured = securityOption.modelData.secured
                 }
             }
         }
     }
 
-    Text {
-        visible: root.secured
-        text: "Password"
-        color: Theme.muted
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.panelCaptionSize
-    }
+    FieldLabel { visible: root.secured; text: "Password" }
 
     Rectangle {
         visible: root.secured
@@ -171,16 +145,11 @@ ColumnLayout {
 
         TextInput {
             id: passwordInput
-
-            anchors {
-                fill: parent
-                leftMargin: Theme.gap * 3
-                rightMargin: 42
-            }
+            anchors { fill: parent; leftMargin: Theme.gap * 3; rightMargin: 42 }
             enabled: !root.busy
             color: Theme.fg
             selectionColor: Theme.red
-            selectedTextColor: "#000000"
+            selectedTextColor: Theme.onAccent
             font.family: Theme.fontFamily
             font.pixelSize: Theme.panelBodySize
             verticalAlignment: TextInput.AlignVCenter
@@ -199,11 +168,7 @@ ColumnLayout {
         }
 
         Text {
-            anchors {
-                right: parent.right
-                rightMargin: Theme.gap * 3
-                verticalCenter: parent.verticalCenter
-            }
+            anchors { right: parent.right; rightMargin: Theme.gap * 3; verticalCenter: parent.verticalCenter }
             text: root.showPassword ? "󰈈" : "󰈉"
             color: revealArea.containsMouse ? Theme.fg : Theme.muted
             font.family: Theme.iconFontFamily
@@ -212,12 +177,7 @@ ColumnLayout {
 
         MouseArea {
             id: revealArea
-
-            anchors {
-                top: parent.top
-                right: parent.right
-                bottom: parent.bottom
-            }
+            anchors { top: parent.top; right: parent.right; bottom: parent.bottom }
             width: 42
             enabled: !root.busy
             hoverEnabled: true
@@ -241,17 +201,14 @@ ColumnLayout {
         spacing: Theme.gap * 2
 
         Repeater {
-            model: [{
-                label: "Cancel",
-                submit: false
-            }, {
-                label: root.busy ? "Connecting" : "Connect",
-                submit: true
-            }]
+            model: [
+                { label: "Cancel", submit: false },
+                { label: root.busy ? "Connecting" : "Connect", submit: true }
+            ]
 
             delegate: Rectangle {
+                id: actionButton
                 required property var modelData
-
                 Layout.fillWidth: true
                 implicitHeight: 40
                 radius: Theme.surfaceRadius
@@ -260,27 +217,26 @@ ColumnLayout {
 
                 Text {
                     anchors.centerIn: parent
-                    text: modelData.label
+                    text: actionButton.modelData.label
                     color: Theme.fg
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.panelMetaSize
-                    font.weight: modelData.submit ? Theme.emphasisWeight : Font.Normal
+                    font.weight: actionButton.modelData.submit ? Theme.emphasisWeight : Font.Normal
                 }
 
                 Frame.PanelSpinner {
-                    visible: root.busy && modelData.submit
+                    visible: root.busy && actionButton.modelData.submit
                     anchors.centerIn: parent
                     spinnerSize: 15
                 }
 
                 MouseArea {
                     id: actionArea
-
                     anchors.fill: parent
                     enabled: !root.busy
                     hoverEnabled: true
                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    onClicked: modelData.submit ? root.submit() : root.cancelled()
+                    onClicked: actionButton.modelData.submit ? root.submit() : root.cancelled()
                 }
             }
         }

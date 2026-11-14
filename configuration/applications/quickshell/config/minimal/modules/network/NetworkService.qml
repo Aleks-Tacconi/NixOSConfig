@@ -4,20 +4,11 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-/**
- * Shared NetworkManager state and actions for all bar instances.
- */
+/** Shared NetworkManager state and actions for all bar instances. */
 Scope {
     id: root
 
     property var trafficViewers: []
-
-    /** Track open network panels without one monitor disabling another. */
-    function setTrafficVisible(view, visible) {
-        const viewers = root.trafficViewers.filter(item => item !== view);
-        root.trafficViewers = visible ? viewers.concat([view]) : viewers;
-    }
-
     property string interfaceName: ""
     property string wifiInterface: ""
     property string networkType: "none"
@@ -42,58 +33,48 @@ Scope {
     signal passwordRequested(var network)
     signal actionSucceeded
 
+    /** Track open network panels without one monitor disabling another. */
+    function setTrafficVisible(view, visible) {
+        const viewers = root.trafficViewers.filter(item => item !== view);
+        root.trafficViewers = visible ? viewers.concat([view]) : viewers;
+    }
 
     NetworkTraffic {
         id: traffic
-
         interfaceName: root.interfaceName
         active: root.trafficViewers.length > 0
     }
 
-    TailscaleService {
-        id: tailscale
-    }
+    TailscaleService { id: tailscale }
+    Process { id: settingsProcess }
 
     Timer {
-        interval: 5000
-        repeat: true
-        running: true
-        triggeredOnStart: true
+        interval: 5000; repeat: true; running: true; triggeredOnStart: true
         onTriggered: root.refreshStatus()
     }
 
     Process {
         id: statusProcess
-
-        stdout: StdioCollector {
-            id: statusOutput
-        }
-
+        stdout: StdioCollector { id: statusOutput }
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0)
                 root.applyStatus(statusOutput.text);
-            if (root.scanAfterStatus) {
-                const force = root.queuedRescan;
-                root.scanAfterStatus = false;
-                root.queuedRescan = false;
-                if (root.wifiInterface.length > 0)
-                    root.requestScan(force);
-                else
-                    root.networks = [];
-            }
+            if (!root.scanAfterStatus)
+                return;
+            const force = root.queuedRescan;
+            root.scanAfterStatus = false;
+            root.queuedRescan = false;
+            if (root.wifiInterface.length > 0)
+                root.requestScan(force);
+            else
+                root.networks = [];
         }
     }
 
     Process {
         id: scanProcess
-
-        stdout: StdioCollector {
-            id: scanOutput
-        }
-        stderr: StdioCollector {
-            id: scanError
-        }
-
+        stdout: StdioCollector { id: scanOutput }
+        stderr: StdioCollector { id: scanError }
         onExited: (exitCode, exitStatus) => {
             root.scanPending = false;
             if (root.actionStatusText === "Scanning for networks...")
@@ -102,24 +83,20 @@ Scope {
                 root.applyScan(scanOutput.text);
             else
                 root.errorText = root.cleanError(scanError.text);
-            if (root.queuedScan) {
-                const force = root.queuedRescan;
-                root.queuedScan = false;
-                root.queuedRescan = false;
-                Qt.callLater(() => root.requestScan(force));
-            }
+            if (!root.queuedScan)
+                return;
+            const force = root.queuedRescan;
+            root.queuedScan = false;
+            root.queuedRescan = false;
+            Qt.callLater(() => root.requestScan(force));
         }
     }
 
     Process {
         id: actionProcess
-
         property var request: null
         stdinEnabled: true
-        stderr: StdioCollector {
-            id: actionError
-        }
-
+        stderr: StdioCollector { id: actionError }
         onExited: (exitCode, exitStatus) => {
             const request = actionProcess.request;
             actionProcess.request = null;
@@ -138,10 +115,6 @@ Scope {
                     root.passwordRequested(request.network);
             }
         }
-    }
-
-    Process {
-        id: settingsProcess
     }
 
     function refreshStatus() {
@@ -172,20 +145,15 @@ Scope {
         if (root.wifiInterface.length === 0) {
             root.scanAfterStatus = true;
             root.queuedRescan = rescan;
-            root.refreshStatus();
-            return;
+            return root.refreshStatus();
         }
         if (!root.wifiEnabled) {
             root.networks = [];
             return;
         }
-
         root.scanPending = true;
         root.errorText = "";
-        const command = ["quickshell-network-control", "scan", "--interface", root.wifiInterface];
-        if (rescan)
-            command.push("--rescan");
-        scanProcess.exec(command);
+        scanProcess.exec(["quickshell-network-control", "scan", "--interface", root.wifiInterface, ...(rescan ? ["--rescan"] : [])]);
     }
 
     function applyScan(output) {
@@ -197,90 +165,65 @@ Scope {
         }
     }
 
-    function startAction(command, request = null, password = "", statusText = "Working...") {
+    function startAction(args, request, password, statusText) {
         if (root.actionPending)
             return;
         root.actionPending = true;
-        root.actionStatusText = statusText;
-        root.actionNetworkBssid = request !== null && request.network ? request.network.bssid : "";
+        root.actionStatusText = statusText || "Working...";
+        root.actionNetworkBssid = request ? (request.network?.bssid ?? "") : "";
         root.errorText = "";
         actionProcess.request = request;
-        actionProcess.exec(command);
-        if (password.length > 0) {
+        actionProcess.exec(["quickshell-network-control", ...args]);
+        if (password && password.length > 0)
             actionProcess.write(password + "\n");
-            actionProcess.closeStdin();
-        }
     }
 
     function cancelAction() {
-        if (actionProcess.running) {
-            actionProcess.kill();
-            actionProcess.request = null;
-            root.actionPending = false;
-            root.actionNetworkBssid = "";
-            root.actionStatusText = "";
-            root.errorText = "Operation cancelled";
-        }
+        if (!actionProcess.running)
+            return;
+        actionProcess.running = false;
+        actionProcess.request = null;
+        root.actionPending = false;
+        root.actionNetworkBssid = "";
+        root.actionStatusText = "";
+        root.errorText = "Operation cancelled";
     }
 
     function activate(network) {
-        if (network.active) {
-            root.disconnectWifi(network);
-            return;
-        }
+        if (network.active)
+            return root.disconnectWifi(network);
         if (!network.supported) {
             root.openSettings();
             root.errorText = "Opened connection settings for " + network.ssid;
             return;
         }
-        if (network.requiresPassword && network.savedUuid.length === 0) {
-            root.passwordRequested(network);
-            return;
-        }
-        const command = ["quickshell-network-control", "connect", "--interface", root.wifiInterface, "--bssid", network.bssid];
-        if (network.savedUuid && network.savedUuid.length > 0)
-            command.push("--uuid", network.savedUuid);
-        root.startAction(command, {
-            network: network,
-            retryWithPassword: network.requiresPassword
-        }, "", "Connecting to " + network.ssid + "...");
+        if (network.requiresPassword && network.savedUuid.length === 0)
+            return root.passwordRequested(network);
+        const args = ["connect", "--interface", root.wifiInterface, "--bssid", network.bssid];
+        if (network.savedUuid?.length > 0)
+            args.push("--uuid", network.savedUuid);
+        root.startAction(args, { network, retryWithPassword: network.requiresPassword }, "", `Connecting to ${network.ssid}...`);
     }
 
     function activateWithPassword(network, password) {
-        root.startAction([
-            "quickshell-network-control", "connect", "--interface", root.wifiInterface,
-            "--bssid", network.bssid, "--password-stdin"
-        ], {
-            network: network,
-            retryWithPassword: false
-        }, password, "Connecting to " + network.ssid + "...");
+        const args = ["connect", "--interface", root.wifiInterface, "--bssid", network.bssid, "--password-stdin"];
+        root.startAction(args, { network, retryWithPassword: false }, password, `Connecting to ${network.ssid}...`);
     }
 
     function activateHidden(ssid, secured, password) {
-        const command = [
-            "quickshell-network-control", "connect-hidden", "--interface", root.wifiInterface,
-            "--ssid", ssid
-        ];
+        const args = ["connect-hidden", "--interface", root.wifiInterface, "--ssid", ssid];
         if (secured)
-            command.push("--password-stdin");
-        root.startAction(command, null, password, "Connecting to " + ssid + "...");
+            args.push("--password-stdin");
+        root.startAction(args, null, password, `Connecting to ${ssid}...`);
     }
 
     function disconnectWifi(network = null) {
         if (root.wifiInterface.length > 0)
-            root.startAction(["quickshell-network-control", "disconnect", "--interface", root.wifiInterface], {
-                network: network,
-                retryWithPassword: false
-            }, "", "Disconnecting...");
+            root.startAction(["disconnect", "--interface", root.wifiInterface], { network, retryWithPassword: false }, "", "Disconnecting...");
     }
 
     function setWifiEnabled(enabled) {
-        root.startAction(
-            ["quickshell-network-control", "radio", enabled ? "on" : "off"],
-            null,
-            "",
-            enabled ? "Enabling Wi-Fi..." : "Disabling Wi-Fi..."
-        );
+        root.startAction(["radio", enabled ? "on" : "off"], null, "", enabled ? "Enabling Wi-Fi..." : "Disabling Wi-Fi...");
     }
 
     function openSettings() {
@@ -288,9 +231,8 @@ Scope {
             settingsProcess.exec(["nm-connection-editor"]);
     }
 
-    function clearError() {
-        root.errorText = "";
-    }
+    function clearError() { root.errorText = ""; }
+    function toggleTailscale() { tailscale.toggle(); }
 
     function cleanError(output) {
         const message = output.trim().replace(/^Error:\s*/i, "");
@@ -300,9 +242,5 @@ Scope {
         if (lower.includes("timeout") || lower.includes("not respond"))
             return "Connection timed out. Please try again";
         return message.length > 0 ? message : "Network operation failed";
-    }
-
-    function toggleTailscale() {
-        tailscale.toggle();
     }
 }

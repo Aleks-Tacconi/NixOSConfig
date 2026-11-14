@@ -1,12 +1,13 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import Quickshell.Io
 
 /**
  * Read transfer rates for the currently preferred network interface.
  */
-Item {
+Scope {
     id: root
 
     required property string interfaceName
