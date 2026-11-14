@@ -1,8 +1,8 @@
 config-file = rose-pine-moon.conf
 
-background-opacity = 0.85
+background-opacity = 0.92
 background-opacity-cells = true
-background-blur = false
+background-blur = true
 window-padding-x = 5
 window-padding-y = 5
 
