@@ -37,6 +37,22 @@ Item {
     readonly property real panelDepth: Math.max(0, (root.popupScreen?.height ?? 1080) - Theme.barHeight - Theme.popupGap * 2)
     readonly property real notificationsWidth: 390
     readonly property real notificationsPopupLeftMargin: Theme.gap * 2
+    property var toastHeights: ({})
+
+    function setToastHeight(index, height) {
+        if (root.toastHeights[index] === height)
+            return;
+        const next = Object.assign({}, root.toastHeights);
+        next[index] = height;
+        root.toastHeights = next;
+    }
+
+    function toastOffsetFor(index) {
+        let offset = 0;
+        for (let i = 0; i < index; i += 1)
+            offset += (root.toastHeights[i] ?? 0) + Theme.gap * 2;
+        return offset;
+    }
 
     function notificationIcon() { return root.notificationCenter?.dndEnabled ? "󰂛" : "󰂚"; }
     function isFocusedScreen() { return Hyprland.monitorFor(root.popupScreen)?.focused ?? false; }
@@ -171,58 +187,55 @@ Item {
         }
     }
 
-    PanelWindow {
-        id: toastWindow
+    Variants {
+        model: ScriptModel { values: root.activeNotifications }
 
-        screen: root.popupScreen
-        visible: root.toastShouldShow && !root.calendarOpen && !root.notificationsOpen
-        anchors { top: true; left: true }
-        // qmllint disable unqualified unresolved-type
-        margins { top: Theme.barHeight + Theme.popupGap; left: root.notificationsPopupLeftMargin }
-        // qmllint enable unqualified unresolved-type
-        WlrLayershell.namespace: "quickshell:topLeftNotification"
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        implicitWidth: root.notificationsWidth
-        implicitHeight: Math.max(1, toastColumn.implicitHeight)
-        mask: Region { item: toastColumn }
+        PanelWindow {
+            id: toastWindow
 
-        Column {
-            id: toastColumn
+            required property var modelData
+            required property int index
 
-            width: parent.width
-            spacing: Theme.gap * 2
-            move: Transition { NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic } }
+            screen: root.popupScreen
+            visible: root.toastShouldShow && !root.calendarOpen && !root.notificationsOpen
+            anchors { top: true; left: true }
+            // qmllint disable unqualified unresolved-type
+            margins {
+                top: Theme.barHeight + Theme.popupGap + root.toastOffsetFor(toastWindow.index)
+                left: root.notificationsPopupLeftMargin
+                Behavior on top { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+            }
+            // qmllint enable unqualified unresolved-type
+            WlrLayershell.namespace: "quickshell:topLeftNotification"
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.exclusionMode: ExclusionMode.Ignore
+            color: "transparent"
+            implicitWidth: root.notificationsWidth
+            implicitHeight: Math.max(1, toastSurface.implicitHeight)
+            onImplicitHeightChanged: root.setToastHeight(toastWindow.index, toastWindow.implicitHeight)
+            Component.onCompleted: root.setToastHeight(toastWindow.index, toastWindow.implicitHeight)
 
-            Repeater {
-                model: ScriptModel { values: root.activeNotifications }
+            Frame.PanelSurface {
+                id: toastSurface
 
-                Frame.PanelSurface {
-                    id: toastSurface
+                anchors.fill: parent
+                implicitHeight: toastCard.implicitHeight + Theme.gap * 2
+                opacity: (root.notificationCenter?.isToastFading(toastWindow.modelData) ?? false) ? 0 : 1
+                Behavior on opacity { NumberAnimation { duration: 180 } }
 
-                    required property var modelData
+                NotificationCard {
+                    id: toastCard
 
-                    width: toastColumn.width
-                    implicitHeight: toastCard.implicitHeight + Theme.gap * 2
-                    height: implicitHeight
-                    opacity: (root.notificationCenter?.isToastFading(toastSurface.modelData) ?? false) ? 0 : 1
-                    Behavior on opacity { NumberAnimation { duration: 180 } }
-
-                    NotificationCard {
-                        id: toastCard
-
-                        anchors { fill: parent; margins: Theme.gap }
-                        notification: toastSurface.modelData
-                        toast: true
-                        onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
-                        onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
-                        onActivated: notification => {
-                            if (!root.notificationCenter?.activateNotification(notification))
-                                root.openPopup = "notifications";
-                        }
-                        onInteractionChanged: interacting => root.notificationCenter?.setActiveNotificationHovered(interacting)
+                    anchors { fill: parent; margins: Theme.gap }
+                    notification: toastWindow.modelData
+                    toast: true
+                    onDismissRequested: notification => root.notificationCenter?.dismissNotification(notification)
+                    onActionRequested: (notification, action) => root.notificationCenter?.invokeNotificationAction(notification, action)
+                    onActivated: notification => {
+                        if (!root.notificationCenter?.activateNotification(notification))
+                            root.openPopup = "notifications";
                     }
+                    onInteractionChanged: interacting => root.notificationCenter?.setActiveNotificationHovered(interacting)
                 }
             }
         }
