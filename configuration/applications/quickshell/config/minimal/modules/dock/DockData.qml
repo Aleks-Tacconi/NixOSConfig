@@ -29,13 +29,14 @@ Scope {
 
         for (const appId of pinnedApps) {
             const key = root.normalizedAppId(appId);
+            if (key.length === 0 || key === "unknown") continue;
             if (!groups.has(key))
                 groups.set(key, { appId, pinned: true, toplevels: [] });
         }
-
         for (const toplevel of ToplevelManager.toplevels.values) {
             const appId = root.appIdForToplevel(toplevel);
             const key = root.normalizedAppId(appId);
+            if (key.length === 0 || key === "unknown") continue;
             if (!groups.has(key))
                 groups.set(key, { appId, pinned: false, toplevels: [] });
             groups.get(key).toplevels.push(toplevel);
@@ -65,7 +66,7 @@ Scope {
         adapter: JsonAdapter { id: dockPins; property list<string> pinnedApps: [] }
     }
 
-    function normalizedAppId(appId) { return String(appId ?? "").toLowerCase(); }
+    function normalizedAppId(appId) { return TrayApps.normalized(appId); }
     function appIdForToplevel(toplevel) { return toplevel?.appId?.length > 0 ? toplevel.appId : "unknown"; }
     function launchApp(appId) { root.desktopEntryForApp(appId)?.execute(); }
     function desktopEntryForApp(appId) {
@@ -113,11 +114,15 @@ Scope {
         return String(appGroup?.tray?.item?.id ?? "").replace(/[-_]+/g, " ") || "Application";
     }
 
-    function entryIconSource(entry) {
-        if (!entry?.icon)
-            return "";
-        return Quickshell.iconPath(entry.icon.replace(/-symbolic$/, ""), true) || Quickshell.iconPath(entry.icon, true);
+    function resolveIconSource(iconName) {
+        const icon = String(iconName ?? "").trim();
+        if (icon.length === 0) return "";
+        if (/^(image|file):\/\/|^qrc:/.test(icon)) return icon;
+        if (icon.startsWith("/")) return `file://${icon}`;
+        return Quickshell.iconPath(icon.replace(/-symbolic$/, ""), true) || Quickshell.iconPath(icon, true);
     }
+
+    function entryIconSource(entry) { return root.resolveIconSource(entry?.icon); }
 
     function iconSourceForApp(appId) {
         const entryIcon = root.entryIconSource(root.desktopEntryForApp(appId));
@@ -137,7 +142,7 @@ Scope {
         const entryIcon = root.entryIconSource(root.desktopEntryForGroup(appGroup));
         if (entryIcon.length > 0)
             return entryIcon;
-        const trayIcon = String(appGroup?.tray?.item?.icon ?? "");
+        const trayIcon = root.resolveIconSource(appGroup?.tray?.item?.icon);
         if (trayIcon.length > 0)
             return trayIcon;
         return (appGroup?.appId?.length ?? 0) > 0
@@ -227,9 +232,15 @@ Scope {
         onExited: (exitCode, exitStatus) => {
             const pid = gtkListProcess.queriedPid;
             if (pid > 0) {
-                const next = Object.assign({}, root.gtkActionsByPid);
-                next[pid] = exitCode === 0 ? TrayApps.parseGtkActions(gtkListOutput.text) : [];
-                root.gtkActionsByPid = next;
+                const actions = exitCode === 0 ? TrayApps.parseGtkActions(gtkListOutput.text) : [];
+                if (actions.length > 0 || root.gtkActionsByPid[pid] !== undefined) {
+                    const next = Object.assign({}, root.gtkActionsByPid);
+                    if (actions.length > 0)
+                        next[pid] = actions;
+                    else
+                        delete next[pid];
+                    root.gtkActionsByPid = next;
+                }
             }
             Qt.callLater(() => root.startNextGtkQuery());
         }

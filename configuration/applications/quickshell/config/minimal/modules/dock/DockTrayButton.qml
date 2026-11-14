@@ -12,9 +12,6 @@ Item {
     required property var trayItem
     property bool menuOpen: false
     property var desktopEntry: null
-    readonly property string applicationIcon: root.desktopEntry?.icon
-        ? (Quickshell.iconPath(root.desktopEntry.icon.replace(/-symbolic$/, ""), true)
-            || Quickshell.iconPath(root.desktopEntry.icon, true)) : ""
     signal popupRequested(var activator)
 
     width: Theme.panelRowHeight - Theme.gap / 2
@@ -22,7 +19,7 @@ Item {
     z: mouseArea.containsMouse ? 1 : 0
     activeFocusOnTab: true
     Accessible.role: Accessible.Button
-    Accessible.name: root.trayItem.title || root.trayItem.id
+    Accessible.name: root.trayItem?.title || root.trayItem?.id || ""
     Accessible.onPressAction: root.activate()
     Keys.onReturnPressed: root.activate()
     Keys.onEnterPressed: root.activate()
@@ -31,10 +28,10 @@ Item {
 
     /** Activate the app, respecting tray entries that only provide a menu. */
     function activate() {
-        if (root.trayItem.onlyMenu)
+        if (root.trayItem?.onlyMenu)
             root.popupRequested(mouseArea);
         else
-            root.trayItem.activate();
+            root.trayItem?.activate();
     }
 
     Rectangle {
@@ -50,7 +47,9 @@ Item {
         anchors.centerIn: parent
         width: root.width - Theme.gap * 2
         height: width
-        source: root.applicationIcon || root.trayItem.icon || Quickshell.iconPath("application-x-executable", true)
+        source: DockData.entryIconSource(root.desktopEntry)
+            || DockData.resolveIconSource(root.trayItem?.icon)
+            || Quickshell.iconPath("application-x-executable", true)
     }
 
     Rectangle {
@@ -72,14 +71,13 @@ Item {
             rightMargin: -Theme.gap / 2
             top: parent.top
             bottom: parent.bottom
-            bottomMargin: -Theme.popupGap
         }
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
         onClicked: mouse => {
             if (mouse.button === Qt.MiddleButton)
-                root.trayItem.secondaryActivate();
+                root.trayItem?.secondaryActivate();
             else if (mouse.button === Qt.RightButton)
                 root.popupRequested(mouseArea);
             else
@@ -87,9 +85,9 @@ Item {
         }
         onWheel: wheel => {
             if (wheel.angleDelta.y !== 0)
-                root.trayItem.scroll(wheel.angleDelta.y, false);
+                root.trayItem?.scroll(wheel.angleDelta.y, false);
             else if (wheel.angleDelta.x !== 0)
-                root.trayItem.scroll(wheel.angleDelta.x, true);
+                root.trayItem?.scroll(wheel.angleDelta.x, true);
         }
     }
 }

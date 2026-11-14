@@ -16,6 +16,7 @@ Item {
     property var trayItem: null
     property bool menuOpen: false
     property int lastFocused: -1
+    property string lastAppId: ""
     property alias activatorMouseArea: mouseArea
 
     readonly property int windowCount: root.appGroup?.toplevels?.length ?? 0
@@ -32,7 +33,15 @@ Item {
     height: 30
     z: root.hovered ? 1 : 0
 
-    onAppGroupChanged: root.lastFocused = -1
+    onAppGroupChanged: {
+        const nextId = root.dataSource.normalizedAppId(root.appGroup?.appId ?? "");
+        if (nextId !== root.lastAppId) {
+            root.lastAppId = nextId;
+            root.lastFocused = -1;
+        } else if (root.windowCount > 0) {
+            root.lastFocused = Math.min(root.lastFocused, root.windowCount - 1);
+        }
+    }
 
     /** Focus a window, activate a background tray app, or launch a pinned app. */
     function focusNextWindow() {
@@ -129,7 +138,6 @@ Item {
             rightMargin: -Theme.gap / 2
             top: parent.top
             bottom: parent.bottom
-            bottomMargin: -Theme.popupGap
         }
 
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
@@ -149,7 +157,7 @@ Item {
                 root.trayItem.secondaryActivate();
             else if (mouse.button === Qt.RightButton)
                 root.popupRequested(root.appGroup, mouseArea);
-            else
+            else if (mouse.button === Qt.LeftButton)
                 root.focusNextWindow();
         }
     }

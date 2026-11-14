@@ -35,9 +35,8 @@ ColumnLayout {
     readonly property var appMenu: root.dataSource.menuForGroup(root.appGroup)
     readonly property var gtkActions: root.appMenu === null ? root.dataSource.gtkActionsForGroup(root.appGroup) : []
     readonly property bool hasOptions: root.appMenu !== null || root.gtkActions.length > 0 || root.desktopActions.length > 0
-    readonly property bool hasBoth: root.hasOptions && root.windowCount > 0
-    readonly property bool showOptions: root.hasOptions && (!root.hasBoth || root.activeTab === "options")
-    readonly property bool showWindows: root.windowCount > 0 && (!root.hasBoth || root.activeTab === "windows")
+    readonly property bool showOptions: root.activeTab === "options"
+    readonly property bool showWindows: root.activeTab === "windows"
 
     signal dismissRequested
 
@@ -48,6 +47,7 @@ ColumnLayout {
         signal clicked
         Layout.preferredWidth: 28
         Layout.preferredHeight: 28
+        Accessible.role: Accessible.Button
         radius: Theme.surfaceRadius
         color: btnMouse.containsMouse || iconBtn.active ? Theme.panelSurfaceHover : "transparent"
         Behavior on color { ColorAnimation { duration: 120 } }
@@ -74,7 +74,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: 26
         radius: Theme.surfaceRadius
-        color: chip.selected ? Theme.panelSurfaceHover : (chipMouse.containsMouse ? Theme.panelSurface : "transparent")
+        color: chip.selected ? Theme.panelSurface : (chipMouse.containsMouse ? Theme.panelSurfaceHover : "transparent")
         Behavior on color { ColorAnimation { duration: 120 } }
         Text {
             anchors.centerIn: parent
@@ -119,6 +119,7 @@ ColumnLayout {
         HeaderIconButton {
             visible: root.canOpen
             icon: "󰐕"
+            Accessible.name: root.windowCount === 0 && root.canActivateTray ? "Open" : "Launch"
             onClicked: {
                 if (root.windowCount === 0 && root.canActivateTray)
                     root.trayItem.activate();
@@ -134,6 +135,7 @@ ColumnLayout {
             visible: root.canPin
             icon: "󰐃"
             active: root.pinned
+            Accessible.name: root.pinned ? "Unpin from dock" : "Pin to dock"
             onClicked: {
                 root.dataSource.togglePinned(root.appId);
                 root.dismissRequested();
@@ -141,32 +143,23 @@ ColumnLayout {
         }
     }
 
-    Rectangle {
-        visible: root.hasBoth
+    RowLayout {
         Layout.fillWidth: true
-        Layout.preferredHeight: 32
-        radius: Theme.surfaceRadius
-        color: Theme.panelSurface
+        spacing: Theme.gap
 
-        RowLayout {
-            anchors { fill: parent; margins: 3 }
-            spacing: 3
-
-            TabChip { label: "Options"; selected: root.activeTab === "options"; onClicked: root.activeTab = "options" }
-            TabChip { label: `Windows (${root.windowCount})`; selected: root.activeTab === "windows"; onClicked: root.activeTab = "windows" }
-        }
+        TabChip { label: "Options"; selected: root.activeTab === "options"; onClicked: root.activeTab = "options" }
+        TabChip { label: `Windows (${root.windowCount})`; selected: root.activeTab === "windows"; onClicked: root.activeTab = "windows" }
     }
 
     Item {
-        visible: root.showOptions || root.showWindows
         Layout.fillWidth: true
-        Layout.preferredHeight: visible ? Math.min(root.maxBodyHeight, bodyColumn.implicitHeight) : 0
+        Layout.preferredHeight: Math.min(root.maxBodyHeight, bodyColumn.implicitHeight)
         implicitHeight: Layout.preferredHeight
 
         Flickable {
             id: bodyScroll
 
-            anchors { fill: parent; rightMargin: bodyScroll.interactive ? Theme.gap * 2 : 0 }
+            anchors { fill: parent; rightMargin: Theme.gap * 2 }
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             contentWidth: width
@@ -177,7 +170,18 @@ ColumnLayout {
                 id: bodyColumn
 
                 width: bodyScroll.width
-                spacing: Theme.gap / 2
+                spacing: Theme.gap
+
+                Text {
+                    visible: (root.showOptions && !root.hasOptions) || (root.showWindows && root.windowCount === 0)
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.panelRowHeight
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text: root.showOptions ? "No options" : "No windows"
+                    color: Theme.muted
+                    font { family: Theme.fontFamily; pixelSize: Theme.panelMetaSize }
+                }
 
                 Repeater {
                     model: ScriptModel { values: root.showOptions ? root.desktopActions : [] }
@@ -186,7 +190,6 @@ ColumnLayout {
                         id: desktopActionRow
                         required property var modelData
                         Layout.fillWidth: true
-                        rowHeight: 28
                         label: desktopActionRow.modelData.title
                         icon: desktopActionRow.modelData.icon || "󰘔"
                         iconSource: desktopActionRow.modelData.iconSource
@@ -213,7 +216,6 @@ ColumnLayout {
                         id: gtkActionRow
                         required property var modelData
                         Layout.fillWidth: true
-                        rowHeight: 28
                         label: gtkActionRow.modelData.title
                         icon: gtkActionRow.modelData.icon || "󰘔"
                         onClicked: {

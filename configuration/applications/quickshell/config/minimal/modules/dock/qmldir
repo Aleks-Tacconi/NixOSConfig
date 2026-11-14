@@ -6,3 +6,4 @@ DockItems 1.0 DockItems.qml
 DockTray 1.0 DockTray.qml
 DockTrayButton 1.0 DockTrayButton.qml
 DockWindowRow 1.0 DockWindowRow.qml
+WindowDetails 1.0 WindowDetails.qml

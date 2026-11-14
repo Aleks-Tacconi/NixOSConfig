@@ -1,14 +1,16 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Layouts
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Widgets
 import "../../theme"
 
 /**
- * Rounded window thumbnail with overlaid title and controls.
+ * Rounded window thumbnail with overlaid title, controls, and metadata.
  */
-ClippingRectangle {
+ColumnLayout {
     id: root
 
     required property var dataSource
@@ -18,16 +20,33 @@ ClippingRectangle {
 
     readonly property string title: root.toplevel?.title || root.toplevel?.appId || "Window"
     readonly property bool active: root.toplevel === root.dataSource.activeToplevel
+    readonly property var hlToplevel: {
+        if (!root.toplevel)
+            return null;
+        for (const item of Hyprland.toplevels.values) {
+            if (item?.wayland === root.toplevel)
+                return item;
+        }
+        return null;
+    }
+    readonly property var ipc: root.hlToplevel?.lastIpcObject ?? null
+    readonly property string pidText: Number(root.ipc?.pid ?? 0) > 0 ? String(root.ipc.pid) : "Unknown"
+    readonly property string className: root.ipc?.class || root.toplevel?.appId || ""
+    readonly property string workspace: root.ipc?.workspace?.name
+        || (Number(root.ipc?.workspace?.id ?? 0) > 0 ? String(root.ipc.workspace.id) : "Unknown")
     readonly property real previewHeight: Math.round(root.width * 9 / 16)
 
     signal activated
 
-    implicitHeight: root.previewHeight
-    height: implicitHeight
-    radius: Theme.cardRadius
-    color: Theme.panelSurface
+    spacing: Theme.gap * 2
 
-    Loader {
+    ClippingRectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: root.previewHeight
+        radius: Theme.cardRadius
+        color: Theme.panelSurface
+
+        Loader {
         anchors.fill: parent
         active: root.previewsActive && width > 1 && height > 1 && root.toplevel !== null
 
@@ -137,17 +156,26 @@ ClippingRectangle {
             font.pixelSize: Theme.panelBodySize
         }
 
-        MouseArea {
-            id: closeMouse
+            MouseArea {
+                id: closeMouse
 
-            anchors.centerIn: parent
-            width: 38
-            height: 38
-            acceptedButtons: Qt.LeftButton
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.closeWindow()
+                anchors.centerIn: parent
+                width: 38
+                height: 38
+                acceptedButtons: Qt.LeftButton
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.closeWindow()
+            }
         }
+    }
+
+    WindowDetails {
+        Layout.fillWidth: true
+        windowTitle: root.title
+        pid: root.pidText
+        className: root.className
+        workspace: root.workspace
     }
 
     function handleClick(button) {

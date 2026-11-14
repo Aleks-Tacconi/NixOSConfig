@@ -21,14 +21,12 @@ Item {
     property real popupRightMargin: Theme.gap * 2
     property real pulloutPadding: Theme.panelPadding
     property real minPopupHeight: 70
-    property real currentPopupHeight: minPopupHeight
+    readonly property real currentPopupHeight: Math.min(root.popupMaxHeight, Math.max(root.minPopupHeight, appPanel.implicitHeight + root.pulloutPadding * 2))
     property int revealDuration: 150
     property int closeDelay: Theme.popupDismissDelay
     property var hoveredApp: null
     property var hoveredActivator: null
     property var displayedApp: null
-    property var pendingOpenApp: null
-    property var pendingOpenActivator: null
     property bool forcePopupClose: false
 
     readonly property int appCount: DockData.appGroups.length + dockItems.trayCount
@@ -106,7 +104,6 @@ Item {
         const latestGroup = root.findLatestGroup(identity);
         if (latestGroup) {
             root.displayGroup(latestGroup);
-            popupHeightSync.restart();
             return;
         }
 
@@ -124,36 +121,14 @@ Item {
         root.forcePopupClose = false;
         appPanel.resetMenu();
         root.displayGroup(appGroup);
-        root.pendingOpenApp = appGroup;
-        root.pendingOpenActivator = activatorMouseArea;
-        popupHeightSync.restart();
+        root.hoveredApp = appGroup;
+        root.hoveredActivator = activatorMouseArea;
     }
 
     function dismissPopup() {
         root.forcePopupClose = true;
-        root.pendingOpenApp = null;
-        root.pendingOpenActivator = null;
         root.hoveredApp = null;
         root.hoveredActivator = null;
-    }
-
-    function desiredPopupHeight() {
-        return Math.min(root.popupMaxHeight, Math.max(root.minPopupHeight, appPanel.implicitHeight + root.pulloutPadding * 2));
-    }
-
-    Timer {
-        id: popupHeightSync
-
-        interval: root.hoveredApp !== null ? 40 : 0
-        onTriggered: {
-            root.currentPopupHeight = root.desiredPopupHeight();
-            if (root.pendingOpenApp !== null) {
-                root.hoveredApp = root.pendingOpenApp;
-                root.hoveredActivator = root.pendingOpenActivator;
-                root.pendingOpenApp = null;
-                root.pendingOpenActivator = null;
-            }
-        }
     }
 
     Frame.BarPopupWindow {
@@ -180,7 +155,6 @@ Item {
             root.hoveredApp = null;
             root.hoveredActivator = null;
             root.displayedApp = null;
-            root.currentPopupHeight = root.minPopupHeight;
             root.forcePopupClose = false;
         }
 
@@ -201,7 +175,6 @@ Item {
             })
             dataSource: DockData
             previewsActive: pulloutWindow.effectiveOpen && pulloutWindow.progress >= 0.95
-            onImplicitHeightChanged: popupHeightSync.restart()
             onDismissRequested: root.dismissPopup()
         }
     }
