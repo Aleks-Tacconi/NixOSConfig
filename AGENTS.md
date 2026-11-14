@@ -5,24 +5,26 @@ Personal NixOS + Home Manager flake for two hosts: `laptop` and `pc` (`aleks`).
 ## Repository Map
 - `flake.nix`: entrypoint (`nixosConfigurations.laptop`, `nixosConfigurations.pc`).
 - `devices/core.nix`: shared system modules, base packages, and HM configuration.
-- `devices/laptop.nix`, `devices/pc.nix`: host-specific imports and hardware configs.
+- `devices/laptop.nix`, `devices/pc.nix`: host-specific imports, hardware configs, and `NIXOS_HOST` environment variable definition.
 - `configuration/nixconfig/*.nix`: core OS modules (boot, networking, users, etc.).
+- `configuration/nvidia/configuration.nix`: NVIDIA driver settings (imported on `pc`).
 - `configuration/applications/<app>/configuration.nix`: system-level app modules.
 - `configuration/applications/<app>/home-manager.nix`: user-level app modules.
-- `configuration/applications/quickshell/config/minimal/`: Quickshell QML configuration.
-- `configuration/homemanagerconfig/*.nix`: shared HM settings (themes, envvars, desktopentries).
+- `configuration/applications/quickshell/config/minimal/`: Quickshell QML source tree (deployed with generated `Config.qml` to `~/.config/quickshell/default`).
+- `configuration/homemanagerconfig/*.nix`: shared HM settings (dynamic wallpaper themes, envvars, desktopentries).
+- `packages/pommy/`: custom Rust Pomodoro CLI built via Cargo.
 - `home.nix`: Home Manager root module.
-- `Makefile`: primary operational tasks (`rebuild`, `update`, `clean`, `git`, `all`).
-- `agents/`: central configuration and shared rules for OpenCode, agy, Claude, and Cursor.
+- `Makefile`: self-documenting operational, validation, and lint tasks (`help`, `rebuild`, `dry-run`, `check`, `fmt`, `lint`, `update`, `clean`, `git`, `all`) routed via `NIXOS_HOST`.
+- `RootMakefile`: standalone global/host utility tasks (`make -f RootMakefile <target>`).
+- `agents/`: central configuration, shared skills, and rules for OpenCode, agy, Codex, Claude, and Cursor.
 
 ## Commands
-- Rebuild current host: `make rebuild` (**warning**: runs `git add -A` first).
-- Dry-run validation (laptop): `nix build .#nixosConfigurations.laptop.config.system.build.toplevel --dry-run`
-- Dry-run validation (pc): `nix build .#nixosConfigurations.pc.config.system.build.toplevel --dry-run`
-- Flake check: `nix flake check`
-- Format check (Nix): `nix run nixpkgs#nixfmt-rfc-style -- -c $(git ls-files '*.nix')`
-- Lint (Nix): `nix run nixpkgs#statix -- check .`
-- Shell lint: `nix run nixpkgs#shellcheck -- $(git ls-files '*.sh')`
+- Show available Make targets: `make` or `make help`
+- Rebuild current host (`NIXOS_HOST`): `make rebuild` (**warning**: runs `git add -A` first).
+- Dry-run validation (`NIXOS_HOST`): `make dry-run` (`nix build ".#nixosConfigurations.$(NIXOS_HOST).config.system.build.toplevel" --dry-run`)
+- Flake check: `make check` (`nix flake check`)
+- Format check (Nix): `make fmt` (`nix run nixpkgs#nixfmt-rfc-style -- -c $(git ls-files '*.nix')`)
+- Lint (Nix & Shell): `make lint` (`statix check .` and `shellcheck`)
 - Do NOT run `make git` or `make all` unless explicitly requested (auto-commits and pushes).
 
 ## Nix & Module Conventions
@@ -35,7 +37,7 @@ Personal NixOS + Home Manager flake for two hosts: `laptop` and `pc` (`aleks`).
 - Strings for external commands/window manager rules; booleans for Nix booleans.
 
 ## Quickshell (QML) Architecture & Conventions
-- **Entry point**: `shell.qml` (`ShellRoot`) instantiates persistent services (`NetworkService`, `NotificationCenter`, `Launcher.Init`, `Bar.Init`).
+- **Entry point**: `shell.qml` (`ShellRoot`) instantiates persistent services (`NetworkService`, `NotificationCenter`, `Wallpaper.Init`, `Launcher.Init`, `Bar.Init`).
 - **Module Structure**: `modules/<feature>/Init.qml` is the standard module entrypoint.
 - **Header Pragmas**: Use `pragma ComponentBehavior: Bound` at top of components.
 - **Documentation**: Add short `/** ... */` docstring above the root component describing its role.

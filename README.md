@@ -9,101 +9,51 @@ layouts, so it is a reference rather than a drop-in configuration.
 ## Desktop
 
 - Hyprland with host-specific monitor and workspace layouts.
-- Nix-managed Quickshell `minimal`: top bar, launcher, dock, notifications,
-  calendar, media controls, network/battery status, and power menu. Click-open
-  top-bar panels close after the pointer leaves their trigger and panel.
-- Google Chrome by default, plus Helium and Firefox.
-- Ghostty, Nautilus, Hyprlock, SwayOSD, Catppuccin/Papirus theming, KDE Connect,
-  and Jellyfin.
-- Preservation-oriented Google Drive sync on both hosts and Syncthing for
-  `~/ObsidianVault` between them.
-- OpenCode and selected global configuration managed by Home Manager.
+- Nix-managed Quickshell desktop shell: top bar, application/file/emoji/clipboard
+  launcher, dock, notifications, calendar, media controls, network/Tailscale/battery
+  status, night-light toggle, and power menu. Click-open top-bar panels close
+  after the pointer leaves their trigger and panel.
+- Google Chrome by default, plus Firefox.
+- Ghostty, Nautilus, Hyprlock, SwayOSD, Catppuccin/Papirus theming with
+  wallpaper-driven dynamic Qt/KDE palettes (`quickshell-wallpaper-theme`), and
+  KDE Connect.
+- Syncthing for `~/ObsidianVault` between hosts.
+- Declarative agent configurations (OpenCode, Antigravity `agy`, Codex, Claude,
+  Cursor, and `rtk`) managed by Home Manager.
 
-Quickshell's static configuration is deployed from
-`configuration/applications/quickshell/config/minimal` to
-`~/.config/quickshell/minimal`; mutable dock pins live at
-`~/.local/state/quickshell/minimal/dock-pins.json`.
+Quickshell's static configuration is built from
+`configuration/applications/quickshell/config/minimal` together with
+Nix-generated `Config.qml` and launcher file search lists, and deployed to
+`~/.config/quickshell/default`. Mutable dock pins live at
+`~/.local/state/quickshell/dock-pins.json`, and dynamic wallpaper theme state is
+generated in `~/.local/state/quickshell/wallpaper-theme/`.
 
-Agent configurations for OpenCode, Antigravity (agy), Claude, and Cursor are
-managed under `agents/` with a root `AGENTS.md` and shared skills directory
-bootstrapped across application environments via Home Manager.
+### Quickshell Options
 
-## Google Drive
+`configuration/applications/quickshell/configuration.nix` exposes
+`desktop.quickshell.*` NixOS options:
 
-Both hosts keep a complete offline copy at `~/Google Drive`. Each independently
-runs `rclone bisync` directly against `gdrive:` every five minutes, using the
-same package, commands, state layout, and systemd units. User lingering keeps
-timers active after logout.
+| Option | Default | Description |
+| --- | --- | --- |
+| `desktop.quickshell.enable` | `true` | Enable the Quickshell desktop shell |
+| `desktop.quickshell.launcher.applications` | `true` | Enable application search in the launcher |
+| `desktop.quickshell.launcher.files` | `true` | Enable file search in the launcher |
+| `desktop.quickshell.launcher.emoji` | `true` | Enable emoji search in the launcher |
+| `desktop.quickshell.launcher.clipboard` | `true` | Enable clipboard history in the launcher |
+| `desktop.quickshell.launcher.fileSearch.paths` | `[ "Downloads" ]` | Home-relative or absolute paths searched by the file launcher |
+| `desktop.quickshell.launcher.fileSearch.excludes` |*(common build/VCS dirs)* | `fd` exclusion patterns for launcher file search |
+| `desktop.quickshell.notifications.popupTimeout` | `4800` | Notification popup timeout in milliseconds |
+| `desktop.quickshell.notifications.queueLimit` | `20` | Maximum queued notification popups |
+| `desktop.quickshell.nightLight.enable` | `true` | Expose night-light controls |
+| `desktop.quickshell.nightLight.temperature` | `3500` | Night-light color temperature in Kelvin |
+| `desktop.quickshell.network.tailscale` | `true` | Expose the Tailscale connection toggle |
+| `desktop.quickshell.appMenu.enable` | `true` | Enable application menus |
+| `desktop.quickshell.appMenu.nativeMenus` | `true` | Prefer native application menus when available |
 
-### Setup
-
-Set up each host independently, in either order, as `aleks`:
-
-```bash
-rclone config
-rclone lsd gdrive:
-gdrive-sync
-gdrive-sync status
-```
-
-In `rclone config`, create a remote named exactly `gdrive`, grant full Drive
-access, and complete browser OAuth. A personal Google API client ID is
-recommended for regular sync but is optional. Credentials remain in
-`~/.config/rclone/rclone.conf`; never commit that file or its OAuth tokens.
-
-Initialization refuses a non-empty `~/Google Drive` and uses Drive as the
-authoritative first copy. Scheduled jobs wait for the first successful manual
-`gdrive-sync`, which initializes the folder when needed and enables automatic
-five-minute sync.
-
-Monitor the timer and service with:
-
-```bash
-systemctl --user status google-drive-sync.timer
-journalctl --user -u google-drive-sync.service -f
-```
-
-### Behavior
-
-- Create, edit, rename, move, or delete ordinary files normally in
-  `~/Google Drive`.
-- A move is copied to the new path, then deleted from the old path. It propagates
-  normally while the old path is archived.
-- Deletions propagate but are recoverable: replaced/deleted local versions go
-  to `~/.local/state/gdrive-sync/backups/`, and Drive versions go to
-  `gdrive:.gdrive-sync/history/`. UUID-based run directories prevent history
-  collisions, and Google Drive trash is forced on.
-- If both hosts edit the same path before syncing, the newer modification time
-  wins and the losing version gets a numbered `conflict` suffix.
-- A run aborts before applying more than 1000 deletions. Reports are stored in
-  `~/.local/state/gdrive-sync/reports/`; failures trigger a desktop notification.
-- Daily cleanup retains local backups and Drive history for 30 days and reports
-  for 14 days. It permanently removes expired reserved Drive history to release
-  storage, never active files. Both hosts use the same cleanup service with a
-  random delay to reduce simultaneous remote cleanup.
-- Google Docs, Sheets, Slides, and Drawings appear in their normal hierarchy as
-  `.url` files that open the browser document. They require internet access and
-  are edited in Drive; no separate offline export folder exists.
-- Any file or directory name beginning with uppercase `PRIVATE` is excluded at
-  any depth and never uploads or downloads. The rule is case-sensitive, for
-  example `PRIVATE-notes.txt` and `work/PRIVATE-project/`.
-- `.gdrive-sync` is excluded so archived versions cannot re-enter the live tree.
-
-### Recovery and Security
-
-Bisync never resyncs automatically. If rclone requires state recovery, first
-preserve unsynchronized local work outside `~/Google Drive`, then run the
-Drive-authoritative recovery:
-
-```bash
-gdrive-sync resync
-```
-
-The health check requires rclone's Google Drive backend and rejects disabled TLS
-certificate verification. Certificate-validated HTTPS encrypts transfers in
-transit, but Google can read the data. Google Drive provides no distributed
-rclone lock, so simultaneous runs can overlap; numbered conflicts and UUID-based
-histories aid recovery but do not guarantee zero data loss.
+Agent configurations for OpenCode, Antigravity (`agy`), Codex, Claude, and
+Cursor are managed under `agents/` with a shared `agents/AGENTS.md` and
+`agents/skills/` directory linked into each tool's configuration path via Home
+Manager.
 
 ## Syncthing
 
@@ -137,15 +87,19 @@ journalctl -u syncthing.service -f
 
 | Path | Purpose |
 | --- | --- |
-| `flake.nix` | Flake inputs and both NixOS hosts |
+| `flake.nix` | Flake inputs and NixOS host outputs |
 | `devices/core.nix` | Shared system and application imports |
-| `devices/laptop.nix` | Laptop hardware and host-specific settings |
-| `devices/pc.nix` | PC hardware and host-specific settings |
-| `configuration/nixconfig/` | Core NixOS modules |
+| `devices/laptop.nix` | Laptop hardware and host-specific settings (`NIXOS_HOST = "laptop"`) |
+| `devices/pc.nix` | PC hardware and host-specific settings (`NIXOS_HOST = "pc"`) |
+| `configuration/nixconfig/` | Core NixOS system modules |
+| `configuration/nvidia/` | NVIDIA GPU configuration imported by `devices/pc.nix` |
 | `configuration/applications/` | Application-specific system and Home Manager modules |
-| `configuration/homemanagerconfig/` | Shared user environment, theme, and desktop configuration |
+| `configuration/homemanagerconfig/` | Shared user environment, dynamic theme, and desktop entry configuration |
+| `packages/pommy/` | Custom Rust Pomodoro CLI package built via Cargo |
 | `home.nix` | Home Manager root for `aleks` |
-| `agents/` | Declarative agent configurations (OpenCode, agy, shared skills, and rules) |
+| `agents/` | Declarative agent configurations (OpenCode, `agy`, Codex, Claude, Cursor, shared skills, and rules) |
+| `Makefile` | Self-documenting operational, validation, and lint tasks routed via `NIXOS_HOST` |
+| `RootMakefile` | Standalone host utility tasks (`make -f RootMakefile <target>`) |
 
 ## Keybindings
 
@@ -153,8 +107,8 @@ The leader key is Super.
 
 | Key | Action |
 | --- | --- |
-| `Super+1` to `Super+9` | Switch workspace |
-| `Super+Shift+1` to `Super+Shift+9` | Move the active window to a workspace |
+| `Super+1` to `Super+0` | Switch to workspace 1–10 |
+| `Super+Shift+1` to `Super+Shift+0` | Move the active window to workspace 1–10 |
 | `Super+S` | Toggle the special workspace |
 | `Super+Shift+S` | Move the active window to the special workspace |
 | `Super+Space` | Open the Quickshell launcher |
@@ -169,31 +123,41 @@ The leader key is Super.
 | `Super+Shift+H/J/K/L` | Move the active window |
 | `Alt+H/J/K/L` | Resize the active window |
 | `Alt+Space` | Toggle media playback |
-| `Print` | Capture a region |
+| `Print` or `Ctrl+Shift+4` | Capture a region |
 | `Shift+Print` | Capture a window |
+| `XF86AudioRaiseVolume` / `XF86AudioLowerVolume` | Raise or lower output volume (SwayOSD) |
+| `XF86AudioMute` / `XF86AudioMicMute` | Toggle output or microphone mute (SwayOSD) |
+| `XF86MonBrightnessUp` / `XF86MonBrightnessDown` | Raise or lower screen brightness (SwayOSD) |
 
 ## Installation
 
 1. Clone the repository.
 2. Review the username, hardware configuration, boot device, monitor names,
    storage mounts, and host-specific settings in `devices/`.
-3. Evaluate the host: `nix build .#nixosConfigurations.laptop.config.system.build.toplevel --dry-run`.
-4. Switch to it: `sudo nixos-rebuild switch --flake .#laptop`.
-
-Use `#pc` instead for the desktop host.
+3. For initial bootstrap before `NIXOS_HOST` is active in the environment, pass
+   `NIXOS_HOST=<host>` explicitly:
+   - Dry-run: `make dry-run NIXOS_HOST=<host>`
+   - Switch: `sudo nixos-rebuild switch --flake .#<host>`
+4. Once activated, `NIXOS_HOST` is exported by the host configuration and `make`
+   targets route automatically.
 
 ## Commands
 
+Run `make` or `make help` to list all available targets:
 
 | Command | Behavior |
 | --- | --- |
-| `nix flake check` | Evaluate the flake |
-| `make rebuild` | Rebuild the system |
+| `make` / `make help` | Show available targets |
+| `make rebuild` | Stage changes and rebuild the active `$(NIXOS_HOST)` configuration |
+| `make dry-run` | Dry-run build the active `$(NIXOS_HOST)` configuration |
+| `make check` | Evaluate the flake and run checks (`nix flake check`) |
+| `make fmt` | Check Nix formatting with `nixfmt-rfc-style` |
+| `make lint` | Run `statix` and `shellcheck` linters |
 | `make update` | Update all flake inputs |
-| `make clean` | Remove old user/system profile history and run system and user garbage collection |
+| `make clean` | Wipe old user/system profile history and collect garbage |
 | `make git MSG="message"` | Stage, commit, and push to `origin/main` |
-| `make all MSG="message"` | Update, commit, push, and rebuild the laptop |
+| `make all MSG="message"` | Update flake inputs, commit/push, and rebuild `$(NIXOS_HOST)` |
 
 `make git` and `make all` push changes; `make clean` removes old generations.
-Review their recipes before use. Run `RootMakefile` utilities with
+Review their recipes before use. Run standalone utilities in `RootMakefile` with
 `make -f RootMakefile <target>`.
