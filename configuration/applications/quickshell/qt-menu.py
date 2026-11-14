@@ -23,8 +23,6 @@ MENU_INTERFACE = "com.canonical.dbusmenu"
 CALL_TIMEOUT = 0.5
 MAX_CONCURRENT_CALLS = 32
 MAX_MENU_ID = 64
-PROBE_ATTEMPTS = 8
-PROBE_DELAY = 0.15
 CALL_SEMAPHORE: ContextVar[asyncio.Semaphore] = ContextVar("call_semaphore")
 
 
@@ -152,31 +150,25 @@ async def probe_candidates(
 
 async def probe(bus: MessageBus, pid: int) -> dict[str, str] | None:
     """Find the lowest-numbered Qt menu endpoint exported by a process."""
-    for attempt in range(PROBE_ATTEMPTS):
-        services = await services_for_pid(bus, pid)
-        child_lists = await asyncio.gather(
-            *(discover_menubar_children(bus, service) for service in services)
-        )
-        discovered = [
-            (service, path)
-            for service, paths in zip(services, child_lists, strict=True)
-            for path in paths
-        ]
-        endpoint = await probe_candidates(bus, discovered)
-        if endpoint is not None:
-            return endpoint
-        if not discovered:
-            fallback = [
-                (service, f"/MenuBar/{menu_id}")
-                for service in services
-                for menu_id in range(1, MAX_MENU_ID + 1)
-            ]
-            endpoint = await probe_candidates(bus, fallback)
-            if endpoint is not None:
-                return endpoint
-        if attempt + 1 < PROBE_ATTEMPTS:
-            await asyncio.sleep(PROBE_DELAY)
-    return None
+    services = await services_for_pid(bus, pid)
+    if not services:
+        return None
+    child_lists = await asyncio.gather(
+        *(discover_menubar_children(bus, service) for service in services)
+    )
+    discovered = [
+        (service, path)
+        for service, paths in zip(services, child_lists, strict=True)
+        for path in paths
+    ]
+    if discovered:
+        return await probe_candidates(bus, discovered)
+    fallback = [
+        (service, f"/MenuBar/{menu_id}")
+        for service in services
+        for menu_id in range(1, MAX_MENU_ID + 1)
+    ]
+    return await probe_candidates(bus, fallback)
 
 
 def positive_pid(value: str) -> int:

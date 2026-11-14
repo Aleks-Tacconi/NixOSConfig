@@ -14,6 +14,7 @@ from typing import Any
 
 from dbus_next import BusType, Message, MessageType
 from dbus_next.aio import MessageBus
+from dbus_next.errors import DBusError
 
 DBUS_SERVICE = "org.freedesktop.DBus"
 DBUS_PATH = "/org/freedesktop/DBus"
@@ -235,7 +236,7 @@ def main() -> int:
     """Run the CLI and convert D-Bus failures to a nonzero exit code."""
     try:
         asyncio.run(run(parse_args()))
-    except (TimeoutError, BridgeError, OSError) as error:
+    except (TimeoutError, BridgeError, DBusError, EOFError, OSError) as error:
         print(f"quickshell-gtk-actions: {error}", file=sys.stderr)
         return 1
     return 0
