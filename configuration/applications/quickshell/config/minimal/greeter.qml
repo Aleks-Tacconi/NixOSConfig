@@ -18,7 +18,7 @@ ShellRoot {
     property string pendingPassword: ""
 
     function startSession(): void {
-        if (!Greetd.available)
+        if (!Greetd.available || Greetd.state !== GreetdState.Inactive)
             return;
         Greetd.createSession(root.username);
     }
@@ -62,13 +62,17 @@ ShellRoot {
         function onReadyToLaunch() {
             const cmd = Quickshell.env("QUICKSHELL_GREETER_CMD") || "start-hyprland";
             Greetd.launch([cmd]);
-            Qt.callLater(Qt.quit);
+        }
+
+        function onLaunched() {
+            Qt.quit();
         }
 
         function onError(error) {
             root.busy = false;
             root.pendingPassword = "";
             root.errorMessage = "Greeter error";
+            root.startSession();
         }
     }
 
