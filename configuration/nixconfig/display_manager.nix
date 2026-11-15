@@ -41,6 +41,9 @@ let
     })
 
     hl.config({
+      input = {
+        kb_layout = "gb",
+      },
       cursor = {
         no_hardware_cursors = 1,
       },
@@ -65,7 +68,7 @@ let
     export XCURSOR_THEME="Bibata-Modern-Classic"
     export XCURSOR_SIZE="24"
     export XCURSOR_PATH="${pkgs.bibata-cursors}/share/icons"
-    exec ${pkgs.hyprland}/bin/start-hyprland -- --config ${greeterHyprlandConfig}
+    exec ${pkgs.hyprland}/bin/Hyprland --config ${greeterHyprlandConfig}
   '';
 in
 {
