@@ -13,6 +13,14 @@
       url = "github:quickshell-mirror/quickshell/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    rex = {
+      url = "https://pkgs.superlogical.com/rex/nix/snapshot.tar.gz";
+    };
+
+    rex-rune = {
+      url = "github:Aleks-Tacconi/rex-rune";
+    };
   };
 
   outputs =

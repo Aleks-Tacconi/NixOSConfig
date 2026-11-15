@@ -54,6 +54,7 @@
     ../configuration/applications/quickshell/configuration.nix
     ../configuration/applications/terminal-utils/configuration.nix
     ../configuration/applications/ghostty/configuration.nix
+    ../configuration/applications/rex-rune/configuration.nix
     ../configuration/applications/libreoffice/configuration.nix
     ../configuration/applications/mediaplayer/configuration.nix
     ../configuration/applications/nvim/configuration.nix
