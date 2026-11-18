@@ -269,6 +269,7 @@ in
           background_color = "0x121212";
           force_default_wallpaper = 0;
           disable_hyprland_logo = true;
+          disable_splash_rendering = true;
           focus_on_activate = true;
         };
       };
