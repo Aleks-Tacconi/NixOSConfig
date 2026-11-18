@@ -18,7 +18,15 @@ let
     if [ -r "$hm_vars" ]; then
       . "$hm_vars"
     fi
-    exec ${pkgs.hyprland}/bin/start-hyprland
+    exec ${pkgs.systemd}/bin/systemd-cat -t hyprland-session \
+      ${pkgs.hyprland}/bin/start-hyprland --path ${pkgs.hyprland}/bin/Hyprland
+  '';
+  greeterWallpaperPreload = pkgs.writeShellScript "greeter-wallpaper-preload" ''
+    img="/var/cache/greeter-wallpaper/current"
+    if [ ! -r "$img" ]; then
+      img="${greeterWallpaper}"
+    fi
+    exec ${pkgs.swaybg}/bin/swaybg -i "$img" -m fill
   '';
   quickshellGreeter = pkgs.writeShellScriptBin "quickshell-greeter" ''
     export QT_QPA_PLATFORM="wayland;xcb"
@@ -50,6 +58,7 @@ let
       misc = {
         background_color = "0x121212",
         disable_hyprland_logo = true,
+        disable_splash_rendering = true,
         force_default_wallpaper = 0,
       },
       animations = {
@@ -58,23 +67,36 @@ let
     })
 
     hl.on("hyprland.start", function()
+      hl.exec_cmd("${greeterWallpaperPreload}")
       hl.exec_cmd("${quickshellGreeter}/bin/quickshell-greeter; ${pkgs.hyprland}/bin/hyprctl dispatch exit")
     end)
   '';
   greeterSession = pkgs.writeShellScript "greeter-session" ''
-    if [ -t 1 ]; then
-      printf '\033[2J\033[H\033[?25l'
-    fi
     export XCURSOR_THEME="Bibata-Modern-Classic"
     export XCURSOR_SIZE="24"
     export XCURSOR_PATH="${pkgs.bibata-cursors}/share/icons"
-    exec ${pkgs.hyprland}/bin/Hyprland --config ${greeterHyprlandConfig}
+    exec ${pkgs.systemd}/bin/systemd-cat -t hyprland-greeter \
+      ${pkgs.hyprland}/bin/start-hyprland --path ${pkgs.hyprland}/bin/Hyprland -- --config ${greeterHyprlandConfig}
   '';
 in
 {
-  systemd.tmpfiles.rules = [
-    "d /var/cache/greeter-wallpaper 0755 aleks users -"
-  ];
+  systemd = {
+    tmpfiles.rules = [
+      "d /var/cache/greeter-wallpaper 0755 aleks users -"
+    ];
+
+    services = {
+      plymouth-quit = lib.mkIf config.boot.plymouth.enable {
+        overrideStrategy = "asDropin";
+        serviceConfig.ExecStart = [
+          ""
+          "-${pkgs.plymouth}/bin/plymouth quit --retain-splash"
+        ];
+      };
+
+      greetd.serviceConfig.Type = lib.mkForce "simple";
+    };
+  };
 
   services.greetd = {
     enable = true;
