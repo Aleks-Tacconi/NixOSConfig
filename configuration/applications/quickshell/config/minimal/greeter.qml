@@ -13,8 +13,11 @@ ShellRoot {
 
     readonly property string username: Quickshell.env("QUICKSHELL_GREETER_USER") || "aleks"
     readonly property string wallpaperSource: Quickshell.env("QUICKSHELL_GREETER_WALLPAPER") || ""
+    readonly property int transitionDuration: 180
     property bool busy: false
+    property bool launching: false
     property string errorMessage: ""
+    property string passwordText: ""
     property string pendingPassword: ""
 
     function startSession(): void {
@@ -24,7 +27,10 @@ ShellRoot {
     }
 
     function submitPassword(password: string): void {
+        if (root.busy || root.launching || password.length === 0)
+            return;
         root.errorMessage = "";
+        root.passwordText = "";
         root.busy = true;
         if (Greetd.state === GreetdState.Authenticating) {
             Greetd.respond(password);
@@ -34,7 +40,20 @@ ShellRoot {
         }
     }
 
+    function launchSession(): void {
+        const cmd = Quickshell.env("QUICKSHELL_GREETER_CMD") || "start-hyprland";
+        Greetd.launch([cmd]);
+    }
+
     Component.onCompleted: root.startSession()
+
+    Timer {
+        id: launchTimer
+
+        interval: root.transitionDuration
+        repeat: false
+        onTriggered: root.launchSession()
+    }
 
     Connections {
         target: Greetd
@@ -54,14 +73,15 @@ ShellRoot {
 
         function onAuthFailure(message) {
             root.busy = false;
+            root.launching = false;
             root.pendingPassword = "";
             root.errorMessage = message || "Incorrect password";
             root.startSession();
         }
 
         function onReadyToLaunch() {
-            const cmd = Quickshell.env("QUICKSHELL_GREETER_CMD") || "start-hyprland";
-            Greetd.launch([cmd]);
+            root.launching = true;
+            launchTimer.restart();
         }
 
         function onLaunched() {
@@ -70,6 +90,7 @@ ShellRoot {
 
         function onError(error) {
             root.busy = false;
+            root.launching = false;
             root.pendingPassword = "";
             root.errorMessage = "Greeter error";
             root.startSession();
@@ -87,6 +108,7 @@ ShellRoot {
             screen: window.modelData
             color: "transparent"
             exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.namespace: "quickshell:greeter"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
@@ -101,8 +123,13 @@ ShellRoot {
                 anchors.fill: parent
                 username: root.username
                 wallpaperSource: root.wallpaperSource
+                passwordText: root.passwordText
                 errorMessage: root.errorMessage
                 busy: root.busy
+                showBackdrop: false
+                revealed: !root.launching
+                transitionDuration: root.transitionDuration
+                onPasswordEdited: text => { root.passwordText = text; }
                 onSubmitted: password => root.submitPassword(password)
             }
         }
