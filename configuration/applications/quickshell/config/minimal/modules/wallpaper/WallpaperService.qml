@@ -12,8 +12,8 @@ Scope {
     readonly property string dataHome: Quickshell.env("XDG_DATA_HOME") || `${Quickshell.env("HOME")}/.local/share`
     readonly property string fallback: `file://${root.dataHome}/wallpapers/cypberpunk.jpg`
     readonly property string stateHome: Quickshell.env("XDG_STATE_HOME") || `${Quickshell.env("HOME")}/.local/state`
-    property string current: root.fallback
-    property string previous: root.fallback
+    property string current: ""
+    property string previous: ""
     property string pending: ""
     property string error: ""
     readonly property bool busy: root.pending.length > 0 || themeProcess.running
@@ -78,10 +78,14 @@ Scope {
         path: `${root.stateHome}/quickshell/wallpaper.json`
         printErrors: false
         onLoaded: {
-            if (savedState.wallpaper.length > 0) {
-                root.previous = savedState.wallpaper;
-                root.current = savedState.wallpaper;
-            }
+            const initial = savedState.wallpaper.length > 0 ? savedState.wallpaper : root.fallback;
+            root.previous = initial;
+            root.current = initial;
+            root.syncGreeterWallpaper(root.current);
+        }
+        onLoadFailed: {
+            root.previous = root.fallback;
+            root.current = root.fallback;
             root.syncGreeterWallpaper(root.current);
         }
         onSaveFailed: root.error = "Wallpaper applied, but the selection could not be saved."

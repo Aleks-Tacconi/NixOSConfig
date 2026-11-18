@@ -35,6 +35,8 @@ Scope {
                     anchors.fill: parent
                     source: WallpaperService.previous
                     fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    visible: !incoming.initialLoad && WallpaperService.previous.length > 0
                 }
 
                 Image {
@@ -52,14 +54,16 @@ Scope {
                         incoming.opacity = 0;
                     }
                     onStatusChanged: {
-                        if (incoming.status !== Image.Ready)
-                            return;
-                        if (incoming.initialLoad) {
+                        if (incoming.status === Image.Ready) {
+                            if (incoming.initialLoad) {
+                                incoming.initialLoad = false;
+                                incoming.opacity = 1;
+                                incoming.scale = 1;
+                            } else {
+                                reveal.restart();
+                            }
+                        } else if (incoming.status === Image.Error && incoming.initialLoad) {
                             incoming.initialLoad = false;
-                            incoming.opacity = 1;
-                            incoming.scale = 1;
-                        } else {
-                            reveal.restart();
                         }
                     }
 
